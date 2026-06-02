@@ -1,0 +1,73 @@
+import type { Database } from './database'
+
+export type { Database }
+
+export type User = Database['public']['Tables']['users']['Row']
+export type DiagnosticTest = Database['public']['Tables']['diagnostic_tests']['Row']
+export type StudyPlan = Database['public']['Tables']['study_plans']['Row']
+export type CalendarTask = Database['public']['Tables']['calendar_tasks']['Row']
+export type QuestionSession = Database['public']['Tables']['question_sessions']['Row']
+export type ErrorLog = Database['public']['Tables']['error_logs']['Row']
+export type ScoreHistory = Database['public']['Tables']['score_history']['Row']
+export type Notification = Database['public']['Tables']['notifications']['Row']
+
+export type Subject = 'math' | 'reading_writing' | 'both'
+export type ErrorType = 'concept' | 'careless' | 'time' | 'strategy' | 'other'
+export type TestType = 'diagnostic' | 'practice' | 'official' | 'full_length'
+export type NotificationType = 'reminder' | 'achievement' | 'system' | 'ai_suggestion'
+
+export interface CollegeBoardFilter {
+  domain: string
+  skill?: string
+  difficulty?: 'easy' | 'medium' | 'hard'
+}
+
+export interface AIPlanRequest {
+  currentScore: number
+  targetScore: number
+  testDate: string
+  hoursPerWeek: number
+  weakAreas: string[]
+  mathScore?: number
+  readingWritingScore?: number
+}
+
+export interface AIPlanWeek {
+  weekNumber: number
+  startDate: string
+  endDate: string
+  theme: string
+  tasks: AIPlanTask[]
+}
+
+export interface AIPlanTask {
+  day: string
+  subject: Subject
+  category: string
+  durationMinutes: number
+  description: string
+  collegeBoardFilters: CollegeBoardFilter
+}
+
+export interface AIStudyPlan {
+  title: string
+  totalWeeks: number
+  weeks: AIPlanWeek[]
+  overallStrategy: string
+}
+
+export interface CategoryStat {
+  category: string
+  subject: Subject
+  attempted: number
+  correct: number
+  accuracy: number
+}
+
+export interface ScoreChartPoint {
+  date: string
+  total: number
+  math: number | null
+  readingWriting: number | null
+  testType: TestType
+}
