@@ -75,6 +75,32 @@ Every generated `calendar_tasks` row includes:
 
 ### Calendar (`/calendar`)
 
+**Views:** Month, Week, Agenda — controlled by a view-switcher tab bar in the header. Navigation (prev/next/today) adjusts by month, week, or 30-day window depending on the active view.
+
+**Data fetching:** `hooks/use-calendar-tasks-range.ts` — takes `startDate`/`endDate` strings and reloads on change. The range is recomputed whenever the view or anchor date changes.
+
+**Color coding:** `components/calendar/task-colors.ts` — maps the 8 SAT domain categories + "Full Practice Test" to distinct Tailwind color schemes (bg, border, text, dot, left-bar).
+
+**Task cards:**
+- Month view: compact chips with colored left bar, domain name, and question count.
+- Week view: taller cards with domain, question count, subject, and completion icon.
+- Agenda view: full cards with subject badge, question count, duration, and a preview of QB filter tags (domain / skill / difficulty).
+
+**Task Drawer (`components/calendar/task-drawer.tsx`):**  
+Right-side slide-over panel. Opens on any task card click. Shows:
+- Domain category label + colored dot + title
+- Quick stats: section, duration, question count
+- College Board QB filters (domain / skill / difficulty / target questions)
+- "Open College Board Question Bank" external link
+- Numbered step-by-step instructions for obtaining questions (or practice test instructions for Full Practice Tests)
+- Expected completion time panel (allocated minutes + exam-pace estimate)
+- Adaptive Planner metadata (priority / score impact / mastery goal)
+- Footer: "Log Session" button (→ SessionWorkflowDialog), "Enter Score" (→ PracticeTestScoreDialog), or "Mark Complete" for manual tasks
+
+**Drag-and-drop rescheduling:** HTML5 drag-and-drop on task cards (disabled for completed tasks). Dropping onto a different day cell calls `rescheduleCalendarTask` server action which updates `task_date` in Supabase immediately, then reloads the task list.
+
+**`actions/calendar.ts` now exports `rescheduleCalendarTask(id, newDate)`.**
+
 - **`SessionWorkflowDialog`** (`components/calendar/session-workflow-dialog.tsx`) — the primary session completion UX, a 5-phase state machine:
   1. **idle** — task info, question count, time budget
   2. **active** — countdown timer + per-question "Your Answer" dropdowns (A/B/C/D)
@@ -104,9 +130,8 @@ Every generated `calendar_tasks` row includes:
 
 2. **Manual "Replan Now" button** — no UI to force a replanning pass without submitting data. Implement as `triggerManualReplan()` in `actions/study-plan.ts` calling `runAdaptiveReplanner(..., 'manual')`, wired to a button in the calendar header or home page.
 
-3. **College Board Workflow page** — visual guide for applying QB filters; not yet built.
+3. **Notifications UI** — `notifications` table is populated; no real-time badge or alert UI beyond the navbar stub.
 
-4. **Notifications UI** — `notifications` table is populated; no real-time badge or alert UI beyond the navbar stub.
 
 ---
 

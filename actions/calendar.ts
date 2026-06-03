@@ -63,6 +63,23 @@ export async function toggleTaskComplete(id: string, is_completed: boolean) {
   return { success: true }
 }
 
+export async function rescheduleCalendarTask(id: string, newDate: string) {
+  'use server'
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const { error } = await supabase
+    .from('calendar_tasks')
+    .update({ task_date: newDate, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/calendar')
+  return { success: true }
+}
+
 export async function deleteCalendarTask(id: string) {
   'use server'
   const supabase = await createClient()
