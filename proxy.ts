@@ -25,26 +25,28 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
   const isAuthRoute = pathname === '/login' || pathname === '/signup'
   const isPublicRoute = isAuthRoute || pathname === '/'
 
+  // Unauthenticated → redirect to login for all protected routes
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
+  // Authenticated + on auth page → send to home
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/home'
     return NextResponse.redirect(url)
   }
+
+  // Onboarding completion is enforced in the dashboard layout,
+  // not here, to avoid an extra DB round-trip on every request.
 
   return supabaseResponse
 }

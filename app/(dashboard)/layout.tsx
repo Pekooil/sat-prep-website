@@ -15,6 +15,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('id', user.id)
     .single()
 
+  // First-time users must complete onboarding
+  if (profile && profile.has_completed_onboarding === false) {
+    redirect('/onboarding')
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--background)]">
       <Navbar user={profile} />

@@ -71,3 +71,73 @@ export interface ScoreChartPoint {
   readingWriting: number | null
   testType: TestType
 }
+
+// ─── Onboarding ────────────────────────────────────────────────────────────
+
+export interface OnboardingStep1Data {
+  currentScore: number
+  targetScore: number
+  testDate: string
+  dailyStudyMinutes: number
+}
+
+export interface CategoryPerf {
+  attempted: number
+  correct: number
+}
+
+export interface OnboardingStep2Data {
+  reading_writing: {
+    informationIdeas: CategoryPerf
+    craftStructure: CategoryPerf
+    expressionIdeas: CategoryPerf
+    standardEnglish: CategoryPerf
+  }
+  math: {
+    algebra: CategoryPerf
+    advancedMath: CategoryPerf
+    problemSolving: CategoryPerf
+    geometry: CategoryPerf
+  }
+}
+
+export interface DomainStat {
+  key: string
+  label: string
+  cbDomain: string
+  subject: 'math' | 'reading_writing'
+  attempted: number
+  correct: number
+  accuracy: number // 0-100
+  level: 'weak' | 'moderate' | 'strong'
+}
+
+export interface OnboardingAnalysis {
+  domains: DomainStat[]
+  weakDomains: DomainStat[]
+  strongDomains: DomainStat[]
+  totalAttempted: number
+  totalCorrect: number
+  overallAccuracy: number
+  scoreGap: number
+  studyDays: number
+  estimatedImprovement: number
+}
+
+export interface AIOnboardingRec {
+  message: string
+  priorityTopics: Array<{
+    domain: string
+    subject: string
+    reason: string
+    weeklyGoal: string
+    cbFilters: {
+      domain: string
+      skill?: string
+      difficulty: 'easy' | 'medium' | 'hard'
+    }
+  }>
+  studyTips: string[]
+  estimatedTimelineWeeks: number
+  weeklyPlanSummary: string
+}

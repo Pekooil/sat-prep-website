@@ -13,6 +13,8 @@ export interface Database {
           current_score: number | null
           test_date: string | null
           study_hours_per_week: number | null
+          daily_study_minutes: number | null
+          has_completed_onboarding: boolean
           created_at: string
           updated_at: string
         }
@@ -24,6 +26,8 @@ export interface Database {
           current_score?: number | null
           test_date?: string | null
           study_hours_per_week?: number | null
+          daily_study_minutes?: number | null
+          has_completed_onboarding?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -34,6 +38,8 @@ export interface Database {
           current_score?: number | null
           test_date?: string | null
           study_hours_per_week?: number | null
+          daily_study_minutes?: number | null
+          has_completed_onboarding?: boolean
           updated_at?: string
         }
         Relationships: []

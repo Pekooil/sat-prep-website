@@ -10,9 +10,15 @@ CREATE TABLE IF NOT EXISTS users (
   current_score INTEGER,
   test_date DATE,
   study_hours_per_week INTEGER DEFAULT 10,
+  daily_study_minutes INTEGER DEFAULT 60,
+  has_completed_onboarding BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migration: add columns if table already exists
+ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_study_minutes INTEGER DEFAULT 60;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS has_completed_onboarding BOOLEAN DEFAULT FALSE;
 
 -- diagnostic_tests
 CREATE TABLE IF NOT EXISTS diagnostic_tests (
