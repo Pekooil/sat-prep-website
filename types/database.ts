@@ -125,6 +125,12 @@ export interface Database {
           category: string | null
           is_completed: boolean
           college_board_filters: Json | null
+          priority_score: number | null
+          mastery_target: number | null
+          estimated_score_impact: number | null
+          replanning_weight: number | null
+          /** True once a task is completed — the Adaptive Replanner must not modify locked rows. */
+          replan_locked: boolean
           created_at: string
           updated_at: string
         }
@@ -141,6 +147,11 @@ export interface Database {
           category?: string | null
           is_completed?: boolean
           college_board_filters?: Json | null
+          priority_score?: number | null
+          mastery_target?: number | null
+          estimated_score_impact?: number | null
+          replanning_weight?: number | null
+          replan_locked?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -154,6 +165,11 @@ export interface Database {
           category?: string | null
           is_completed?: boolean
           college_board_filters?: Json | null
+          priority_score?: number | null
+          mastery_target?: number | null
+          estimated_score_impact?: number | null
+          replanning_weight?: number | null
+          replan_locked?: boolean
           updated_at?: string
         }
         Relationships: []

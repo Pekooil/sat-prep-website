@@ -143,6 +143,7 @@ function buildStudyBlock(
   weekNum: number,
   totalWeeks: number,
   domainStudyCount: number,
+  maxPriorityScore: number,
 ): StudyBlock {
   // Ramp question count: 80 % in week 1 → 120 % in the final week
   const rampFactor = 0.80 + (weekNum / totalWeeks) * 0.40
@@ -156,6 +157,10 @@ function buildStudyBlock(
     advanced:   `${questionCount} ${difficulty} ${rd.entry.label} questions under timed conditions. Target ${rd.targetAccuracy}% accuracy. Review every error immediately after the set.`,
     strategy:   `Timed ${rd.entry.label} set — ${questionCount} Hard questions. Simulate test conditions. Goal: ${rd.targetAccuracy}% accuracy. Log and mark mastered errors afterwards.`,
   }
+
+  const replanningWeight = maxPriorityScore > 0
+    ? Math.round((rd.priorityScore / maxPriorityScore) * 100) / 100
+    : 0
 
   return {
     subject: rd.entry.subject,
@@ -171,6 +176,10 @@ function buildStudyBlock(
       difficulty,
     },
     description: descriptions[phase],
+    priorityScore:        rd.priorityScore,
+    masteryTarget:        rd.targetAccuracy,
+    estimatedScoreImpact: rd.potentialPoints,
+    replanningWeight,
   }
 }
 
@@ -178,11 +187,15 @@ function buildReviewBlocks(
   domainsStudiedThisWeek: RankedDomain[],
   phase: Phase,
   durationMinutes: number,
+  maxPriorityScore: number,
 ): ReviewBlock[] {
   const minutesPerDomain = Math.floor(durationMinutes / Math.max(domainsStudiedThisWeek.length, 1))
   return domainsStudiedThisWeek.map(rd => {
     const difficulty = difficultyForSession(phase, rd.currentAccuracy)
     const skill = primarySkill(rd.entry, difficulty)
+    const replanningWeight = maxPriorityScore > 0
+      ? Math.round((rd.priorityScore / maxPriorityScore) * 100) / 100
+      : 0
     return {
       subject: rd.entry.subject,
       domainKey: rd.entry.key,
@@ -192,6 +205,10 @@ function buildReviewBlocks(
       difficulty,
       cbFilters: { domain: rd.entry.cbDomain, skill, difficulty },
       description: `Review ${REVIEW_QUESTIONS_PER_DOMAIN} ${difficulty} ${rd.entry.label} questions. Focus on error types from this week's sessions. Update mastery status in Error Log.`,
+      priorityScore:        rd.priorityScore,
+      masteryTarget:        rd.targetAccuracy,
+      estimatedScoreImpact: rd.potentialPoints,
+      replanningWeight,
     }
   })
 }
@@ -204,6 +221,12 @@ function buildPracticeTestBlock(testNumber: number): PracticeTestBlock {
     description:
       `Full-length Digital SAT simulation — ${PRACTICE_TEST_QUESTIONS} questions (44 Math + 54 Reading & Writing) under strict timed conditions. ` +
       `Use an official College Board Bluebook practice test. After finishing, log every error by domain in your Error Log before reviewing explanations.`,
+    // Practice tests have fixed high priority — they are diagnostic milestones,
+    // not domain-specific, so score impact is sentinel 0 (not additive with domain gains).
+    priorityScore:        9999,
+    masteryTarget:        0,
+    estimatedScoreImpact: 0,
+    replanningWeight:     0.9,
   }
 }
 
@@ -223,6 +246,7 @@ export function buildSchedule(
   const totalWeeks = Math.ceil(totalDays / 7)
   const practiceTestWeeks = practiceTestWeekSet(totalWeeks)
   const baseQuestions = dailyQuestionTarget(input.dailyStudyMinutes)
+  const maxPriorityScore = ranked[0]?.priorityScore ?? 1
 
   // Track per-domain study count for skill progression
   const domainStudyCounters = new Map<string, number>(
@@ -292,7 +316,7 @@ export function buildSchedule(
         continue
       }
       const reviewDuration = Math.min(input.dailyStudyMinutes, uniqueDomains.length * 12)
-      const blocks = buildReviewBlocks(uniqueDomains, phase, reviewDuration)
+      const blocks = buildReviewBlocks(uniqueDomains, phase, reviewDuration, maxPriorityScore)
       schedule.push({
         date, dayOfWeek, dayType, weekNumber: weekNum, phase,
         blocks,
@@ -316,6 +340,7 @@ export function buildSchedule(
       baseQuestions,
       weekNum, totalWeeks,
       studyCount,
+      maxPriorityScore,
     )
     domainStudyCounters.set(rd.entry.key, studyCount + 1)
     weekDomains.push(rd)

@@ -33,7 +33,6 @@ function studyBlockToTask(
   planId: string,
 ): TaskInsertRow {
   const subject = block.subject
-  const sectionLabel = subject === 'math' ? 'Math' : 'Reading & Writing'
 
   return {
     user_id:       userId,
@@ -45,6 +44,11 @@ function studyBlockToTask(
     subject,
     category:      block.domainLabel,
     is_completed:  false,
+    replan_locked: false,
+    priority_score:         block.priorityScore,
+    mastery_target:         block.masteryTarget,
+    estimated_score_impact: block.estimatedScoreImpact,
+    replanning_weight:      block.replanningWeight,
     college_board_filters: {
       domain:     block.cbFilters.domain,
       skill:      block.cbFilters.skill,
@@ -69,6 +73,11 @@ function reviewBlockToTask(
     subject:       block.subject,
     category:      block.domainLabel,
     is_completed:  false,
+    replan_locked: false,
+    priority_score:         block.priorityScore,
+    mastery_target:         block.masteryTarget,
+    estimated_score_impact: block.estimatedScoreImpact,
+    replanning_weight:      block.replanningWeight,
     college_board_filters: {
       domain:     block.cbFilters.domain,
       skill:      block.cbFilters.skill,
@@ -93,6 +102,11 @@ function practiceTestToTask(
     subject:       'both',
     category:      'Full Practice Test',
     is_completed:  false,
+    replan_locked: false,
+    priority_score:         block.priorityScore,
+    mastery_target:         block.masteryTarget,
+    estimated_score_impact: block.estimatedScoreImpact,
+    replanning_weight:      block.replanningWeight,
     college_board_filters: {
       domain:     'Full-Length Practice Test',
       skill:      'Complete test simulation (Bluebook)',

@@ -73,7 +73,34 @@ export interface CollegeBoardFilter {
   difficulty: Difficulty
 }
 
-export interface StudyBlock {
+// ─── Adaptive Replanner Metadata ─────────────────────────────────────────────
+
+export interface ReplannerMeta {
+  /**
+   * Raw priority score for this assignment — higher means more urgent.
+   * For study/review blocks: gap × leverage from the domain ranking.
+   * For practice tests: fixed sentinel value (9999).
+   */
+  priorityScore: number
+  /**
+   * Accuracy percentage (0–100) the student must reach on this domain
+   * to hit their target score. Drives the replanner's stop condition.
+   */
+  masteryTarget: number
+  /**
+   * Estimated SAT-point gain attributable to this assignment.
+   * Based on the domain's potentialPoints from the scoring service.
+   */
+  estimatedScoreImpact: number
+  /**
+   * Normalized 0–1 weight used by the Adaptive Replanner to decide how
+   * aggressively to reschedule this block vs. others.
+   * Computed as priorityScore / maxPriorityScore across all blocks in the plan.
+   */
+  replanningWeight: number
+}
+
+export interface StudyBlock extends ReplannerMeta {
   subject: Subject
   domainKey: string
   domainLabel: string
@@ -86,7 +113,7 @@ export interface StudyBlock {
   description: string
 }
 
-export interface ReviewBlock {
+export interface ReviewBlock extends ReplannerMeta {
   subject: Subject
   domainKey: string
   domainLabel: string
@@ -97,7 +124,7 @@ export interface ReviewBlock {
   description: string
 }
 
-export interface PracticeTestBlock {
+export interface PracticeTestBlock extends ReplannerMeta {
   durationMinutes: 180
   questionCount: 98  // 44 Math + 54 R&W
   description: string

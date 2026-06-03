@@ -46,7 +46,13 @@ export async function toggleTaskComplete(id: string, is_completed: boolean) {
 
   const { error } = await supabase
     .from('calendar_tasks')
-    .update({ is_completed, updated_at: new Date().toISOString() })
+    .update({
+      is_completed,
+      // Lock completed tasks so the Adaptive Replanner cannot modify historical records.
+      // Unlocking (un-completing) also removes the lock so it can be rescheduled again.
+      replan_locked: is_completed,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', id)
     .eq('user_id', user.id)
 

@@ -130,8 +130,18 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Migration: Adaptive Replanner columns on calendar_tasks
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS priority_score         NUMERIC  DEFAULT 0;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS mastery_target         INTEGER  DEFAULT 0;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS estimated_score_impact NUMERIC  DEFAULT 0;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replanning_weight      NUMERIC  DEFAULT 0;
+-- replan_locked: set TRUE when a task is completed; the Adaptive Replanner must skip locked rows.
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replan_locked          BOOLEAN  DEFAULT FALSE;
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_calendar_tasks_user_date ON calendar_tasks(user_id, task_date);
+-- Adaptive Replanner query: future unlocked tasks ordered by priority
+CREATE INDEX IF NOT EXISTS idx_calendar_tasks_replanner ON calendar_tasks(user_id, task_date, replanning_weight) WHERE NOT replan_locked;
 CREATE INDEX IF NOT EXISTS idx_error_logs_user_subject ON error_logs(user_id, subject);
 CREATE INDEX IF NOT EXISTS idx_score_history_user_date ON score_history(user_id, test_date);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read);
