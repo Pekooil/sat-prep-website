@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { generateRecommendations } from '@/lib/sat-planner'
 import { runAdaptiveReplanner } from '@/lib/adaptive-replanner'
+import { StudyPlanEngine } from '@/lib/study-plan-engine'
+import type { TopicPerformance } from '@/lib/study-plan-engine/types'
 import type {
   OnboardingStep1Data,
   OnboardingStep2Data,
@@ -116,27 +118,33 @@ export async function saveOnboarding(
   // Diagnostic data entered → seed initial replanning pass (runs after plan is saved below)
   // Deferred to after the study plan insert so the active plan exists to query against.
 
-  // 4. Study plan (from deterministic recs, or generate fresh ones)
-  const planRecs = recs ?? generateRecommendations(
-    {
-      currentScore: step1.currentScore,
-      targetScore: step1.targetScore,
-      testDate: step1.testDate,
-      dailyStudyMinutes: step1.dailyStudyMinutes,
-    },
-    analysis,
-  )
+  // 4. Study plan — run the engine so calendar_tasks rows are created alongside the plan
+  const topicPerformance: TopicPerformance[] = DOMAIN_MAP
+    .map(d => {
+      const { attempted, correct } = d.get()
+      if (attempted <= 0) return null
+      const clamped = Math.min(correct, attempted)
+      return {
+        domainKey: d.key,
+        attempted,
+        correct: clamped,
+        accuracy: Math.round((clamped / attempted) * 100),
+      }
+    })
+    .filter((t): t is TopicPerformance => t !== null)
 
-  await supabase.from('study_plans').insert({
-    user_id: user.id,
-    title: `${analysis.studyDays}-Day SAT Study Plan`,
-    description: planRecs.weeklyPlanSummary,
-    start_date: today,
-    end_date: step1.testDate,
-    is_active: true,
-    ai_generated: false,
-    plan_data: { recs: planRecs, analysis, generatedAt: new Date().toISOString() },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const engine = new StudyPlanEngine(supabase as any)
+  const planResult = await engine.generate({
+    userId: user.id,
+    currentScore: step1.currentScore,
+    targetScore: step1.targetScore,
+    testDate: step1.testDate,
+    dailyStudyMinutes: step1.dailyStudyMinutes,
+    topicPerformance,
   })
+
+  if (planResult.error) return { error: planResult.error }
 
   // 5. Baseline score history
   const mathEstimate = Math.round(step1.currentScore * 0.5)

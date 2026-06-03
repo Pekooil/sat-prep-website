@@ -12,17 +12,29 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { createQuestionSession } from '@/actions/question-sessions'
+import type { MistakeType, MissedAnalysisEntry, SessionMetrics } from '@/actions/question-sessions'
 import { toggleTaskComplete } from '@/actions/calendar'
 import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
+import { DOMAIN_CATALOG } from '@/lib/study-plan-engine/domain-catalog'
 import type { CalendarTask } from '@/types'
 import type { CollegeBoardFilter } from '@/types'
 import type { DomainChange } from '@/lib/adaptive-replanner/types'
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const MISTAKE_TYPE_OPTIONS: { value: MistakeType; label: string }[] = [
+  { value: 'concept_gap',      label: 'Concept Gap'      },
+  { value: 'careless_error',   label: 'Careless Error'   },
+  { value: 'timing_issue',     label: 'Timing Issue'     },
+  { value: 'misread_question', label: 'Misread Question' },
+  { value: 'strategy_error',   label: 'Strategy Error'   },
+]
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Letter = 'A' | 'B' | 'C' | 'D'
-type WorkflowPhase = 'idle' | 'active' | 'review' | 'results' | 'plan_updated'
+type WorkflowPhase = 'idle' | 'active' | 'review' | 'results' | 'missed_analysis' | 'plan_updated'
 
 interface QuestionRow {
   yourAnswer: Letter | null
@@ -41,7 +53,7 @@ interface SessionWorkflowDialogProps {
 const SECS_PER_Q: Record<string, number> = {
   math:             95,
   reading_writing:  71,
-  both:             71,   // fallback — shouldn't reach session workflow for 'both'
+  both:             71,
 }
 
 function parseQuestionCount(title: string): number {
@@ -51,7 +63,7 @@ function parseQuestionCount(title: string): number {
 
 function allocatedSeconds(count: number, subject: string): number {
   const raw = count * (SECS_PER_Q[subject] ?? 71)
-  return Math.ceil(raw / 60) * 60   // round up to full minute
+  return Math.ceil(raw / 60) * 60
 }
 
 function formatClock(secs: number): string {
@@ -124,12 +136,20 @@ export function SessionWorkflowDialog({
   const allocSecs      = React.useMemo(() => allocatedSeconds(questionCount, task.subject), [questionCount, task.subject])
   const filters        = task.college_board_filters as CollegeBoardFilter | null
 
+  // Skills for the task's domain — used in the missed-analysis subtopic selector
+  const domainSkills = React.useMemo(() => {
+    const domain = DOMAIN_CATALOG.find(d => d.label === task.category)
+    return domain?.skills.map(s => s.label) ?? []
+  }, [task.category])
+
   // ── State ──────────────────────────────────────────────────────────────────
-  const [phase, setPhase]       = React.useState<WorkflowPhase>('idle')
-  const [rows, setRows]         = React.useState<QuestionRow[]>([])
-  const [timeElapsed, setElapsed] = React.useState(0)
-  const [timedOut, setTimedOut] = React.useState(false)
-  const [saving, setSaving]     = React.useState(false)
+  const [phase, setPhase]             = React.useState<WorkflowPhase>('idle')
+  const [rows, setRows]               = React.useState<QuestionRow[]>([])
+  const [timeElapsed, setElapsed]     = React.useState(0)
+  const [timedOut, setTimedOut]       = React.useState(false)
+  const [saving, setSaving]           = React.useState(false)
+  const [missedRows, setMissedRows]   = React.useState<MissedAnalysisEntry[]>([])
+  const [sessionMetrics, setSessionMetrics] = React.useState<SessionMetrics | null>(null)
   const [replanResult, setReplanResult] = React.useState<{
     tasksUpdated: number
     taskChanges: DomainChange[]
@@ -156,7 +176,7 @@ export function SessionWorkflowDialog({
     }
   }, [timeElapsed, allocSecs, phase, timedOut, toast])
 
-  // Reset state when dialog opens/closes
+  // Reset state when dialog closes
   React.useEffect(() => {
     if (!open) {
       setPhase('idle')
@@ -165,6 +185,8 @@ export function SessionWorkflowDialog({
       setTimedOut(false)
       setSaving(false)
       setReplanResult(null)
+      setMissedRows([])
+      setSessionMetrics(null)
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
   }, [open])
@@ -186,7 +208,33 @@ export function SessionWorkflowDialog({
     setPhase('results')
   }
 
-  async function handleSave() {
+  async function handleContinueToMissedAnalysis() {
+    const missed = rows
+      .map((row, i) => ({ row, i }))
+      .filter(({ row }) =>
+        row.yourAnswer !== null &&
+        row.correctAnswer !== null &&
+        row.yourAnswer !== row.correctAnswer
+      )
+
+    if (missed.length === 0) {
+      // Perfect score — skip analysis and save immediately
+      await handleSave([])
+      return
+    }
+
+    const prefilledSubtopic = (filters?.skill as string | undefined) ?? null
+    setMissedRows(
+      missed.map(({ i }) => ({
+        questionIndex: i,
+        subtopic:     prefilledSubtopic,
+        mistakeType:  null,
+      }))
+    )
+    setPhase('missed_analysis')
+  }
+
+  async function handleSave(analysisRows: MissedAnalysisEntry[]) {
     setSaving(true)
     const attempted = rows.filter(r => r.yourAnswer !== null).length
     const correct   = rows.filter(r => r.yourAnswer !== null && r.yourAnswer === r.correctAnswer).length
@@ -198,22 +246,26 @@ export function SessionWorkflowDialog({
         correct: r.correctAnswer,
         right:   r.yourAnswer !== null && r.yourAnswer === r.correctAnswer,
       })),
-      totalSeconds: timeElapsed,
+      totalSeconds:     timeElapsed,
       allocatedSeconds: allocSecs,
+      missedAnalysis:   analysisRows.filter(ma => ma.mistakeType !== null),
     })
 
-    const result = await createQuestionSession({
-      calendar_task_id:    task.id,
-      session_date:        task.task_date,
-      subject:             task.subject === 'both' ? 'math' : task.subject,
-      category:            task.category ?? '',
-      subcategory:         filters?.skill ?? null,
-      questions_attempted: attempted,
-      questions_correct:   correct,
-      time_spent_minutes:  Math.round(timeElapsed / 60) || 1,
-      college_board_filters: task.college_board_filters,
-      notes: notesPayload,
-    })
+    const result = await createQuestionSession(
+      {
+        calendar_task_id:      task.id,
+        session_date:          task.task_date,
+        subject:               task.subject === 'both' ? 'math' : task.subject,
+        category:              task.category ?? '',
+        subcategory:           (filters?.skill as string | undefined) ?? null,
+        questions_attempted:   attempted,
+        questions_correct:     correct,
+        time_spent_minutes:    Math.round(timeElapsed / 60) || 1,
+        college_board_filters: task.college_board_filters,
+        notes:                 notesPayload,
+      },
+      analysisRows,
+    )
 
     setSaving(false)
 
@@ -224,9 +276,8 @@ export function SessionWorkflowDialog({
 
     await toggleTaskComplete(task.id, true)
 
-    if (result.replanner) {
-      setReplanResult(result.replanner)
-    }
+    if (result.replanner) setReplanResult(result.replanner)
+    if (result.metrics)   setSessionMetrics(result.metrics)
     setPhase('plan_updated')
   }
 
@@ -238,11 +289,19 @@ export function SessionWorkflowDialog({
     setRows(prev => prev.map((r, i) => i === idx ? { ...r, correctAnswer: val } : r))
   }
 
-  // ── Derived stats (used in results + plan_updated phases) ─────────────────
+  function updateMissedRow(questionIndex: number, patch: Partial<MissedAnalysisEntry>) {
+    setMissedRows(prev => prev.map(r => r.questionIndex === questionIndex ? { ...r, ...patch } : r))
+  }
+
+  // ── Derived stats ──────────────────────────────────────────────────────────
   const attempted    = rows.filter(r => r.yourAnswer !== null).length
   const correct      = rows.filter(r => r.yourAnswer !== null && r.yourAnswer === r.correctAnswer).length
   const accuracy     = attempted > 0 ? Math.round((correct / attempted) * 100) : 0
-  const timeLeft     = allocSecs - timeElapsed  // positive = early, negative = overtime
+  const timeLeft     = allocSecs - timeElapsed
+  const missedCount  = rows.filter(r =>
+    r.yourAnswer !== null && r.correctAnswer !== null && r.yourAnswer !== r.correctAnswer
+  ).length
+  const taggedCount  = missedRows.filter(r => r.mistakeType !== null).length
 
   // ─────────────────────────────────────────────────────────────────────────
   // RENDER
@@ -252,7 +311,7 @@ export function SessionWorkflowDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
         'flex flex-col gap-0 p-0 overflow-hidden',
-        phase === 'active' || phase === 'review' || phase === 'results'
+        phase === 'active' || phase === 'review' || phase === 'results' || phase === 'missed_analysis'
           ? 'sm:max-w-2xl max-h-[90vh]'
           : 'sm:max-w-md'
       )}>
@@ -308,7 +367,6 @@ export function SessionWorkflowDialog({
         {/* ── ACTIVE ───────────────────────────────────────────────────────── */}
         {phase === 'active' && (
           <>
-            {/* Sticky header with timer */}
             <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--border)] bg-[var(--background)] sticky top-0 z-10">
               <div>
                 <p className="text-sm font-medium">{task.title}</p>
@@ -317,7 +375,6 @@ export function SessionWorkflowDialog({
               <TimerDisplay elapsed={timeElapsed} allocated={allocSecs} />
             </div>
 
-            {/* Scrollable question table */}
             <div className="flex-1 overflow-y-auto px-6 py-4">
               <table className="w-full text-sm">
                 <thead>
@@ -343,7 +400,6 @@ export function SessionWorkflowDialog({
               </table>
             </div>
 
-            {/* Sticky footer */}
             <div className="px-6 py-3 border-t border-[var(--border)] bg-[var(--background)] flex items-center justify-between">
               <p className="text-xs text-[var(--muted-foreground)]">
                 {rows.filter(r => r.yourAnswer !== null).length}/{questionCount} answered
@@ -421,7 +477,6 @@ export function SessionWorkflowDialog({
               <DialogTitle>Session Results</DialogTitle>
             </DialogHeader>
 
-            {/* Score summary */}
             <div className="px-6 pb-4 space-y-4">
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/30 p-3">
@@ -457,7 +512,6 @@ export function SessionWorkflowDialog({
                 </div>
               </div>
 
-              {/* Accuracy progress bar */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
                   <span className="text-[var(--muted-foreground)]">Accuracy</span>
@@ -472,7 +526,6 @@ export function SessionWorkflowDialog({
               </div>
             </div>
 
-            {/* Per-question table */}
             <div className="flex-1 overflow-y-auto px-6 pb-2">
               <table className="w-full text-sm">
                 <thead>
@@ -512,7 +565,112 @@ export function SessionWorkflowDialog({
               <p className="text-xs text-[var(--muted-foreground)]">
                 Total time: <span className="font-mono font-medium">{formatClock(timeElapsed)}</span>
               </p>
-              <Button onClick={handleSave} disabled={saving}>
+              <Button onClick={handleContinueToMissedAnalysis} disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {missedCount > 0 ? 'Continue' : 'Save & Complete Task'}
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* ── MISSED ANALYSIS ──────────────────────────────────────────────── */}
+        {phase === 'missed_analysis' && (
+          <>
+            <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--border)]">
+              <div>
+                <p className="text-sm font-medium">Review Missed Questions</p>
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  {missedRows.length} missed · {task.category}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className={cn(
+                  'text-sm font-bold',
+                  accuracy >= 90 ? 'text-emerald-600 dark:text-emerald-400' : accuracy >= 70 ? 'text-amber-500' : 'text-red-500'
+                )}>{accuracy}%</p>
+                <p className="text-[10px] text-[var(--muted-foreground)]">accuracy</p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <p className="text-xs text-[var(--muted-foreground)] mb-3">
+                Tag each missed question with a subtopic and mistake type to auto-populate your Error Log.
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[500px]">
+                  <thead>
+                    <tr className="border-b border-[var(--border)]">
+                      <th className="text-left py-2 text-xs text-[var(--muted-foreground)] font-medium w-10">#</th>
+                      <th className="text-left py-2 text-xs text-[var(--muted-foreground)] font-medium w-10">Yours</th>
+                      <th className="text-left py-2 text-xs text-[var(--muted-foreground)] font-medium w-14">Correct</th>
+                      <th className="text-left py-2 text-xs text-[var(--muted-foreground)] font-medium">Subtopic</th>
+                      <th className="text-left py-2 text-xs text-[var(--muted-foreground)] font-medium">Mistake Type</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {missedRows.map(mr => (
+                      <tr key={mr.questionIndex} className="border-b border-[var(--border)]/50">
+                        <td className="py-2 text-xs text-[var(--muted-foreground)] font-mono">Q{mr.questionIndex + 1}</td>
+                        <td className="py-2">
+                          <span className="inline-flex h-7 w-8 items-center justify-center rounded border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 text-xs font-medium text-red-600 dark:text-red-400">
+                            {rows[mr.questionIndex].yourAnswer}
+                          </span>
+                        </td>
+                        <td className="py-2">
+                          <span className="inline-flex h-7 w-8 items-center justify-center rounded border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            {rows[mr.questionIndex].correctAnswer}
+                          </span>
+                        </td>
+                        <td className="py-2 pr-2">
+                          <Select
+                            value={mr.subtopic ?? '__none__'}
+                            onValueChange={v => updateMissedRow(mr.questionIndex, { subtopic: v === '__none__' ? null : v })}
+                          >
+                            <SelectTrigger className="h-8 text-xs w-[175px]">
+                              <SelectValue placeholder="— subtopic —" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__" className="text-xs text-[var(--muted-foreground)]">— subtopic —</SelectItem>
+                              {domainSkills.map(skill => (
+                                <SelectItem key={skill} value={skill} className="text-xs">{skill}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="py-2">
+                          <Select
+                            value={mr.mistakeType ?? '__none__'}
+                            onValueChange={v => updateMissedRow(mr.questionIndex, { mistakeType: v === '__none__' ? null : v as MistakeType })}
+                          >
+                            <SelectTrigger className="h-8 text-xs w-[155px]">
+                              <SelectValue placeholder="— mistake type —" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__" className="text-xs text-[var(--muted-foreground)]">— mistake type —</SelectItem>
+                              {MISTAKE_TYPE_OPTIONS.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {taggedCount > 0 && (
+                <p className="text-xs text-[var(--muted-foreground)] mt-3">
+                  {taggedCount} question{taggedCount !== 1 ? 's' : ''} tagged — will be added to Error Log automatically.
+                </p>
+              )}
+            </div>
+
+            <div className="px-6 py-3 border-t border-[var(--border)] flex justify-between items-center">
+              <Button variant="outline" onClick={() => handleSave([])} disabled={saving}>
+                Skip Analysis
+              </Button>
+              <Button onClick={() => handleSave(missedRows)} disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save & Complete Task
               </Button>
@@ -547,6 +705,45 @@ export function SessionWorkflowDialog({
                   </div>
                 ) : null}
               </div>
+
+              {/* Session metrics: improvement + mastery */}
+              {sessionMetrics && (
+                <div className={cn(
+                  'grid gap-3',
+                  sessionMetrics.improvementPct !== null ? 'grid-cols-2' : 'grid-cols-1'
+                )}>
+                  {sessionMetrics.improvementPct !== null && (
+                    <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 text-center">
+                      <p className="text-xs text-[var(--muted-foreground)]">vs. Prior Sessions</p>
+                      <p className={cn(
+                        'text-xl font-bold',
+                        sessionMetrics.improvementPct >= 0
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-red-500 dark:text-red-400'
+                      )}>
+                        {sessionMetrics.improvementPct > 0 ? '+' : ''}{sessionMetrics.improvementPct}%
+                      </p>
+                      <p className="text-[10px] text-[var(--muted-foreground)]">improvement</p>
+                    </div>
+                  )}
+                  <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 text-center">
+                    <p className="text-xs text-[var(--muted-foreground)]">Topic Mastery</p>
+                    <p className="text-xl font-bold">{sessionMetrics.topicMastery}%</p>
+                    <Progress value={sessionMetrics.topicMastery} className="h-1.5 mt-1" />
+                    <p className="text-[10px] text-[var(--muted-foreground)] mt-1">5-session rolling avg</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Error log auto-entry notice */}
+              {taggedCount > 0 && (
+                <div className="flex items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-3">
+                  <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
+                  <p className="text-xs">
+                    {taggedCount} missed question{taggedCount !== 1 ? 's' : ''} logged to Error Log with mistake types
+                  </p>
+                </div>
+              )}
 
               {/* Replanner summary */}
               {replanResult && replanResult.tasksUpdated > 0 ? (

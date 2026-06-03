@@ -55,7 +55,7 @@ All dashboard routes are protected by middleware that checks the Supabase sessio
 - **Onboarding wizard** — 4 steps: basics, domain performance entry, diagnostic analysis, deterministic recommendations; saves user profile, diagnostic test, question sessions, baseline score, welcome notification; triggers initial replanning pass on completion
 - **Study Plan Engine** — deterministic day-by-day schedule generator (`lib/study-plan-engine/`); produces one `study_plans` row and per-day `calendar_tasks` rows with College Board QB filters and full replanner metadata
 - **Adaptive Replanner** — `lib/adaptive-replanner/`; triggered by question session completion, error log creation, onboarding, and practice/official test score submission; re-ranks all 8 domains, updates future unlocked tasks (difficulty, question count, priority scores), returns per-domain `DomainChange[]` and `predictedScore`; writes audit log
-- **Session Workflow** — `SessionWorkflowDialog` on the calendar page: countdown timer (71s/q for R&W, 95s/q for Math, rounded to nearest minute), per-question A/B/C/D answer entry, correct-answer entry after submission, results summary (score, accuracy vs 90% target, time used/overtime), plan-updated screen with specific domain changes and potential score
+- **Session Workflow** — `SessionWorkflowDialog` on the calendar page: 6-phase UX (idle → active → review → results → missed_analysis → plan_updated); countdown timer (71s/q R&W, 95s/q Math), per-question A/B/C/D answer entry, correct-answer review, results summary; **missed-analysis phase** lets users tag each wrong answer with a subtopic and mistake type (Concept Gap / Careless Error / Timing Issue / Misread Question / Strategy Error) — skippable, auto-creates `error_log` entries; plan-updated screen shows improvement %, topic mastery (5-session rolling avg), replanner domain changes, and potential score
 - **Calendar** — three views (month/week/agenda) with view switcher; task cards color-coded by domain category; clicking any task opens a right-side drawer showing QB filters, step-by-step QB instructions, and expected completion time; drag-and-drop rescheduling updates Supabase immediately; replanner metadata displayed in drawer; practice test completion opens score dialog; session workflow accessible from drawer footer
 - **Error Log** — create errors, mark mastered, review count tracking; triggers replanning on creation
 - **Data / Analytics** — score timeline, accuracy charts, category stats, session summary cards; practice/official/full_length test score submission triggers replanning
@@ -109,7 +109,7 @@ components/
     task-drawer.tsx                Right-side slide-over: QB filters, QB instructions,
                                    expected time, replanner stats, session launch buttons
     task-colors.ts                 Color map for all 8 SAT domains + Full Practice Test
-    session-workflow-dialog.tsx    5-phase session UX (DO NOT MODIFY)
+    session-workflow-dialog.tsx    6-phase session UX (idle/active/review/results/missed_analysis/plan_updated)
     practice-test-score-dialog.tsx Score entry for practice test tasks (DO NOT MODIFY)
     task-form-dialog.tsx           Manual task creation form
     day-tasks-panel.tsx            Legacy sidebar — not rendered in current calendar; can be deleted

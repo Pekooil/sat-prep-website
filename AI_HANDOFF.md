@@ -23,7 +23,7 @@ actions/
                             rescheduleCalendarTask (drag-and-drop: updates task_date only)
   error-logs.ts             CRUD; createErrorLog triggers replanning
   onboarding.ts             saveOnboarding; triggers initial replanning after diagnostic insert
-  question-sessions.ts      createQuestionSession; triggers replanning; returns DomainChange[] + predictedScore
+  question-sessions.ts      createQuestionSession(data, missedAnalysis?); triggers replanning; auto-creates error_log entries for tagged missed questions; returns DomainChange[] + predictedScore + SessionMetrics (accuracy, improvementPct, topicMastery)
   score-history.ts          addScoreEntry; triggers replanning for practice/official/full_length
   study-plan.ts             generatePlanFromProfile, generatePlanFromForm
   ai-planner.ts             generateAIStudyPlan (Home page trigger — calls generatePlanFromForm)
@@ -46,7 +46,7 @@ components/
     task-drawer.tsx               Right-side slide-over: QB filters, QB instructions,
                                   expected time, replanner stats, session launch buttons
     task-colors.ts                Shared color map for all 8 SAT domains + Full Practice Test
-    session-workflow-dialog.tsx   5-phase session UX (DO NOT MODIFY — answering system)
+    session-workflow-dialog.tsx   6-phase session UX: idle → active → review → results → missed_analysis → plan_updated; exports MistakeType + MissedAnalysisEntry types via actions/question-sessions.ts
     practice-test-score-dialog.tsx Score entry for practice test tasks (DO NOT MODIFY)
     task-form-dialog.tsx          Manual task creation form
     day-tasks-panel.tsx           Legacy sidebar panel — still exists but NOT rendered in the
@@ -210,9 +210,15 @@ HTML5 drag API — no extra library. Task cards are `draggable={!task.is_complet
 
 `components/calendar/task-colors.ts` is the single source of truth. Each of the 8 SAT domains + "Full Practice Test" maps to `{ bg, border, text, dot, leftBar }` Tailwind class strings. If new domains are added to `DOMAIN_CATALOG`, add a matching entry here.
 
-### Session Dialogs (DO NOT MODIFY)
+### Session Dialogs
 
-`SessionWorkflowDialog` and `PracticeTestScoreDialog` are the answering system. They must not be changed. The calendar drawer and calendar client may _reference_ them (open/close, pass props) but must not alter their internal logic.
+**`SessionWorkflowDialog`** — 6-phase UX (idle / active / review / results / missed_analysis / plan_updated):
+- `missed_analysis` phase (new, session 3): shows every wrong answer; per-row selects for subtopic (from `DOMAIN_CATALOG` skills) and mistake type (`MistakeType`). Skip bypasses analysis. Auto-skipped when 0 missed questions.
+- `handleSave(analysisRows: MissedAnalysisEntry[])` calls `createQuestionSession(data, analysisRows)` — the action creates error_log entries for tagged questions and returns `SessionMetrics`.
+- `plan_updated` phase now shows: improvement % (vs prior sessions), topic mastery (5-session rolling avg), error-log notice if entries were auto-created.
+- `MistakeType` and `MissedAnalysisEntry` are exported from `actions/question-sessions.ts` and imported in the dialog.
+
+**`PracticeTestScoreDialog`** — do not modify. The calendar drawer references it via callback props only.
 
 ---
 
@@ -269,7 +275,7 @@ SELECT COUNT(*) FROM replan_audit_logs; -- must not error
 5. **Next.js 16 async params** — dynamic route segments must `await params` before use.
 6. **`replan_locked = true` tasks are immutable to the replanner.** Set by `toggleTaskComplete`; removed on un-complete.
 7. **Replanner never deletes or rebuilds.** Only UPDATEs. Manual tasks are always preserved.
-8. **`createQuestionSession` returns replanner details directly.** `SessionWorkflowDialog` uses the returned `taskChanges` and `predictedScore` to render the `plan_updated` phase — no second fetch needed.
+8. **`createQuestionSession` returns replanner details + session metrics directly.** `SessionWorkflowDialog` uses `taskChanges`, `predictedScore`, and the new `metrics` object (`accuracy`, `improvementPct`, `topicMastery`) to render the `plan_updated` phase — no second fetch needed. It also accepts a second `MissedAnalysisEntry[]` argument and auto-creates error_log rows for any entries with a non-null `mistakeType`.
 9. **Calendar drawer is purely informational.** Do not embed session/scoring logic in the drawer.
 10. **QB URL:** `https://satsuiteeducatorquestionbank.collegeboard.org/digital/search` — set in `lib/constants.ts` as `COLLEGE_BOARD_QB_URL`.
 11. **Tutorial progress** is stored in `localStorage` under key `'sat-planner-tutorial-progress'` as a `boolean[]` of length 7. The `TutorialClient` component handles hydration safety with a `hydrated` flag to avoid SSR mismatch.

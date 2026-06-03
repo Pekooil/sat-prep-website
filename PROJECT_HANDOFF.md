@@ -6,7 +6,7 @@ This document is updated at the end of every session. It records the current fea
 
 ## Last Updated
 
-2026-06-03 (session 2)
+2026-06-03 (session 3)
 
 ---
 
@@ -54,10 +54,12 @@ This document is updated at the end of every session. It records the current fea
 - **Drag-and-drop rescheduling** — HTML5 drag API; `rescheduleCalendarTask` server action updates Supabase immediately; toast confirmation on success
 - **Add Task** button opens `TaskFormDialog` for manual task creation
 
-### Session Workflow (`SessionWorkflowDialog`)
-- 5-phase UX: idle → active → review → results → plan_updated
+### Session Workflow (`SessionWorkflowDialog`) — updated session 3
+- **6-phase UX:** idle → active → review → results → missed_analysis → plan_updated
 - Countdown timer (71s/q R&W, 95s/q Math), per-question A/B/C/D entry, correct-answer entry, accuracy vs 90% target, overtime tracking
-- On save: inserts `question_sessions` → triggers replanning → shows domain changes + predicted score
+- **Missed-question analysis phase** (new): for each wrong answer, user selects a subtopic (domain skills from `DOMAIN_CATALOG`) and a mistake type (Concept Gap / Careless Error / Timing Issue / Misread Question / Strategy Error). Skippable with "Skip Analysis". If 0 missed questions, phase is auto-skipped.
+- On save: inserts `question_sessions` → auto-creates `error_logs` for tagged mistakes → triggers replanning → returns `SessionMetrics` (accuracy %, improvement % vs prior sessions, topic mastery rolling avg)
+- **Plan Updated phase** (enhanced): shows improvement % (green/red) and topic mastery progress bar in addition to the replanner domain-change list; shows notice if error logs were auto-created
 
 ### Error Log (`/error-log`)
 - Create, review, and master individual errors
