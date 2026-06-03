@@ -131,12 +131,28 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 -- Migration: Adaptive Replanner columns on calendar_tasks
-ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS priority_score         NUMERIC  DEFAULT 0;
-ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS mastery_target         INTEGER  DEFAULT 0;
-ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS estimated_score_impact NUMERIC  DEFAULT 0;
-ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replanning_weight      NUMERIC  DEFAULT 0;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS priority_score         NUMERIC    DEFAULT 0;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS mastery_target         INTEGER    DEFAULT 0;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS estimated_score_impact NUMERIC    DEFAULT 0;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replanning_weight      NUMERIC    DEFAULT 0;
 -- replan_locked: set TRUE when a task is completed; the Adaptive Replanner must skip locked rows.
-ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replan_locked          BOOLEAN  DEFAULT FALSE;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replan_locked          BOOLEAN    DEFAULT FALSE;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS last_replanned_at      TIMESTAMPTZ;
+
+-- replan_audit_logs: immutable record of every replanning run
+CREATE TABLE IF NOT EXISTS replan_audit_logs (
+  id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id          UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  triggered_by     TEXT        NOT NULL CHECK (triggered_by IN ('question_session','error_log','practice_test_score','manual')),
+  trigger_id       UUID,
+  tasks_updated    INTEGER     DEFAULT 0,
+  domains_reprioritized JSONB,
+  changes_summary  TEXT,
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_replan_audit_user ON replan_audit_logs(user_id, created_at DESC);
+ALTER TABLE replan_audit_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own replan logs" ON replan_audit_logs FOR ALL USING (auth.uid() = user_id);
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_calendar_tasks_user_date ON calendar_tasks(user_id, task_date);

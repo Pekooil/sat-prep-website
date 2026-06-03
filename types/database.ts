@@ -131,6 +131,7 @@ export interface Database {
           replanning_weight: number | null
           /** True once a task is completed — the Adaptive Replanner must not modify locked rows. */
           replan_locked: boolean
+          last_replanned_at: string | null
           created_at: string
           updated_at: string
         }
@@ -152,6 +153,7 @@ export interface Database {
           estimated_score_impact?: number | null
           replanning_weight?: number | null
           replan_locked?: boolean
+          last_replanned_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -170,6 +172,7 @@ export interface Database {
           estimated_score_impact?: number | null
           replanning_weight?: number | null
           replan_locked?: boolean
+          last_replanned_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -330,6 +333,30 @@ export interface Database {
         Update: {
           is_read?: boolean
         }
+        Relationships: []
+      }
+      replan_audit_logs: {
+        Row: {
+          id: string
+          user_id: string
+          triggered_by: 'question_session' | 'error_log' | 'practice_test_score' | 'manual'
+          trigger_id: string | null
+          tasks_updated: number
+          domains_reprioritized: Json | null
+          changes_summary: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          triggered_by: 'question_session' | 'error_log' | 'practice_test_score' | 'manual'
+          trigger_id?: string | null
+          tasks_updated?: number
+          domains_reprioritized?: Json | null
+          changes_summary?: string | null
+          created_at?: string
+        }
+        Update: Record<string, never>
         Relationships: []
       }
     }

@@ -16,9 +16,10 @@ A production web application that helps students prepare for the Digital SAT by 
 | UI Components | Radix UI primitives + custom components in `components/ui/` |
 | Auth + Database | Supabase (email/password auth, PostgreSQL, Row Level Security) |
 | Planning Engine | Deterministic TypeScript — no OpenAI or external AI dependency |
+| Adaptive Replanner | Deterministic TypeScript — triggers on performance events, re-ranks domains |
 | React | React 19 |
 
-**No OpenAI dependency.** All recommendations and schedule generation are produced by the deterministic engine in `lib/study-plan-engine/`.
+**No OpenAI dependency.** All planning and replanning is produced by deterministic engines in `lib/study-plan-engine/` and `lib/adaptive-replanner/`.
 
 ---
 
@@ -36,12 +37,12 @@ The project lives at **`/Users/darcywang/sat-prep-website`**, not at `~/Desktop/
 | `/signup` | Account creation |
 | `/onboarding` | 4-step setup wizard (redirects away once completed) |
 | `/home` | Dashboard: score cards, upcoming tasks, AI Plan Generator |
-| `/calendar` | Monthly calendar with task management |
+| `/calendar` | Monthly calendar with task management, session workflow, replanner metadata |
 | `/error-log` | Mistake tracking with mastery status |
 | `/data` | Score timeline, accuracy charts, session analytics |
 | `/info` | About, FAQ, contact form |
 
-All dashboard routes (`/home`, `/calendar`, `/error-log`, `/data`, `/info`) are protected by middleware that checks Supabase session.
+All dashboard routes are protected by middleware that checks the Supabase session.
 
 ---
 
@@ -49,45 +50,81 @@ All dashboard routes (`/home`, `/calendar`, `/error-log`, `/data`, `/info`) are 
 
 ### ✅ Completed
 
-- **Authentication** — sign up, sign in, sign out via Supabase Auth; `middleware.ts` protects dashboard routes and redirects unauthenticated users
-- **Onboarding wizard** — 4 steps: (1) basics (current score, target, test date, daily minutes), (2) domain performance entry, (3) diagnostic analysis, (4) deterministic recommendations; saves user profile, diagnostic test, question sessions, baseline score, and welcome notification
-- **Study Plan Engine** — deterministic day-by-day schedule generator (`lib/study-plan-engine/`); produces one `study_plans` row and per-day `calendar_tasks` rows with exact College Board QB filters
-- **Calendar** — monthly grid, day task panel, task form dialog (create/edit/delete/complete), real-time data via client hooks
-- **Error Log** — create errors by subject/category/type, mark mastered, review count tracking, filter and search
-- **Data / Analytics** — score progression timeline chart, accuracy by domain bar chart, category performance stats, session summary cards
+- **Authentication** — sign up, sign in, sign out via Supabase Auth; middleware protects all dashboard routes
+- **Onboarding wizard** — 4 steps: basics, domain performance entry, diagnostic analysis, deterministic recommendations; saves user profile, diagnostic test, question sessions, baseline score, welcome notification; triggers initial replanning pass on completion
+- **Study Plan Engine** — deterministic day-by-day schedule generator (`lib/study-plan-engine/`); produces one `study_plans` row and per-day `calendar_tasks` rows with College Board QB filters and full replanner metadata
+- **Adaptive Replanner** — `lib/adaptive-replanner/`; triggered by question session completion, error log creation, onboarding, and practice/official test score submission; re-ranks all 8 domains, updates future unlocked tasks (difficulty, question count, priority scores), returns per-domain `DomainChange[]` and `predictedScore`; writes audit log
+- **Session Workflow** — `SessionWorkflowDialog` on the calendar page: countdown timer (71s/q for R&W, 95s/q for Math, rounded to nearest minute), per-question A/B/C/D answer entry, correct-answer entry after submission, results summary (score, accuracy vs 90% target, time used/overtime), plan-updated screen with specific domain changes and potential score
+- **Calendar** — monthly grid, day task panel with replanner metadata display (priority 1–100, mastery target 90%, estimated score impact, replanning weight, last replanned timestamp); practice test completion opens score dialog
+- **Error Log** — create errors, mark mastered, review count tracking; triggers replanning on creation
+- **Data / Analytics** — score timeline, accuracy charts, category stats, session summary cards; practice/official/full_length test score submission triggers replanning
 - **Info page** — about section, FAQ accordion, contact form
 
 ### 🔜 Not Yet Built
 
-- Question session entry form (manual logging of QB results after practicing)
-- Push / email notifications
-- College Board Workflow education page
+- **"Replan Now" button** — no UI to force a manual replanning pass
+- **College Board Workflow page** — visual guide for applying QB filters
+- **Notifications UI** — table is populated but no real-time badge/alert
+- **Cleanup:** `log-session-dialog.tsx` is superseded by `SessionWorkflowDialog` and can be deleted
+
+---
+
+## Replanner Metadata on `calendar_tasks`
+
+Every plan-generated task carries these fields, updated on each replanning pass:
+
+| Field | Range | Meaning |
+|---|---|---|
+| `priority_score` | 1–100 | Normalized domain urgency; practice tests = 100 |
+| `mastery_target` | 90 (fixed) | Accuracy % target shown to student; practice tests = 0 (N/A) |
+| `estimated_score_impact` | 0–n | Potential SAT-point gain from this domain |
+| `replanning_weight` | 0–1 | Used by replanner to scale adjustment aggression |
+| `replan_locked` | bool | `true` = task completed, replanner must skip |
+| `last_replanned_at` | timestamp | When this task was last updated by the replanner |
 
 ---
 
 ## Key Directories
 
 ```
-actions/          Server Actions (auth, calendar, error-logs, onboarding,
-                  score-history, study-plan, ai-planner)
-app/              Next.js App Router pages
-components/       React components grouped by feature
-hooks/            Client-side Supabase data hooks
+actions/
+  auth.ts                  signIn, signUp, signOut
+  calendar.ts              CRUD for calendar_tasks; toggleTaskComplete sets replan_locked
+  error-logs.ts            CRUD for error_logs; createErrorLog triggers replanning
+  onboarding.ts            saveOnboarding; triggers initial replanning after diagnostic insert
+  question-sessions.ts     createQuestionSession; triggers replanning; returns DomainChange[] + predictedScore
+  score-history.ts         addScoreEntry; triggers replanning for practice/official/full_length
+  study-plan.ts            generatePlanFromProfile, generatePlanFromForm
+  ai-planner.ts            generateAIStudyPlan (Home page trigger)
+
+app/                       Next.js App Router pages
+components/
+  calendar/
+    day-tasks-panel.tsx            Task list with session dialogs + replanner metadata display
+    session-workflow-dialog.tsx    5-phase session UX: idle → active → review → results → plan_updated
+    practice-test-score-dialog.tsx Score entry for practice test tasks
+    log-session-dialog.tsx         Legacy quick-log dialog (superseded, can be deleted)
+  ...
+
 lib/
-  constants.ts           Domain/skill constants for UI dropdowns
-  utils.ts               cn(), date helpers, etc.
-  sat-planner.ts         Legacy planner — generates AIOnboardingRec / AIStudyPlan
-                         (used only by onboarding Step 4 recommendations display)
-  study-plan-engine/     NEW production engine (see PLANNER_ALGORITHM.md)
-    index.ts             StudyPlanEngine class — main entry point
-    types.ts             Core types
-    domain-catalog.ts    8 SAT domains with CB QB labels and skill lists
-    scoring.service.ts   rankDomains(), targetAccuracyForScore()
-    difficulty.service.ts phaseForWeek(), difficultyForSession()
-    scheduler.service.ts buildSchedule() — day-by-day DaySchedule[]
-    plan-store.service.ts PlanStoreService.save() — DB persistence
-supabase/schema.sql      Full Postgres schema with RLS
+  study-plan-engine/       Initial schedule generator (see PLANNER_ALGORITHM.md)
+  adaptive-replanner/
+    index.ts               runAdaptiveReplanner() — main entry point
+    types.ts               ReplanTrigger, ReplannerResult, DomainChange, TaskUpdate
+
+supabase/schema.sql        Full Postgres schema + all migration ALTER TABLE statements
 types/
-  database.ts     Hand-written Supabase type definitions
-  index.ts        Exported app-level types
+  database.ts              Hand-written Supabase types (includes replan_audit_logs)
+  index.ts                 App-level type exports
 ```
+
+---
+
+## Replanner Trigger Map
+
+| Event | Action file | Trigger type |
+|---|---|---|
+| Question session logged (via SessionWorkflowDialog) | `actions/question-sessions.ts` | `question_session` |
+| Error log created | `actions/error-logs.ts` | `error_log` |
+| Onboarding completed (diagnostic sessions) | `actions/onboarding.ts` | `question_session` |
+| Practice / official / full_length test score added | `actions/score-history.ts` | `practice_test_score` |

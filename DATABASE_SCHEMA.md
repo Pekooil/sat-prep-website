@@ -18,6 +18,7 @@ All tables have Row Level Security enabled. Every policy uses `auth.uid()` so qu
 | `error_logs` | Individual mistake entries with mastery tracking |
 | `score_history` | Composite + section scores over time for charts |
 | `notifications` | In-app alerts (reminders, achievements, system messages) |
+| `replan_audit_logs` | Immutable record of every adaptive replanning run |
 
 ---
 
@@ -112,6 +113,12 @@ One row per study block. Each `DaySchedule` from the engine maps to one or more 
 | `category` | `text` | nullable; domain label (e.g. "Algebra") or "Full Practice Test" |
 | `is_completed` | `boolean` | default false |
 | `college_board_filters` | `jsonb` | QB filter bag (see below) |
+| `priority_score` | `numeric` | **1–100**; normalized domain priority. Practice tests = 100. Default 0 until replanner runs. |
+| `mastery_target` | `integer` | Fixed **90** for all study/review tasks; 0 for practice tests (N/A). |
+| `estimated_score_impact` | `numeric` | Estimated SAT-point gain from this domain. 0 for practice tests. |
+| `replanning_weight` | `numeric` | **0–1**; `priorityScore / maxPriorityScore`. Practice tests = 0.9. |
+| `replan_locked` | `boolean` | `false` by default. Set `true` when task is completed — the Adaptive Replanner skips all locked rows. |
+| `last_replanned_at` | `timestamptz` | nullable; timestamp of the most recent replanning pass that touched this row. |
 | `created_at` | `timestamptz` | auto |
 | `updated_at` | `timestamptz` | auto |
 
@@ -125,7 +132,9 @@ One row per study block. Each `DaySchedule` from the engine maps to one or more 
 ```
 For practice test days: `{ "domain": "Full-Length Practice Test", "skill": "Complete test simulation (Bluebook)", "difficulty": "hard" }`.
 
-**Indexes:** `idx_calendar_tasks_user_date` on `(user_id, task_date)`.
+**Indexes:**
+- `idx_calendar_tasks_user_date` on `(user_id, task_date)`
+- `idx_calendar_tasks_replanner` on `(user_id, task_date, replanning_weight) WHERE NOT replan_locked` — used by the Adaptive Replanner query
 
 ---
 
@@ -146,8 +155,20 @@ Records the outcome of one College Board QB session. Users enter results after p
 | `questions_correct` | `integer` | default 0 |
 | `time_spent_minutes` | `integer` | nullable |
 | `college_board_filters` | `jsonb` | nullable; QB filters that were applied |
-| `notes` | `text` | nullable |
+| `notes` | `text` | nullable; when logged via `SessionWorkflowDialog`, contains a JSON blob with per-question answer details (see below) |
 | `created_at` | `timestamptz` | auto |
+
+**`notes` JSON shape (when logged via SessionWorkflowDialog):**
+```json
+{
+  "answers": [
+    { "q": 1, "yours": "A", "correct": "B", "right": false },
+    { "q": 2, "yours": "C", "correct": "C", "right": true }
+  ],
+  "totalSeconds": 843,
+  "allocatedSeconds": 900
+}
+```
 
 **Important:** The study plan engine reads this table to compute `TopicPerformance` for domain ranking. It aggregates `questions_attempted` and `questions_correct` grouped by `category` (mapped to domain key via `DOMAIN_CATALOG[].label`). Sessions created during onboarding have `notes = 'From onboarding diagnostic'`.
 
@@ -201,7 +222,7 @@ Composite and section-level scores over time. Powers the Data page score timelin
 
 **Indexes:** `idx_score_history_user_date` on `(user_id, test_date)`.
 
-Adding a score via `addScoreEntry` also updates `users.current_score`.
+Adding a score via `addScoreEntry` also updates `users.current_score`. For `test_type` of `practice`, `official`, or `full_length`, it also triggers the Adaptive Replanner.
 
 ---
 
@@ -221,6 +242,29 @@ In-app alerts. Currently populated by the system; no user-generated notification
 | `created_at` | `timestamptz` | auto |
 
 **Indexes:** `idx_notifications_user_unread` on `(user_id, is_read)`.
+
+---
+
+## replan_audit_logs
+
+Immutable record of every Adaptive Replanner run. One row per trigger event.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `uuid` | PK, auto |
+| `user_id` | `uuid` | FK → users (CASCADE delete) |
+| `triggered_by` | `text` | `'question_session' \| 'error_log' \| 'practice_test_score' \| 'manual'` |
+| `trigger_id` | `uuid` | nullable; UUID of the triggering record (session, error log, score) |
+| `tasks_updated` | `integer` | count of `calendar_tasks` rows modified in this run |
+| `domains_reprioritized` | `jsonb` | nullable; top-5 domain snapshot with priority scores and accuracy |
+| `changes_summary` | `text` | nullable; human-readable description of the run |
+| `created_at` | `timestamptz` | auto |
+
+**Indexes:** `idx_replan_audit_user` on `(user_id, created_at DESC)`.
+
+**RLS:** `Users can view own replan logs` — `auth.uid() = user_id` for ALL operations.
+
+**Note:** Rows in this table are never updated or deleted by application code — they are append-only.
 
 ---
 
@@ -253,5 +297,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 | `error_logs` | `auth.uid() = user_id` |
 | `score_history` | `auth.uid() = user_id` |
 | `notifications` | `auth.uid() = user_id` |
+| `replan_audit_logs` | `auth.uid() = user_id` |
 
 All policies are `FOR ALL` (SELECT, INSERT, UPDATE, DELETE).

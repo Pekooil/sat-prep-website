@@ -10,6 +10,7 @@ export type QuestionSession = Database['public']['Tables']['question_sessions'][
 export type ErrorLog = Database['public']['Tables']['error_logs']['Row']
 export type ScoreHistory = Database['public']['Tables']['score_history']['Row']
 export type Notification = Database['public']['Tables']['notifications']['Row']
+export type ReplanAuditLog = Database['public']['Tables']['replan_audit_logs']['Row']
 
 export type Subject = 'math' | 'reading_writing' | 'both'
 export type ErrorType = 'concept' | 'careless' | 'time' | 'strategy' | 'other'

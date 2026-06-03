@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { generateRecommendations } from '@/lib/sat-planner'
+import { runAdaptiveReplanner } from '@/lib/adaptive-replanner'
 import type {
   OnboardingStep1Data,
   OnboardingStep2Data,
@@ -112,6 +113,9 @@ export async function saveOnboarding(
     if (sessErr) return { error: sessErr.message }
   }
 
+  // Diagnostic data entered → seed initial replanning pass (runs after plan is saved below)
+  // Deferred to after the study plan insert so the active plan exists to query against.
+
   // 4. Study plan (from deterministic recs, or generate fresh ones)
   const planRecs = recs ?? generateRecommendations(
     {
@@ -153,6 +157,10 @@ export async function saveOnboarding(
     type: 'system',
     is_read: false,
   })
+
+  // Trigger initial replanning pass now that diagnostic sessions and plan exist.
+  // Fire-and-forget — onboarding completion should not block on this.
+  runAdaptiveReplanner(supabase, user.id, 'question_session').catch(() => { /* non-fatal */ })
 
   revalidatePath('/home')
   revalidatePath('/data')

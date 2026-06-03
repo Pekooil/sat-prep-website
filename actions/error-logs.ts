@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { runAdaptiveReplanner } from '@/lib/adaptive-replanner'
 import type { Database } from '@/types/database'
 
 type ErrorLogInsert = Database['public']['Tables']['error_logs']['Insert']
@@ -13,8 +14,15 @@ export async function createErrorLog(data: Omit<ErrorLogInsert, 'user_id'>) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Unauthorized' }
 
-  const { error } = await supabase.from('error_logs').insert({ ...data, user_id: user.id })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: log, error } = await (supabase.from('error_logs') as any)
+    .insert({ ...data, user_id: user.id })
+    .select('id')
+    .single()
   if (error) return { error: error.message }
+
+  // Error pattern change → re-evaluate weak areas
+  await runAdaptiveReplanner(supabase, user.id, 'error_log', log.id)
 
   revalidatePath('/error-log')
   return { success: true }

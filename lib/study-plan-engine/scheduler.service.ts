@@ -176,8 +176,8 @@ function buildStudyBlock(
       difficulty,
     },
     description: descriptions[phase],
-    priorityScore:        rd.priorityScore,
-    masteryTarget:        rd.targetAccuracy,
+    priorityScore:        Math.max(1, Math.round((rd.priorityScore / maxPriorityScore) * 100)),
+    masteryTarget:        90,
     estimatedScoreImpact: rd.potentialPoints,
     replanningWeight,
   }
@@ -205,8 +205,8 @@ function buildReviewBlocks(
       difficulty,
       cbFilters: { domain: rd.entry.cbDomain, skill, difficulty },
       description: `Review ${REVIEW_QUESTIONS_PER_DOMAIN} ${difficulty} ${rd.entry.label} questions. Focus on error types from this week's sessions. Update mastery status in Error Log.`,
-      priorityScore:        rd.priorityScore,
-      masteryTarget:        rd.targetAccuracy,
+      priorityScore:        Math.max(1, Math.round((rd.priorityScore / maxPriorityScore) * 100)),
+      masteryTarget:        90,
       estimatedScoreImpact: rd.potentialPoints,
       replanningWeight,
     }
@@ -223,7 +223,7 @@ function buildPracticeTestBlock(testNumber: number): PracticeTestBlock {
       `Use an official College Board Bluebook practice test. After finishing, log every error by domain in your Error Log before reviewing explanations.`,
     // Practice tests have fixed high priority — they are diagnostic milestones,
     // not domain-specific, so score impact is sentinel 0 (not additive with domain gains).
-    priorityScore:        9999,
+    priorityScore:        100,
     masteryTarget:        0,
     estimatedScoreImpact: 0,
     replanningWeight:     0.9,
