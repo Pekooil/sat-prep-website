@@ -37,9 +37,10 @@ The project lives at **`/Users/darcywang/sat-prep-website`**, not at `~/Desktop/
 | `/signup` | Account creation |
 | `/onboarding` | 4-step setup wizard (redirects away once completed) |
 | `/home` | Dashboard: score cards, upcoming tasks, AI Plan Generator |
-| `/calendar` | Monthly calendar with task management, session workflow, replanner metadata |
+| `/calendar` | Month / week / agenda views; color-coded task cards; task drawer with QB filters + instructions; drag-and-drop rescheduling; session workflow |
 | `/error-log` | Mistake tracking with mastery status |
 | `/data` | Score timeline, accuracy charts, session analytics |
+| `/tutorial` | 7-step College Board Question Bank onboarding tutorial; per-step progress tracker (localStorage); collapsible help accordions; FAQ section |
 | `/info` | About, FAQ, contact form |
 
 All dashboard routes are protected by middleware that checks the Supabase session.
@@ -58,14 +59,16 @@ All dashboard routes are protected by middleware that checks the Supabase sessio
 - **Calendar** — three views (month/week/agenda) with view switcher; task cards color-coded by domain category; clicking any task opens a right-side drawer showing QB filters, step-by-step QB instructions, and expected completion time; drag-and-drop rescheduling updates Supabase immediately; replanner metadata displayed in drawer; practice test completion opens score dialog; session workflow accessible from drawer footer
 - **Error Log** — create errors, mark mastered, review count tracking; triggers replanning on creation
 - **Data / Analytics** — score timeline, accuracy charts, category stats, session summary cards; practice/official/full_length test score submission triggers replanning
+- **QB Tutorial** (`/tutorial`) — 7-step interactive onboarding walkthrough for the College Board Question Bank workflow; screenshot placeholders for each step; per-step collapsible help Q&A accordions; progress tracker with localStorage persistence and progress bar; FAQ section; bottom CTA linking to QB and Calendar; accessible from main nav as "QB Tutorial"
 - **Info page** — about section, FAQ accordion, contact form
 
 ### 🔜 Not Yet Built
 
 - **"Replan Now" button** — no UI to force a manual replanning pass
-- **College Board Workflow page** — visual guide for applying QB filters
 - **Notifications UI** — table is populated but no real-time badge/alert
 - **Cleanup:** `log-session-dialog.tsx` is superseded by `SessionWorkflowDialog` and can be deleted
+
+> **Note:** QB workflow instructions appear in two places: (1) the task drawer on the Calendar page (concise 7-step quick guide per session), and (2) the dedicated `/tutorial` page (full interactive tutorial with help accordions, progress tracking, and FAQ).
 
 ---
 
@@ -89,7 +92,8 @@ Every plan-generated task carries these fields, updated on each replanning pass:
 ```
 actions/
   auth.ts                  signIn, signUp, signOut
-  calendar.ts              CRUD for calendar_tasks; toggleTaskComplete sets replan_locked
+  calendar.ts              CRUD for calendar_tasks; toggleTaskComplete sets replan_locked;
+                           rescheduleCalendarTask updates task_date (drag-and-drop)
   error-logs.ts            CRUD for error_logs; createErrorLog triggers replanning
   onboarding.ts            saveOnboarding; triggers initial replanning after diagnostic insert
   question-sessions.ts     createQuestionSession; triggers replanning; returns DomainChange[] + predictedScore
@@ -100,11 +104,21 @@ actions/
 app/                       Next.js App Router pages
 components/
   calendar/
-    day-tasks-panel.tsx            Task list with session dialogs + replanner metadata display
-    session-workflow-dialog.tsx    5-phase session UX: idle → active → review → results → plan_updated
-    practice-test-score-dialog.tsx Score entry for practice test tasks
-    log-session-dialog.tsx         Legacy quick-log dialog (superseded, can be deleted)
+    calendar-client.tsx            Orchestrator: month/week/agenda views, drag-and-drop,
+                                   drawer + dialog state management
+    task-drawer.tsx                Right-side slide-over: QB filters, QB instructions,
+                                   expected time, replanner stats, session launch buttons
+    task-colors.ts                 Color map for all 8 SAT domains + Full Practice Test
+    session-workflow-dialog.tsx    5-phase session UX (DO NOT MODIFY)
+    practice-test-score-dialog.tsx Score entry for practice test tasks (DO NOT MODIFY)
+    task-form-dialog.tsx           Manual task creation form
+    day-tasks-panel.tsx            Legacy sidebar — not rendered in current calendar; can be deleted
+    log-session-dialog.tsx         Legacy quick-log — superseded; can be deleted
   ...
+
+hooks/
+  use-calendar-tasks-range.ts  Loads tasks for any startDate/endDate range
+  use-calendar-tasks.ts        Original month-scoped hook (legacy)
 
 lib/
   study-plan-engine/       Initial schedule generator (see PLANNER_ALGORITHM.md)
@@ -115,7 +129,7 @@ lib/
 supabase/schema.sql        Full Postgres schema + all migration ALTER TABLE statements
 types/
   database.ts              Hand-written Supabase types (includes replan_audit_logs)
-  index.ts                 App-level type exports
+  index.ts                 App-level type exports (CalendarTask, CollegeBoardFilter, etc.)
 ```
 
 ---

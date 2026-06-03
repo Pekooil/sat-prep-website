@@ -7,7 +7,7 @@ This application assists students in using the **College Board Question Bank** (
 ## The Core Workflow
 
 1. The app generates a study schedule with specific QB filter recommendations (domain, skill, difficulty).
-2. The student visits [College Board Question Bank](https://satsuite.collegeboard.org/digital/digital-practice-preparation/practice-tests/linear) directly.
+2. The student visits [College Board Question Bank](https://satsuiteeducatorquestionbank.collegeboard.org/digital/search) directly.
 3. The student applies the recommended filters on the CB website and downloads/practices questions there.
 4. The student returns to this app and logs their results (questions attempted, questions correct).
 5. The app uses those results to update its domain rankings and re-prioritize the plan.

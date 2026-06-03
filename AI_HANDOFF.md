@@ -1,143 +1,224 @@
 # AI Handoff
 
-This document describes the current state of the codebase for the next AI agent picking up this project. Read PROJECT_CONTEXT.md first for the big picture.
+Technical reference for AI agents continuing work on this project. Read `PROJECT_CONTEXT.md` first for the product overview, and `PROJECT_HANDOFF.md` for feature status and next steps.
 
 ---
 
-## Completed Features
+## Quick Start
 
-### Infrastructure
-- Next.js 16.2.7 App Router at `/Users/darcywang/sat-prep-website` (not `~/Desktop/`)
-- Supabase auth + database wired (`lib/supabase/client.ts`, `lib/supabase/server.ts`)
-- `middleware.ts` guards `/home`, `/calendar`, `/data`, `/error-log`, `/info`
-- Full Postgres schema in `supabase/schema.sql` with RLS on all 9 tables (includes `replan_audit_logs`)
-- Hand-written TypeScript types in `types/database.ts`
+- **Project root:** `/Users/darcywang/sat-prep-website` (NOT `~/Desktop/sat-prep-website`)
+- **Run dev server:** `npm run dev` from the project root (port 3000)
+- **Launch config:** `.claude/launch.json` → `sat-planner`
+- **Stack:** Next.js 16.2.7, React 19, TypeScript 5 strict, Tailwind CSS v4, Supabase
 
-### Auth
-- `actions/auth.ts` — `signIn`, `signUp`, `signOut`
-- `/login` and `/signup` pages
-- Postgres trigger `on_auth_user_created` auto-creates a `users` row on signup
+---
 
-### Onboarding (`/onboarding`)
-- 4-step wizard; on completion writes profile, diagnostic_tests, question_sessions, study_plans, score_history, notifications
-- After saving, fires `runAdaptiveReplanner` (fire-and-forget) to seed initial task metadata
+## Directory Map
 
-### Study Plan Engine (`lib/study-plan-engine/`)
-Full day-by-day schedule generator. Entry point: `StudyPlanEngine.generate(input)`.
+```
+actions/
+  auth.ts                   signIn, signUp, signOut
+  calendar.ts               getCalendarTasks, createCalendarTask, updateCalendarTask,
+                            toggleTaskComplete (sets replan_locked), deleteCalendarTask,
+                            rescheduleCalendarTask (drag-and-drop: updates task_date only)
+  error-logs.ts             CRUD; createErrorLog triggers replanning
+  onboarding.ts             saveOnboarding; triggers initial replanning after diagnostic insert
+  question-sessions.ts      createQuestionSession; triggers replanning; returns DomainChange[] + predictedScore
+  score-history.ts          addScoreEntry; triggers replanning for practice/official/full_length
+  study-plan.ts             generatePlanFromProfile, generatePlanFromForm
+  ai-planner.ts             generateAIStudyPlan (Home page trigger — calls generatePlanFromForm)
 
-Every generated `calendar_tasks` row includes:
-- `priority_score` — normalized **1–100** (computed as `max(1, round(rawScore / maxRawScore × 100))`)
-- `mastery_target` — fixed at **90** for all study/review tasks; 0 for practice tests (N/A)
-- `estimated_score_impact` — potential SAT points from this domain (raw `potentialPoints`)
-- `replanning_weight` — normalized 0–1 priority (used by replanner for aggression)
-- `replan_locked: false` — set true only when task is completed
+app/
+  (auth)/login              Email/password sign-in
+  (auth)/signup             Account creation
+  (dashboard)/home          Score cards, upcoming tasks, AI Plan Generator
+  (dashboard)/calendar      Study calendar (month/week/agenda views)
+  (dashboard)/error-log     Mistake tracking
+  (dashboard)/data          Score timeline, accuracy charts, session analytics
+  (dashboard)/tutorial      QB tutorial (7-step workflow, progress tracker, FAQ)
+  (dashboard)/info          About, FAQ, contact form
+  onboarding/               4-step wizard
 
-### Adaptive Replanner (`lib/adaptive-replanner/`)
+components/
+  calendar/
+    calendar-client.tsx           Main calendar orchestrator — month, week, agenda views,
+                                  view switcher, drag-and-drop, drawer + dialog state management
+    task-drawer.tsx               Right-side slide-over: QB filters, QB instructions,
+                                  expected time, replanner stats, session launch buttons
+    task-colors.ts                Shared color map for all 8 SAT domains + Full Practice Test
+    session-workflow-dialog.tsx   5-phase session UX (DO NOT MODIFY — answering system)
+    practice-test-score-dialog.tsx Score entry for practice test tasks (DO NOT MODIFY)
+    task-form-dialog.tsx          Manual task creation form
+    day-tasks-panel.tsx           Legacy sidebar panel — still exists but NOT rendered in the
+                                  current calendar-client. Can be deleted safely.
+    log-session-dialog.tsx        Legacy quick-log — superseded by SessionWorkflowDialog.
+                                  Can be deleted.
+  tutorial/
+    tutorial-client.tsx           Full client component — 7-step QB workflow tutorial,
+                                  ScreenshotPlaceholder, HelpAccordion, StepCard sub-components,
+                                  progress tracker (localStorage), FAQ accordion, bottom CTA
+  ui/                             Radix UI wrappers: button, badge, card, dialog, select, tabs, ...
+  home/                           Home page components
+  layout/                         Navbar, sidebar, theme provider
+
+hooks/
+  use-calendar-tasks.ts           Original hook (loads by year/month) — still used by legacy code
+  use-calendar-tasks-range.ts     Flexible hook (loads by startDate/endDate) — used by calendar-client
+  use-error-logs.ts
+  use-score-history.ts
+
+lib/
+  study-plan-engine/
+    types.ts                      StudyPlanEngineInput, DaySchedule, DomainEntry, etc.
+    domain-catalog.ts             8 SAT domains with CB QB labels, skills, point weights
+    scoring.service.ts            rankDomains() — ranks by accuracy gap × point leverage
+    difficulty.service.ts         phase assignment (foundation/skill/advanced/strategy)
+    scheduler.service.ts          buildSchedule() — produces day-by-day DaySchedule[]
+    plan-store.service.ts         PlanStoreService.save() — inserts study_plans + calendar_tasks
+    index.ts                      StudyPlanEngine class — orchestrator
+  adaptive-replanner/
+    index.ts                      runAdaptiveReplanner() — main entry point
+    types.ts                      ReplanTrigger, ReplannerResult, DomainChange, TaskUpdate
+  supabase/
+    client.ts                     createClient() for browser
+    server.ts                     createClient() for Server Components / Server Actions
+  constants.ts                    MATH_DOMAINS, RW_DOMAINS, COLLEGE_BOARD_QB_URL, etc.
+  utils.ts                        cn, formatDate, subjectLabel, todayISO, etc.
+
+supabase/schema.sql               Full Postgres schema + all ALTER TABLE migrations (reference only)
+types/
+  database.ts                     Hand-written Supabase row types
+  index.ts                        App-level type re-exports (CalendarTask, User, CollegeBoardFilter, etc.)
+```
+
+---
+
+## Study Plan Engine
+
+**Entry point:** `StudyPlanEngine.generate(input: StudyPlanEngineInput)`
+
+**Input shape:**
+```typescript
+{
+  userId: string
+  currentScore: number       // 400–1600
+  targetScore: number
+  testDate: string           // ISO date
+  dailyStudyMinutes: number
+  topicPerformance: TopicPerformance[]  // per-domain attempted/correct from question_sessions
+}
+```
+
+**Output:** Writes one `study_plans` row + N `calendar_tasks` rows.
+
+**Task metadata written at generation:**
+- `priority_score` — normalized 1–100 (`max(1, round(raw / maxRaw × 100))`); practice tests = 100
+- `mastery_target` — fixed 90 for study/review tasks; 0 for practice tests
+- `estimated_score_impact` — raw `potentialPoints` (domain's point gap)
+- `replanning_weight` — 0–1 normalized; practice tests = 0.9
+- `replan_locked: false` — set true when completed via `toggleTaskComplete`
+
+---
+
+## Adaptive Replanner
 
 **Entry point:** `runAdaptiveReplanner(supabase, userId, triggeredBy, triggerId?)`
 
-**Returns:** `ReplannerResult` with:
-- `tasksUpdated` — count of modified tasks
-- `taskChanges: DomainChange[]` — per-domain summary of what changed (difficulty, question count, priority)
-- `predictedScore` — `min(1600, currentScore + sum(all domain potentialPoints))` — upper-bound score if plan is fully executed
-- `domainsReprioritized` — top-5 domain snapshot for the audit log
-- `changesSummary` — human-readable string
-- `auditLogId` — UUID of the `replan_audit_logs` row written
+**`triggeredBy` values:** `'question_session' | 'error_log' | 'practice_test_score' | 'manual'`
 
-**Triggered by:**
-
-| Event | File | Trigger type |
-|---|---|---|
-| Question session logged | `actions/question-sessions.ts` | `question_session` |
-| Error log created | `actions/error-logs.ts` | `error_log` |
-| Onboarding completed | `actions/onboarding.ts` | `question_session` |
-| Practice/official/full_length score added | `actions/score-history.ts` | `practice_test_score` |
+**Returns:** `ReplannerResult`:
+```typescript
+{
+  tasksUpdated: number
+  taskChanges: DomainChange[]     // per-domain difficulty/question delta
+  predictedScore: number          // min(1600, current + sum(potentialPoints))
+  domainsReprioritized: object    // top-5 snapshot for audit log
+  changesSummary: string
+  auditLogId: string
+}
+```
 
 **Algorithm (per run):**
-1. Load user profile (`current_score`, `target_score`, `test_date`, `daily_study_minutes`)
-2. Aggregate all `question_sessions` → per-domain accuracy (`fetchTopicPerformance`)
-3. Re-rank all 8 domains with `rankDomains()` → fresh priority ordering
+1. Load profile (`current_score`, `target_score`, `test_date`, `daily_study_minutes`)
+2. Aggregate all `question_sessions` → per-domain accuracy via `fetchTopicPerformance`
+3. Re-rank 8 domains with `rankDomains()` → fresh priority order
 4. Fetch all future unlocked tasks: `WHERE replan_locked = FALSE AND task_date > TODAY`
 5. For each task:
-   - Practice tests (`category = 'Full Practice Test'`): set `priority_score: 100`, `replanningWeight: 0.9` — never touch title, description, or duration
-   - Study/review tasks: recompute phase (from task_date vs. test_date), difficulty, question count, title, description, all 4 metadata fields; track old vs new difficulty and question count for `DomainChange`
-6. Batch-update all modified tasks in parallel chunks of 100
-7. Set `last_replanned_at` on every updated task
+   - Practice tests → set `priority_score: 100`, `replanningWeight: 0.9`; never touch title/description/duration
+   - Study/review → recompute phase, difficulty, question count, title, description, all 4 metadata fields
+6. Batch-update modified tasks in parallel chunks of 100
+7. Set `last_replanned_at` on every updated row
 8. Compute `predictedScore`
 9. Write one `replan_audit_logs` row
 
 **Safeguards:**
 - Never touches `replan_locked = true` tasks
 - Never deletes any task
-- Never modifies practice test content
 - Question count ceiling: `min(80, floor(duration_minutes × 0.80 / 1.25))`
-- Only operates on tasks belonging to the active `study_plans` row
+- Only operates on tasks in the active `study_plans` row
 
-### Calendar (`/calendar`)
+**Trigger map:**
 
-**Views:** Month, Week, Agenda — controlled by a view-switcher tab bar in the header. Navigation (prev/next/today) adjusts by month, week, or 30-day window depending on the active view.
-
-**Data fetching:** `hooks/use-calendar-tasks-range.ts` — takes `startDate`/`endDate` strings and reloads on change. The range is recomputed whenever the view or anchor date changes.
-
-**Color coding:** `components/calendar/task-colors.ts` — maps the 8 SAT domain categories + "Full Practice Test" to distinct Tailwind color schemes (bg, border, text, dot, left-bar).
-
-**Task cards:**
-- Month view: compact chips with colored left bar, domain name, and question count.
-- Week view: taller cards with domain, question count, subject, and completion icon.
-- Agenda view: full cards with subject badge, question count, duration, and a preview of QB filter tags (domain / skill / difficulty).
-
-**Task Drawer (`components/calendar/task-drawer.tsx`):**  
-Right-side slide-over panel. Opens on any task card click. Shows:
-- Domain category label + colored dot + title
-- Quick stats: section, duration, question count
-- College Board QB filters (domain / skill / difficulty / target questions)
-- "Open College Board Question Bank" external link
-- Numbered step-by-step instructions for obtaining questions (or practice test instructions for Full Practice Tests)
-- Expected completion time panel (allocated minutes + exam-pace estimate)
-- Adaptive Planner metadata (priority / score impact / mastery goal)
-- Footer: "Log Session" button (→ SessionWorkflowDialog), "Enter Score" (→ PracticeTestScoreDialog), or "Mark Complete" for manual tasks
-
-**Drag-and-drop rescheduling:** HTML5 drag-and-drop on task cards (disabled for completed tasks). Dropping onto a different day cell calls `rescheduleCalendarTask` server action which updates `task_date` in Supabase immediately, then reloads the task list.
-
-**`actions/calendar.ts` now exports `rescheduleCalendarTask(id, newDate)`.**
-
-- **`SessionWorkflowDialog`** (`components/calendar/session-workflow-dialog.tsx`) — the primary session completion UX, a 5-phase state machine:
-  1. **idle** — task info, question count, time budget
-  2. **active** — countdown timer + per-question "Your Answer" dropdowns (A/B/C/D)
-  3. **review** — "Correct Answer" dropdowns alongside locked "Your Answer" column
-  4. **results** — score (X/N), accuracy %, vs 90% mastery target, per-question ✓/✗, time left / overtime
-  5. **plan_updated** — replanner changes (per-domain difficulty/question deltas) + potential score
-
-- Timer rules: **71 seconds/question** for Reading & Writing, **95 seconds/question** for Math. Total time rounded up to the nearest full minute. At expiry: toast notification, timer flips to red `+MM:SS overtime` — does not lock input.
-
-- `DayTasksPanel` — per-task AI Replanner Info panel shows: `priority_score` (1–100), `mastery_target` (90%), `estimated_score_impact` (+N pts), `replanning_weight` (%), `last_replanned_at` (relative timestamp)
-
-- Completing a plan-generated study/review task → opens `SessionWorkflowDialog` → on save: inserts `question_sessions` row → triggers replanning → shows plan-updated screen
-- Completing a plan-generated practice test task → opens `PracticeTestScoreDialog` → inserts `score_history` row → triggers replanning
-- Manually-created tasks complete directly
-
-### Error Log (`/error-log`)
-- `createErrorLog` triggers replanning after each new entry
-
-### Data / Analytics (`/data`)
-- `addScoreEntry` triggers replanning for `practice`, `official`, and `full_length` test types
+| Event | File | Trigger type |
+|---|---|---|
+| Question session logged (SessionWorkflowDialog) | `actions/question-sessions.ts` | `question_session` |
+| Error log created | `actions/error-logs.ts` | `error_log` |
+| Onboarding completed (diagnostic sessions) | `actions/onboarding.ts` | `question_session` |
+| Practice / official / full_length score added | `actions/score-history.ts` | `practice_test_score` |
 
 ---
 
-## In-Progress / Unfinished Features
+## Calendar Architecture
 
-1. **`log-session-dialog.tsx`** — superseded by `SessionWorkflowDialog` but still exists. Can be deleted once `SessionWorkflowDialog` is confirmed stable in production.
+### Views
 
-2. **Manual "Replan Now" button** — no UI to force a replanning pass without submitting data. Implement as `triggerManualReplan()` in `actions/study-plan.ts` calling `runAdaptiveReplanner(..., 'manual')`, wired to a button in the calendar header or home page.
+`components/calendar/calendar-client.tsx` orchestrates three views:
 
-3. **Notifications UI** — `notifications` table is populated; no real-time badge or alert UI beyond the navbar stub.
+| View | Date range loaded | Task presentation |
+|---|---|---|
+| Month | First–last of current month | Compact chips: colored left bar + domain + question count |
+| Week | Sun–Sat of current week | Taller cards: domain, question count, subject, status icon |
+| Agenda | Today + 90 days | Full cards: subject badge, question count, duration, QB filter tag row |
 
+Navigation adjusts by month (month view), 7 days (week view), or 30 days (agenda view).
+
+Data is fetched via `hooks/use-calendar-tasks-range.ts` which takes `startDate`/`endDate` strings and reloads when either changes.
+
+### Task Drawer
+
+`components/calendar/task-drawer.tsx` — right-side CSS-transition slide-over (not Radix Dialog). Opens on any task card click; escape key and backdrop click close it.
+
+**Content:**
+1. Header: category dot + label + title + quick stats (section, duration, question count)
+2. College Board QB filters section (domain / skill / difficulty badge / target questions)
+3. "Open College Board Question Bank" link → `COLLEGE_BOARD_QB_URL`
+4. Numbered instructions (7 steps for QB sessions; 6 steps for practice tests)
+5. Expected completion time (allocated minutes + exam-pace estimate: 71 s/q R&W, 95 s/q Math)
+6. Adaptive Planner stats (priority / score impact / mastery goal) — hidden for practice tests
+7. Footer actions:
+   - Plan study tasks → "Log Session" → `SessionWorkflowDialog`
+   - Plan practice tests → "Enter Score" → `PracticeTestScoreDialog`
+   - Manual tasks → "Mark Complete" → `toggleTaskComplete`
+
+### Drag-and-Drop
+
+HTML5 drag API — no extra library. Task cards are `draggable={!task.is_completed}`. On drop onto a different day cell, `rescheduleCalendarTask(taskId, newDate)` is called, which updates `task_date` in Supabase and calls `revalidatePath('/calendar')`. The client-side `reload()` then refreshes the task list.
+
+**Important:** `rescheduleCalendarTask` only updates `task_date`. It does not touch `replan_locked`. The replanner will pick up rescheduled incomplete tasks on its next run.
+
+### Color System
+
+`components/calendar/task-colors.ts` is the single source of truth. Each of the 8 SAT domains + "Full Practice Test" maps to `{ bg, border, text, dot, leftBar }` Tailwind class strings. If new domains are added to `DOMAIN_CATALOG`, add a matching entry here.
+
+### Session Dialogs (DO NOT MODIFY)
+
+`SessionWorkflowDialog` and `PracticeTestScoreDialog` are the answering system. They must not be changed. The calendar drawer and calendar client may _reference_ them (open/close, pass props) but must not alter their internal logic.
 
 ---
 
-## Known Bugs / Required DB Migrations
+## Required DB Migrations
 
-The following SQL must be applied in **Supabase Dashboard → SQL Editor** if not already done:
+Apply in **Supabase Dashboard → SQL Editor** if not already done:
 
 ```sql
 -- Adaptive replanner columns on calendar_tasks
@@ -148,11 +229,9 @@ ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replanning_weight      NUMER
 ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replan_locked          BOOLEAN    DEFAULT FALSE;
 ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS last_replanned_at      TIMESTAMPTZ;
 
--- Replanner index
 CREATE INDEX IF NOT EXISTS idx_calendar_tasks_replanner
   ON calendar_tasks(user_id, task_date, replanning_weight) WHERE NOT replan_locked;
 
--- Audit log table
 CREATE TABLE IF NOT EXISTS replan_audit_logs (
   id                    UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id               UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -168,7 +247,7 @@ ALTER TABLE replan_audit_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own replan logs" ON replan_audit_logs FOR ALL USING (auth.uid() = user_id);
 ```
 
-Verify with:
+Verify:
 ```sql
 SELECT column_name FROM information_schema.columns
 WHERE table_name = 'calendar_tasks'
@@ -181,43 +260,23 @@ SELECT COUNT(*) FROM replan_audit_logs; -- must not error
 
 ---
 
-## Next Recommended Task
+## Implementation Rules
 
-**Add a "Replan Now" button** to the calendar header or home page.
-
-1. Add `triggerManualReplan()` to `actions/study-plan.ts` — calls `runAdaptiveReplanner(supabase, user.id, 'manual')`
-2. Wire to a button in `components/home/ai-planner-trigger.tsx` or the calendar page header
-3. Show a toast with `tasksUpdated` count and the `predictedScore` on completion
-
-This gives students explicit control over replanning without needing to submit new session data.
-
----
-
-## Important Implementation Decisions
-
-1. **No OpenAI.** All planning and replanning is deterministic TypeScript. Do not introduce an LLM dependency.
-
-2. **`priority_score` is 1–100 normalized.** The raw gap × leverage value is used internally for ranking but the DB column stores the normalized value. Practice tests are fixed at 100.
-
-3. **`mastery_target` is fixed at 90.** It does not vary by target score. The internal `targetAccuracy` still drives difficulty selection in the engine; 90 is the display-facing goal.
-
-4. **Replanner updates in-place, never rebuilds.** Only UPDATE operations — no DELETEs or re-inserts. Preserves user-added manual tasks.
-
-5. **`replan_locked` is the single source of truth for replanner eligibility.** Set by `toggleTaskComplete`. The replanner filters `WHERE replan_locked = FALSE`.
-
-6. **`schema.sql` is a reference file, not an auto-migration.** Always run changes manually in the Supabase dashboard and verify.
-
-7. **`createQuestionSession` returns replanner details to the client.** `SessionWorkflowDialog` uses the returned `taskChanges` and `predictedScore` to populate the `plan_updated` phase without a second fetch.
-
-8. **Supabase `as any` casts** are intentional for hand-written type workarounds.
-
-9. **Tailwind CSS v4** — `@import "tailwindcss"` in `globals.css`. Do NOT use `@tailwind base/components/utilities`.
-
-10. **Next.js 16 async params** — dynamic route segments must `await params`.
+1. **No OpenAI.** All planning and replanning is deterministic TypeScript. Never add an LLM dependency.
+2. **Tailwind CSS v4** — use `@import "tailwindcss"` in `globals.css`. Never use `@tailwind base/components/utilities`. Dark mode: `@custom-variant dark (&:where(.dark, .dark *))` + `.dark` class on `<html>`.
+3. **TypeScript strict mode.** No `any` except intentional Supabase cast workarounds (marked with comments).
+4. **`schema.sql` is a reference, not an auto-migration.** Always apply changes manually in Supabase and verify.
+5. **Next.js 16 async params** — dynamic route segments must `await params` before use.
+6. **`replan_locked = true` tasks are immutable to the replanner.** Set by `toggleTaskComplete`; removed on un-complete.
+7. **Replanner never deletes or rebuilds.** Only UPDATEs. Manual tasks are always preserved.
+8. **`createQuestionSession` returns replanner details directly.** `SessionWorkflowDialog` uses the returned `taskChanges` and `predictedScore` to render the `plan_updated` phase — no second fetch needed.
+9. **Calendar drawer is purely informational.** Do not embed session/scoring logic in the drawer.
+10. **QB URL:** `https://satsuiteeducatorquestionbank.collegeboard.org/digital/search` — set in `lib/constants.ts` as `COLLEGE_BOARD_QB_URL`.
+11. **Tutorial progress** is stored in `localStorage` under key `'sat-planner-tutorial-progress'` as a `boolean[]` of length 7. The `TutorialClient` component handles hydration safety with a `hydrated` flag to avoid SSR mismatch.
 
 ---
 
-## Environment Variables Required
+## Environment Variables
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=

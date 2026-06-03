@@ -103,6 +103,7 @@ export const NAV_LINKS = [
   { href: '/calendar', label: 'Calendar' },
   { href: '/error-log', label: 'Error Log' },
   { href: '/data', label: 'Data' },
+  { href: '/tutorial', label: 'QB Tutorial' },
   { href: '/info', label: 'Info & Contact' },
 ] as const
 
@@ -111,4 +112,4 @@ export const SAT_SCORE_MAX = 1600
 export const SAT_SECTION_MIN = 200
 export const SAT_SECTION_MAX = 800
 
-export const COLLEGE_BOARD_QB_URL = 'https://satsuite.collegeboard.org/digital/digital-practice-preparation/practice-tests/linear'
+export const COLLEGE_BOARD_QB_URL = 'https://satsuiteeducatorquestionbank.collegeboard.org/digital/search'
