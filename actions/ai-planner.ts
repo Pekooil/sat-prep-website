@@ -1,42 +1,37 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
 import { generatePlanFromForm } from '@/actions/study-plan'
-import { CONST_VALUE_TO_KEY } from '@/lib/study-plan-engine/domain-catalog'
-import type { AIPlanRequest, AIStudyPlan } from '@/types'
+import { createClient } from '@/lib/supabase/server'
 import type { StudyPlanEngineResult } from '@/lib/study-plan-engine/types'
 
 /**
  * generateAIStudyPlan
  *
- * Server action called from AIPlannerTrigger.
- * Converts the legacy AIPlanRequest shape into StudyPlanEngine inputs and
- * delegates to generatePlanFromForm, which runs the full day-by-day engine.
+ * Server action called from AIPlannerTrigger (now "AI Adaptive Replanner").
+ * Domain priorities are sourced entirely from the user's question_sessions
+ * data — no manual weak-area input is required.
  *
- * Returns StudyPlanEngineResult (not AIStudyPlan) — the trigger component
- * only checks result.data truthiness so this is backward-compatible.
+ * hoursPerDay is converted to dailyStudyMinutes.
+ * daySchedule maps JS getDay() (0=Sun … 6=Sat) → 'study' | 'review' | 'rest'.
  */
-export async function generateAIStudyPlan(
-  request: AIPlanRequest,
-): Promise<{ data?: StudyPlanEngineResult; error?: string }> {
+export async function generateAIStudyPlan(request: {
+  currentScore: number
+  targetScore: number
+  testDate: string
+  minutesPerDay: number
+  daySchedule: Record<number, 'study' | 'review' | 'rest'>
+}): Promise<{ data?: StudyPlanEngineResult; error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Unauthorized' }
 
-  // Convert hours/week → minutes/day
-  const dailyStudyMinutes = Math.max(15, Math.round((request.hoursPerWeek * 60) / 7))
-
-  // Map constant-style weak area values ("algebra", "craft_structure") → domain keys
-  const weakAreaKeys = (request.weakAreas ?? [])
-    .map(v => CONST_VALUE_TO_KEY[v] ?? v)
-    .filter(k => k.length > 0)
+  const dailyStudyMinutes = Math.max(15, Math.min(300, Math.round(request.minutesPerDay)))
 
   return generatePlanFromForm({
-    currentScore: request.currentScore ?? 1050,
-    targetScore: request.targetScore,
-    testDate: request.testDate,
+    currentScore:      request.currentScore,
+    targetScore:       request.targetScore,
+    testDate:          request.testDate,
     dailyStudyMinutes,
-    weakAreaKeys,
+    daySchedule:       request.daySchedule,
   })
 }

@@ -59,6 +59,7 @@ export async function generatePlanFromForm(params: {
   testDate: string
   dailyStudyMinutes: number
   weakAreaKeys?: string[]
+  daySchedule?: Record<number, 'study' | 'review' | 'rest'>
 }): Promise<{ data?: StudyPlanEngineResult; error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -74,6 +75,7 @@ export async function generatePlanFromForm(params: {
     testDate: params.testDate,
     dailyStudyMinutes: params.dailyStudyMinutes,
     topicPerformance,
+    daySchedule: params.daySchedule,
   })
 }
 

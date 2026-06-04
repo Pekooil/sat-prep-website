@@ -6,11 +6,11 @@ import { Home, Calendar, AlertCircle, BarChart2, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const mobileLinks = [
-  { href: '/home', label: 'Home', icon: Home },
-  { href: '/calendar', label: 'Calendar', icon: Calendar },
-  { href: '/error-log', label: 'Errors', icon: AlertCircle },
-  { href: '/data', label: 'Data', icon: BarChart2 },
-  { href: '/info', label: 'Info', icon: Info },
+  { href: '/home',      label: 'Home',     icon: Home },
+  { href: '/calendar',  label: 'Calendar', icon: Calendar },
+  { href: '/error-log', label: 'Errors',   icon: AlertCircle },
+  { href: '/data',      label: 'Data',     icon: BarChart2 },
+  { href: '/info',      label: 'Info',     icon: Info },
 ]
 
 export function MobileNav() {

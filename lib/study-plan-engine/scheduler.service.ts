@@ -102,10 +102,17 @@ function classifyDay(
   dayOfWeek: number,
   weekNum: number,
   practiceTestWeeks: Set<number>,
+  daySchedule?: Record<number, 'study' | 'review' | 'rest'>,
 ): DayType {
-  if (dayOfWeek === 0) return 'rest'
-  if (dayOfWeek === 6) return practiceTestWeeks.has(weekNum) ? 'practice_test' : 'review'
-  return 'study'
+  const base = daySchedule
+    ? (daySchedule[dayOfWeek] ?? 'rest')
+    : dayOfWeek === 0 ? 'rest'
+    : dayOfWeek === 6 ? 'review'
+    : 'study'
+
+  // Promote 'review' days in practice-test weeks to 'practice_test'
+  if (base === 'review' && practiceTestWeeks.has(weekNum)) return 'practice_test'
+  return base
 }
 
 // ─── Domain Pool ─────────────────────────────────────────────────────────────
@@ -262,6 +269,7 @@ export function buildSchedule(
   const phaseWeekRanges = new Map<Phase, { start: number; end: number }>()
 
   const schedule: DaySchedule[] = []
+  let studyDayGlobalIdx = 0   // running count across all study days (any DOW)
 
   for (let dayIdx = 0; dayIdx < totalDays; dayIdx++) {
     const date       = isoDate(addDays(new Date(), dayIdx))
@@ -282,7 +290,7 @@ export function buildSchedule(
       }
     }
 
-    const dayType = classifyDay(dayOfWeek, weekNum, practiceTestWeeks)
+    const dayType = classifyDay(dayOfWeek, weekNum, practiceTestWeeks, input.daySchedule)
 
     if (dayType === 'rest') {
       schedule.push({
@@ -327,11 +335,11 @@ export function buildSchedule(
     }
 
     // ── Study day ──────────────────────────────────────────────────────────
-    // Study-day-of-week index: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4
-    const studyDayIdx = dayOfWeek - 1   // Mon=1→0, Fri=5→4
-    const macroCycle  = Math.floor((weekNum - 1) / 4)
-    const pool        = buildDomainPool(ranked, macroCycle)
-    const rd          = pool[studyDayIdx % pool.length]
+    // Use global study-day counter so any day-of-week can be a study day.
+    const macroCycle = Math.floor((weekNum - 1) / 4)
+    const pool       = buildDomainPool(ranked, macroCycle)
+    const rd         = pool[studyDayGlobalIdx % pool.length]
+    studyDayGlobalIdx++
 
     const studyCount = domainStudyCounters.get(rd.entry.key) ?? 0
     const block = buildStudyBlock(

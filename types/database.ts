@@ -360,7 +360,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          triggered_by: 'question_session' | 'error_log' | 'practice_test_score' | 'manual'
+          triggered_by: 'question_session' | 'error_log' | 'practice_test_score' | 'manual' | 'behind_schedule'
           trigger_id: string | null
           tasks_updated: number
           domains_reprioritized: Json | null
@@ -370,7 +370,7 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
-          triggered_by: 'question_session' | 'error_log' | 'practice_test_score' | 'manual'
+          triggered_by: 'question_session' | 'error_log' | 'practice_test_score' | 'manual' | 'behind_schedule'
           trigger_id?: string | null
           tasks_updated?: number
           domains_reprioritized?: Json | null
@@ -378,6 +378,155 @@ export interface Database {
           created_at?: string
         }
         Update: Record<string, never>
+        Relationships: []
+      }
+      topic_mastery: {
+        Row: {
+          id: string
+          user_id: string
+          domain_key: string
+          domain_label: string
+          subject: 'math' | 'reading_writing'
+          mastery_score: number
+          accuracy_score: number | null
+          recent_accuracy: number | null
+          improvement_factor: number | null
+          mistake_cleanliness: number | null
+          confidence_factor: number | null
+          consistency_factor: number | null
+          total_questions_attempted: number
+          total_sessions: number
+          computed_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          domain_key: string
+          domain_label: string
+          subject: 'math' | 'reading_writing'
+          mastery_score: number
+          accuracy_score?: number | null
+          recent_accuracy?: number | null
+          improvement_factor?: number | null
+          mistake_cleanliness?: number | null
+          confidence_factor?: number | null
+          consistency_factor?: number | null
+          total_questions_attempted?: number
+          total_sessions?: number
+          computed_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          mastery_score?: number
+          accuracy_score?: number | null
+          recent_accuracy?: number | null
+          improvement_factor?: number | null
+          mistake_cleanliness?: number | null
+          confidence_factor?: number | null
+          consistency_factor?: number | null
+          total_questions_attempted?: number
+          total_sessions?: number
+          computed_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      plan_versions: {
+        Row: {
+          id: string
+          user_id: string
+          study_plan_id: string | null
+          version_number: number
+          triggered_by: string
+          reason: string | null
+          tasks_snapshot: Json
+          tasks_updated: number
+          predicted_score: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          study_plan_id?: string | null
+          version_number: number
+          triggered_by: string
+          reason?: string | null
+          tasks_snapshot?: Json
+          tasks_updated?: number
+          predicted_score?: number | null
+          created_at?: string
+        }
+        Update: {
+          tasks_updated?: number
+          predicted_score?: number | null
+        }
+        Relationships: []
+      }
+      score_predictions: {
+        Row: {
+          id: string
+          user_id: string
+          predicted_score: number
+          confidence_low: number
+          confidence_high: number
+          baseline_score: number | null
+          consistency_factor: number | null
+          session_count: number | null
+          mastery_snapshot: Json | null
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          predicted_score: number
+          confidence_low: number
+          confidence_high: number
+          baseline_score?: number | null
+          consistency_factor?: number | null
+          session_count?: number | null
+          mastery_snapshot?: Json | null
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          notes?: string | null
+        }
+        Relationships: []
+      }
+      adaptive_recommendations: {
+        Row: {
+          id: string
+          user_id: string
+          replan_audit_log_id: string | null
+          domain_key: string | null
+          domain_label: string | null
+          recommendation_type: 'increase_volume' | 'reduce_volume' | 'intervention' | 'maintenance' | 'schedule_change' | 'recovery' | 'general'
+          message: string
+          old_mastery: number | null
+          new_mastery: number | null
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          replan_audit_log_id?: string | null
+          domain_key?: string | null
+          domain_label?: string | null
+          recommendation_type: 'increase_volume' | 'reduce_volume' | 'intervention' | 'maintenance' | 'schedule_change' | 'recovery' | 'general'
+          message: string
+          old_mastery?: number | null
+          new_mastery?: number | null
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          is_read?: boolean
+        }
         Relationships: []
       }
     }

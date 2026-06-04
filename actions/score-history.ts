@@ -21,12 +21,37 @@ export async function addScoreEntry(
     .single()
   if (error) return { error: error.message }
 
-  // Update current_score in users table
-  if (data.math_score && data.reading_writing_score) {
-    const total = data.math_score + data.reading_writing_score
+  // Update current_score in users table.
+  // When both sections are provided, use the exact total.
+  // When only one section is provided, fetch the existing other-section score and add.
+  const mathScore = data.math_score ?? 0
+  const rwScore   = data.reading_writing_score ?? 0
+
+  if (mathScore > 0 || rwScore > 0) {
+    let newTotal: number
+
+    if (mathScore > 0 && rwScore > 0) {
+      // Full score — straightforward
+      newTotal = mathScore + rwScore
+    } else {
+      // Partial score — pull the other half from the most recent full score_history row
+      const { data: existing } = await supabase
+        .from('users')
+        .select('current_score')
+        .eq('id', user.id)
+        .single()
+
+      const existingTotal = existing?.current_score ?? 0
+      // Heuristic: split existing total 50/50 to fill the missing section
+      const existingHalf = Math.round(existingTotal * 0.5)
+      newTotal = mathScore > 0
+        ? mathScore + (existingTotal - existingHalf)  // known Math + estimated R&W
+        : (existingHalf) + rwScore                    // estimated Math + known R&W
+    }
+
     await supabase
       .from('users')
-      .update({ current_score: total, updated_at: new Date().toISOString() })
+      .update({ current_score: newTotal, updated_at: new Date().toISOString() })
       .eq('id', user.id)
   }
 

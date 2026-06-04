@@ -7,6 +7,7 @@ export type ReplanTrigger =
   | 'error_log'
   | 'practice_test_score'
   | 'manual'
+  | 'behind_schedule'
 
 export interface DomainChange {
   domainLabel: string
@@ -33,8 +34,15 @@ export interface ReplannerResult {
   auditLogId: string | null
   /** Per-domain summary of what changed in this run */
   taskChanges: DomainChange[]
-  /** Estimated composite score if all remaining plan tasks are completed */
+  /** Predicted SAT score with confidence interval */
   predictedScore: number
+  predictedScoreLow: number
+  predictedScoreHigh: number
+  /** Plan version id saved before this replan */
+  planVersionId: string | null
+  /** Missed assignment recovery stats (when triggered by 'behind_schedule') */
+  recoveredTasks?: number
+  skippedTasks?: number
 }
 
 export interface TaskUpdate {

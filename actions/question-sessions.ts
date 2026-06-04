@@ -40,7 +40,7 @@ export interface CreateSessionResult {
   error?: string
   /** Non-null when the session saved but auto-creating error_log rows failed */
   errorLogWarning?: string
-  replanner?: Pick<ReplannerResult, 'tasksUpdated' | 'taskChanges' | 'predictedScore' | 'changesSummary'>
+  replanner?: Pick<ReplannerResult, 'tasksUpdated' | 'taskChanges' | 'predictedScore' | 'predictedScoreLow' | 'predictedScoreHigh' | 'changesSummary' | 'planVersionId'>
   metrics?: SessionMetrics
 }
 
@@ -157,10 +157,13 @@ export async function createQuestionSession(
     success: true,
     ...(errorLogInsertError ? { errorLogWarning: errorLogInsertError } : {}),
     replanner: {
-      tasksUpdated:   replanResult.tasksUpdated,
-      taskChanges:    replanResult.taskChanges,
-      predictedScore: replanResult.predictedScore,
-      changesSummary: replanResult.changesSummary,
+      tasksUpdated:       replanResult.tasksUpdated,
+      taskChanges:        replanResult.taskChanges,
+      predictedScore:     replanResult.predictedScore,
+      predictedScoreLow:  replanResult.predictedScoreLow,
+      predictedScoreHigh: replanResult.predictedScoreHigh,
+      changesSummary:     replanResult.changesSummary,
+      planVersionId:      replanResult.planVersionId,
     },
     metrics: { accuracy, improvementPct, topicMastery },
   }

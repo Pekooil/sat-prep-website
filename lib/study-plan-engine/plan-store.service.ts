@@ -152,6 +152,16 @@ export class PlanStoreService {
       .eq('user_id', input.userId)
       .eq('is_active', true)
 
+    // ── 1b. Delete all unlogged tasks (not completed, not locked) ───────────
+    // Completed tasks (is_completed=true) and manually locked tasks
+    // (replan_locked=true) are preserved as the user's permanent record.
+    await this.supabase
+      .from('calendar_tasks')
+      .delete()
+      .eq('user_id', input.userId)
+      .eq('is_completed', false)
+      .eq('replan_locked', false)
+
     // ── 2. Insert study_plans row ────────────────────────────────────────────
     const planMeta = {
       totalDays, studyDays, reviewDays, practiceTestDays, restDays,

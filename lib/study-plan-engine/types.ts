@@ -48,6 +48,13 @@ export interface StudyPlanEngineInput {
   testDate: string            // ISO 'YYYY-MM-DD'
   dailyStudyMinutes: number   // per study session (30–180)
   topicPerformance?: TopicPerformance[]
+  /**
+   * Optional per-day-of-week type override.
+   * Keys are JS getDay() values: 0=Sun, 1=Mon … 6=Sat.
+   * When provided, overrides the default Mon–Fri=study, Sat=review, Sun=rest layout.
+   * 'review' days in practiceTestWeeks are automatically promoted to 'practice_test'.
+   */
+  daySchedule?: Record<number, 'study' | 'review' | 'rest'>
 }
 
 // ─── Scoring / Ranking ────────────────────────────────────────────────────────

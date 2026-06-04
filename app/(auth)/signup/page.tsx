@@ -10,8 +10,9 @@ import { Label } from '@/components/ui/label'
 import { signUp } from '@/actions/auth'
 
 export default function SignupPage() {
-  const [pending, setPending] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [pending,   setPending]   = React.useState(false)
+  const [error,     setError]     = React.useState<string | null>(null)
+  const [confirmed, setConfirmed] = React.useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -26,7 +27,34 @@ export default function SignupPage() {
     if (result?.error) {
       setError(result.error)
       setPending(false)
+    } else if (result?.needsConfirmation) {
+      setConfirmed(true)
+      setPending(false)
     }
+  }
+
+  if (confirmed) {
+    return (
+      <Card className="shadow-xl border-0 bg-white dark:bg-slate-800">
+        <CardContent className="p-8 text-center space-y-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 mx-auto">
+            <svg className="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold">Check your email</h2>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            We sent a confirmation link to your email address. Click it to activate your account, then sign in.
+          </p>
+          <Link
+            href="/login"
+            className="inline-block mt-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Back to sign in
+          </Link>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

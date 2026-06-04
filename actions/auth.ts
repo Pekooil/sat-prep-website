@@ -20,12 +20,12 @@ export async function signIn(formData: FormData) {
 
 export async function signUp(formData: FormData) {
   'use server'
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
+  const email    = formData.get('email')     as string
+  const password = formData.get('password')  as string
   const fullName = formData.get('full_name') as string
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { full_name: fullName } },
@@ -33,6 +33,12 @@ export async function signUp(formData: FormData) {
 
   if (error) {
     return { error: error.message }
+  }
+
+  // Email confirmation is enabled in Supabase — session won't exist yet.
+  // Redirect to login with a flag so the page shows a "check your email" message.
+  if (!data.session) {
+    return { needsConfirmation: true }
   }
 
   redirect('/home')

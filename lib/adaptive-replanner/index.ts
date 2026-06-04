@@ -1,22 +1,26 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Adaptive Replanner
+// Adaptive Replanner v2
 //
-// Triggered whenever new performance data arrives (question session, error log,
-// practice test score). Re-ranks all 8 SAT domains from fresh question_sessions
-// data, then updates every future unlocked calendar_task with:
-//   • priority_score (1–100 normalized), mastery_target (fixed 90)
-//   • estimated_score_impact, replanning_weight
-//   • difficulty (adjusted for new accuracy + current phase)
-//   • title and description (reflect new question count and difficulty)
+// Triggered whenever new performance data arrives. Re-ranks all 8 SAT domains
+// and updates every future unlocked calendar_task with:
+//   • priority_score, mastery_target, estimated_score_impact, replanning_weight
+//   • difficulty (adjusted for mastery tier + phase)
+//   • question count (scaled by mastery-tier volume multiplier)
+//   • title and description
 //
-// Safeguards:
-//   • Never touches replan_locked tasks (completed or manually locked)
-//   • Never modifies practice test content (date, duration, description)
-//   • Never exceeds duration_minutes-based question ceiling
+// New in v2:
+//   • Topic Mastery Engine (6-factor 0–100 score per domain)
+//   • Volume multipliers by mastery tier (intervention / developing / normal / mastered)
+//   • Plan version snapshot saved before every replan
+//   • Score prediction with confidence interval stored in score_predictions
+//   • AI coach recommendations generated and persisted
+//   • Missed assignment recovery (triggered by 'behind_schedule')
+//
+// Safeguards (unchanged):
+//   • Never touches replan_locked tasks
+//   • Never modifies practice test content
 //   • Never removes any task — only updates existing rows
-//
-// Returns DomainChange[] and predictedScore for UI display.
-// Writes a replan_audit_log row on every run.
+//   • Never displays or modifies SAT question content
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -26,6 +30,28 @@ import { phaseForWeek, difficultyForSession } from '@/lib/study-plan-engine/diff
 import { DOMAIN_CATALOG } from '@/lib/study-plan-engine/domain-catalog'
 import type { TopicPerformance, Phase, RankedDomain } from '@/lib/study-plan-engine/types'
 import type { ReplanTrigger, ReplannerResult, TaskUpdate, DomainChange } from './types'
+
+import {
+  computeTopicMastery,
+  fetchSavedMastery,
+  saveTopicMastery,
+  volumeMultiplier,
+} from './topic-mastery.service'
+import {
+  computeScorePrediction,
+  saveScorePrediction,
+} from './score-prediction.service'
+import {
+  savePlanVersion,
+  updateVersionTaskCount,
+} from './plan-version.service'
+import {
+  generateRecommendations,
+  saveRecommendations,
+} from './recommendations.service'
+import {
+  recoverMissedAssignments,
+} from './missed-assignment.service'
 
 type Supabase = SupabaseClient<Database>
 
@@ -64,7 +90,6 @@ function questionCountForTask(durationMinutes: number | null, phase: Phase): num
   return Math.max(10, Math.min(80, Math.round(base * ramp[phase])))
 }
 
-/** Parse question count from task title, e.g. "Algebra — Easy · 18q" → 18 */
 function parseQuestionCount(title: string): number | null {
   const m = title.match(/(\d+)q/)
   return m ? parseInt(m[1], 10) : null
@@ -94,7 +119,7 @@ function buildDescription(
   return descriptions[phase]
 }
 
-// ─── Topic performance aggregation ───────────────────────────────────────────
+// ─── Topic performance aggregation (for rankDomains) ─────────────────────────
 
 async function fetchTopicPerformance(supabase: Supabase, userId: string): Promise<TopicPerformance[]> {
   const { data: sessions } = await supabase
@@ -125,18 +150,6 @@ async function fetchTopicPerformance(supabase: Supabase, userId: string): Promis
     }))
 }
 
-// ─── Predicted score estimate ─────────────────────────────────────────────────
-
-/**
- * Upper-bound score estimate: current score + all remaining domain potential.
- * Labeled "potential score" in the UI — what the student could hit if they
- * execute the full plan.
- */
-function computePredictedScore(currentScore: number, ranked: RankedDomain[]): number {
-  const totalPotential = ranked.reduce((sum, rd) => sum + rd.potentialPoints, 0)
-  return Math.min(1600, Math.round(currentScore + totalPotential))
-}
-
 // ─── Main export ─────────────────────────────────────────────────────────────
 
 export async function runAdaptiveReplanner(
@@ -146,12 +159,15 @@ export async function runAdaptiveReplanner(
   triggerId?: string,
 ): Promise<ReplannerResult> {
   const empty: ReplannerResult = {
-    tasksUpdated: 0,
+    tasksUpdated:         0,
     domainsReprioritized: [],
-    changesSummary: 'No changes made.',
-    auditLogId: null,
-    taskChanges: [],
-    predictedScore: 0,
+    changesSummary:       'No changes made.',
+    auditLogId:           null,
+    taskChanges:          [],
+    predictedScore:       0,
+    predictedScoreLow:    0,
+    predictedScoreHigh:   0,
+    planVersionId:        null,
   }
 
   // ── 1. Load user profile ─────────────────────────────────────────────────
@@ -163,17 +179,49 @@ export async function runAdaptiveReplanner(
 
   if (!profile?.test_date) return empty
 
-  const currentScore = profile.current_score ?? 1000
+  const currentScore     = profile.current_score ?? 1000
+  const dailyMinutes     = profile.daily_study_minutes ?? 60
 
-  // ── 2. Re-rank domains from fresh question_sessions data ─────────────────
-  const topicPerformance = await fetchTopicPerformance(supabase, userId)
-  const ranked           = rankDomains(topicPerformance, profile.target_score ?? 1400)
-  const maxPriority      = ranked[0]?.priorityScore ?? 1
-  const predictedScore   = computePredictedScore(currentScore, ranked)
+  // ── 2. Fetch old mastery for comparison (before computing new) ───────────
+  const [oldMastery, topicPerformance] = await Promise.all([
+    fetchSavedMastery(supabase, userId),
+    fetchTopicPerformance(supabase, userId),
+  ])
+
+  // ── 3. Compute new topic mastery (6-factor engine) ───────────────────────
+  const newMastery = await computeTopicMastery(supabase, userId)
+  const masteryByKey = new Map(newMastery.map(m => [m.domainKey, m]))
+
+  // ── 4. Re-rank domains from fresh question_sessions data ─────────────────
+  const ranked     = rankDomains(topicPerformance, profile.target_score ?? 1400)
+  const maxPriority = ranked[0]?.priorityScore ?? 1
 
   const rankedByLabel = new Map<string, RankedDomain>(ranked.map(rd => [rd.entry.label, rd]))
 
-  // ── 3. Fetch active plan id ──────────────────────────────────────────────
+  // ── 5. Compute score prediction ──────────────────────────────────────────
+  const prediction = await computeScorePrediction(
+    supabase, userId, currentScore, newMastery,
+  )
+
+  // ── 6. Save plan version snapshot (before touching tasks) ────────────────
+  const versionId = await savePlanVersion(
+    supabase,
+    userId,
+    triggeredBy,
+    `Triggered by: ${triggeredBy}`,
+    prediction.predictedScore,
+  )
+
+  // ── 7. Missed assignment recovery (only for 'behind_schedule' trigger) ───
+  let recoveredTasks = 0
+  let skippedTasks   = 0
+  if (triggeredBy === 'behind_schedule') {
+    const recovery = await recoverMissedAssignments(supabase, userId, dailyMinutes)
+    recoveredTasks = recovery.recovered
+    skippedTasks   = recovery.skipped
+  }
+
+  // ── 8. Fetch active plan id ──────────────────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: plan } = await (supabase.from('study_plans') as any)
     .select('id')
@@ -181,7 +229,7 @@ export async function runAdaptiveReplanner(
     .eq('is_active', true)
     .single()
 
-  // ── 4. Fetch all future unlocked tasks ───────────────────────────────────
+  // ── 9. Fetch all future unlocked tasks ───────────────────────────────────
   const today = new Date().toISOString().split('T')[0]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const taskQuery = (supabase.from('calendar_tasks') as any)
@@ -194,20 +242,31 @@ export async function runAdaptiveReplanner(
 
   const { data: futureTasks } = await taskQuery
   if (!futureTasks || futureTasks.length === 0) {
-    return { ...empty, predictedScore }
+    await Promise.all([
+      saveScorePrediction(supabase, userId, prediction, newMastery),
+      saveTopicMastery(supabase, userId, newMastery),
+    ])
+    return {
+      ...empty,
+      predictedScore:    prediction.predictedScore,
+      predictedScoreLow: prediction.confidenceLow,
+      predictedScoreHigh: prediction.confidenceHigh,
+      planVersionId:     versionId,
+      recoveredTasks,
+      skippedTasks,
+    }
   }
 
-  // ── 5. Build update payloads + track per-domain changes ──────────────────
+  // ── 10. Build update payloads + track per-domain changes ─────────────────
   const updates: TaskUpdate[] = []
   const now = isoNow()
 
-  // Per-domain change tracking: label → aggregate stats
   const domainTracker = new Map<string, {
-    count: number
-    diffChanges: Set<string>   // "Easy → Medium" etc.
-    qDelta: number             // net question count delta
+    count:         number
+    diffChanges:   Set<string>
+    qDelta:        number
     normalizedPriority: number
-    accuracy: number
+    accuracy:      number
   }>()
 
   for (const task of futureTasks) {
@@ -228,24 +287,27 @@ export async function runAdaptiveReplanner(
     const rd = rankedByLabel.get(task.category ?? '')
     if (!rd) continue
 
-    const phase         = phaseForTaskDate(task.task_date, profile.test_date)
-    const newDifficulty = difficultyForSession(phase, rd.currentAccuracy)
-    const newQCount     = questionCountForTask(task.duration_minutes, phase)
-    const isReview      = (task.title as string).startsWith('Review —')
-    const normalizedPS  = Math.max(1, Math.round((rd.priorityScore / maxPriority) * 100))
-    const replanWeight  = Math.round((rd.priorityScore / maxPriority) * 100) / 100
+    const domainMastery  = masteryByKey.get(rd.entry.key)
+    const masteryScore   = domainMastery?.masteryScore ?? Math.round(rd.currentAccuracy)
+    const volMultiplier  = volumeMultiplier(masteryScore)
 
-    // Detect what changed for the audit summary
-    const oldFilters    = task.college_board_filters as Record<string, string> | null
-    const oldDifficulty = oldFilters?.difficulty ?? null
-    const oldQCount     = parseQuestionCount(task.title as string)
+    const phase          = phaseForTaskDate(task.task_date, profile.test_date)
+    const newDifficulty  = difficultyForSession(phase, rd.currentAccuracy)
+    const baseQCount     = questionCountForTask(task.duration_minutes, phase)
+    const newQCount      = Math.max(10, Math.min(80, Math.round(baseQCount * volMultiplier)))
+    const isReview       = (task.title as string).startsWith('Review —')
+    const normalizedPS   = Math.max(1, Math.round((rd.priorityScore / maxPriority) * 100))
+    const replanWeight   = Math.round((rd.priorityScore / maxPriority) * 100) / 100
+
+    const oldFilters     = task.college_board_filters as Record<string, string> | null
+    const oldDifficulty  = oldFilters?.difficulty ?? null
+    const oldQCount      = parseQuestionCount(task.title as string)
 
     const diffChange = oldDifficulty && oldDifficulty !== newDifficulty
       ? `${capitalize(oldDifficulty)} → ${capitalize(newDifficulty)}`
       : null
     const qDelta = oldQCount !== null ? newQCount - oldQCount : 0
 
-    // Accumulate per-domain stats
     const existing = domainTracker.get(rd.entry.label)
     if (existing) {
       existing.count++
@@ -253,11 +315,11 @@ export async function runAdaptiveReplanner(
       existing.qDelta += qDelta
     } else {
       domainTracker.set(rd.entry.label, {
-        count: 1,
-        diffChanges: diffChange ? new Set([diffChange]) : new Set(),
+        count:              1,
+        diffChanges:        diffChange ? new Set([diffChange]) : new Set(),
         qDelta,
         normalizedPriority: normalizedPS,
-        accuracy: rd.currentAccuracy,
+        accuracy:           rd.currentAccuracy,
       })
     }
 
@@ -274,7 +336,7 @@ export async function runAdaptiveReplanner(
     })
   }
 
-  // ── 6. Batch update in parallel chunks of 100 ────────────────────────────
+  // ── 11. Batch update in parallel chunks of 100 ───────────────────────────
   const CHUNK = 100
   let updatedCount = 0
 
@@ -302,11 +364,11 @@ export async function runAdaptiveReplanner(
     updatedCount += chunk.length
   }
 
-  // ── 7. Build structured change list for UI ───────────────────────────────
+  // ── 12. Build structured change list for UI ──────────────────────────────
   const taskChanges: DomainChange[] = []
   for (const [label, stats] of domainTracker) {
     const topDiff = stats.diffChanges.size > 0 ? [...stats.diffChanges][0] : null
-    const qStr = stats.qDelta !== 0
+    const qStr    = stats.qDelta !== 0
       ? `${stats.qDelta > 0 ? '+' : ''}${stats.qDelta}q`
       : null
     taskChanges.push({
@@ -318,10 +380,9 @@ export async function runAdaptiveReplanner(
       currentAccuracy:  stats.accuracy,
     })
   }
-  // Sort by priority descending for display
   taskChanges.sort((a, b) => b.newPriorityScore - a.newPriorityScore)
 
-  // ── 8. Audit log + domain summary ────────────────────────────────────────
+  // ── 13. Audit log + domain summary ───────────────────────────────────────
   const domainChangesForLog = ranked.slice(0, 5).map(rd => ({
     label:            rd.entry.label,
     oldPriorityScore: 0,
@@ -331,11 +392,15 @@ export async function runAdaptiveReplanner(
   }))
 
   const topDomains = ranked.slice(0, 3)
-    .map(rd => `${rd.entry.label} (${rd.currentAccuracy}% → ${capitalize(difficultyForSession(phaseForTaskDate(today, profile.test_date), rd.currentAccuracy))})`)
+    .map(rd =>
+      `${rd.entry.label} (${rd.currentAccuracy}% → ${capitalize(difficultyForSession(phaseForTaskDate(today, profile.test_date), rd.currentAccuracy))})`
+    )
     .join(', ')
 
   const changesSummary =
-    `Triggered by: ${triggeredBy}. ${updatedCount} tasks updated. Top domains: ${topDomains}.`
+    `Triggered by: ${triggeredBy}. ${updatedCount} tasks updated. ` +
+    `Predicted score: ${prediction.predictedScore} (±${prediction.predictedScore - prediction.confidenceLow}). ` +
+    `Top domains: ${topDomains}.`
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: auditRow } = await (supabase.from('replan_audit_logs') as any)
@@ -350,12 +415,29 @@ export async function runAdaptiveReplanner(
     .select('id')
     .single()
 
+  const auditLogId = auditRow?.id ?? null
+
+  // ── 14. Save mastery, prediction, recommendations, update version count ───
+  const recommendations = generateRecommendations(newMastery, oldMastery)
+
+  await Promise.all([
+    saveTopicMastery(supabase, userId, newMastery),
+    saveScorePrediction(supabase, userId, prediction, newMastery),
+    saveRecommendations(supabase, userId, recommendations, auditLogId ?? undefined),
+    versionId ? updateVersionTaskCount(supabase, versionId, updatedCount) : Promise.resolve(),
+  ])
+
   return {
     tasksUpdated:         updatedCount,
     domainsReprioritized: domainChangesForLog,
     changesSummary,
-    auditLogId:           auditRow?.id ?? null,
+    auditLogId,
     taskChanges,
-    predictedScore,
+    predictedScore:       prediction.predictedScore,
+    predictedScoreLow:    prediction.confidenceLow,
+    predictedScoreHigh:   prediction.confidenceHigh,
+    planVersionId:        versionId,
+    recoveredTasks,
+    skippedTasks,
   }
 }

@@ -10,13 +10,15 @@ export default async function HomePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [profileResult, tasksResult, scoresResult, errorsResult, sessionsResult] = await Promise.all([
+  const today = todayISO()
+
+  const [profileResult, tasksResult, scoresResult, errorsResult, sessionsResult, todayTasksResult, predictionResult] = await Promise.all([
     supabase.from('users').select('*').eq('id', user!.id).single(),
     supabase
       .from('calendar_tasks')
       .select('*')
       .eq('user_id', user!.id)
-      .gte('task_date', todayISO())
+      .gte('task_date', today)
       .order('task_date')
       .limit(5),
     supabase
@@ -31,8 +33,21 @@ export default async function HomePage() {
       .eq('user_id', user!.id),
     supabase
       .from('question_sessions')
-      .select('questions_attempted, questions_correct, time_spent_minutes')
+      .select('questions_attempted, questions_correct, time_spent_minutes, session_date')
       .eq('user_id', user!.id),
+    supabase
+      .from('calendar_tasks')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user!.id)
+      .eq('task_date', today)
+      .eq('is_completed', false),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from('score_predictions') as any)
+      .select('predicted_score')
+      .eq('user_id', user!.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ])
 
   const profile = profileResult.data
@@ -40,17 +55,33 @@ export default async function HomePage() {
   const recentScores = scoresResult.data ?? []
   const errors = errorsResult.data ?? []
   const sessions = sessionsResult.data ?? []
+  const todayTaskCount = todayTasksResult.count ?? 0
+  const predictedScore: number | null = predictionResult.data?.predicted_score ?? null
 
   const totalAttempted = sessions.reduce((s, q) => s + (q.questions_attempted ?? 0), 0)
   const totalCorrect = sessions.reduce((s, q) => s + (q.questions_correct ?? 0), 0)
   const totalMinutes = sessions.reduce((s, q) => s + (q.time_spent_minutes ?? 0), 0)
   const unmasteredErrors = errors.filter(e => !e.mastered).length
 
+  // Compute study streak: consecutive days with at least one session, working back from today
+  const sessionDays = new Set(
+    sessions.map(s => (s.session_date as string | null)?.split('T')[0]).filter(Boolean)
+  )
+  let streak = 0
+  let streakDate = new Date()
+  for (;;) {
+    const key = streakDate.toISOString().split('T')[0]
+    if (sessionDays.has(key)) {
+      streak++
+      streakDate = new Date(streakDate.getTime() - 86_400_000)
+    } else break
+  }
+
   return (
     <div className="space-y-6">
-      <WelcomeBanner profile={profile} />
+      <WelcomeBanner profile={profile} streak={streak} />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <ScoreCard
           label="Current Score"
           value={profile?.current_score ?? null}
@@ -65,16 +96,25 @@ export default async function HomePage() {
           color="indigo"
           description={
             profile?.current_score && profile?.target_score
-              ? `Gap: ${profile.target_score - profile.current_score} points`
+              ? `Gap: ${profile.target_score - profile.current_score} pts`
               : 'Set your goal'
           }
         />
         <ScoreCard
-          label="Accuracy Rate"
-          value={totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : null}
-          suffix="%"
+          label="Predicted Score"
+          value={predictedScore}
+          suffix="/1600"
+          color="violet"
+          description="Based on your session data"
+          href="/data"
+        />
+        <ScoreCard
+          label="Due Today"
+          value={todayTaskCount}
+          suffix=" tasks"
           color="emerald"
-          description={`${totalAttempted} questions practiced`}
+          description="Tap to open calendar"
+          href="/calendar"
         />
         <ScoreCard
           label="Open Errors"

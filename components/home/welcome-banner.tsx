@@ -1,12 +1,13 @@
-import { CalendarDays, TrendingUp } from 'lucide-react'
+import { CalendarDays, TrendingUp, Flame } from 'lucide-react'
 import type { User } from '@/types'
 import { daysUntilTest, formatDate } from '@/lib/utils'
 
 interface WelcomeBannerProps {
   profile: User | null
+  streak?: number
 }
 
-export function WelcomeBanner({ profile }: WelcomeBannerProps) {
+export function WelcomeBanner({ profile, streak = 0 }: WelcomeBannerProps) {
   const days = daysUntilTest(profile?.test_date ?? null)
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Student'
 
@@ -19,8 +20,26 @@ export function WelcomeBanner({ profile }: WelcomeBannerProps) {
         <TrendingUp className="h-48 w-48 -translate-y-8 translate-x-8" />
       </div>
       <div className="relative">
-        <p className="text-blue-200 text-sm font-medium">{greeting},</p>
-        <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{firstName}! 👋</h1>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-blue-200 text-sm font-medium">{greeting},</p>
+            <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{firstName}! 👋</h1>
+          </div>
+          <div className="shrink-0 flex items-center gap-1.5 rounded-xl bg-white/15 px-3 py-2 backdrop-blur-sm">
+            <Flame className="h-4 w-4 text-orange-300" />
+            {streak > 0 ? (
+              <div className="text-right">
+                <p className="text-base font-bold leading-none text-white">{streak}</p>
+                <p className="text-[10px] text-blue-200 leading-none mt-0.5">day streak</p>
+              </div>
+            ) : (
+              <div className="text-right">
+                <p className="text-[11px] font-semibold text-blue-100 leading-none">No streak</p>
+                <p className="text-[10px] text-blue-200 leading-none mt-0.5">Study today!</p>
+              </div>
+            )}
+          </div>
+        </div>
         {days !== null ? (
           <div className="mt-3 flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-blue-200" />

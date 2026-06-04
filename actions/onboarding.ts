@@ -66,18 +66,9 @@ export async function saveOnboarding(
 
   if (profileErr) return { error: profileErr.message }
 
-  // 2. Diagnostic test entry
-  const { error: diagErr } = await supabase.from('diagnostic_tests').insert({
-    user_id: user.id,
-    test_date: today,
-    math_score: estimateSectionScore(step2, 'math'),
-    reading_writing_score: estimateSectionScore(step2, 'reading_writing'),
-    notes: 'Initial diagnostic from onboarding',
-  })
-
-  if (diagErr) return { error: diagErr.message }
-
-  // 3. Question sessions per domain (only domains with data)
+  // 2. Question sessions per domain (only domains with real data)
+  // Note: diagnostic_tests insert removed — question_sessions is the single source of truth
+  // for all per-domain performance data read by the study plan engine and analytics.
   const DOMAIN_MAP = [
     { key: 'informationIdeas', label: 'Information and Ideas',        subject: 'reading_writing' as const, get: () => step2.reading_writing.informationIdeas },
     { key: 'craftStructure',   label: 'Craft and Structure',          subject: 'reading_writing' as const, get: () => step2.reading_writing.craftStructure },
@@ -119,10 +110,19 @@ export async function saveOnboarding(
   // Deferred to after the study plan insert so the active plan exists to query against.
 
   // 4. Study plan — run the engine so calendar_tasks rows are created alongside the plan
+  //
+  // For domains the user skipped (0 attempted), inject a synthetic 40 % seed so the engine
+  // treats them as weak areas and schedules them. This matches the behaviour of
+  // generatePlanFromForm's weakAreaKeys path.
+  // Note: synthetic entries are NOT written to question_sessions — analytics only surfaces
+  // real session rows, so charts stay honest.
   const topicPerformance: TopicPerformance[] = DOMAIN_MAP
     .map(d => {
       const { attempted, correct } = d.get()
-      if (attempted <= 0) return null
+      if (attempted <= 0) {
+        // Skipped domain → treat as weak area at 40 % accuracy
+        return { domainKey: d.key, attempted: 10, correct: 4, accuracy: 40 }
+      }
       const clamped = Math.min(correct, attempted)
       return {
         domainKey: d.key,
@@ -131,7 +131,6 @@ export async function saveOnboarding(
         accuracy: Math.round((clamped / attempted) * 100),
       }
     })
-    .filter((t): t is TopicPerformance => t !== null)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const engine = new StudyPlanEngine(supabase as any)
@@ -148,7 +147,7 @@ export async function saveOnboarding(
 
   // 5. Baseline score history
   const mathEstimate = Math.round(step1.currentScore * 0.5)
-  await supabase.from('score_history').insert({
+  const { error: scoreErr } = await supabase.from('score_history').insert({
     user_id: user.id,
     test_type: 'diagnostic',
     test_date: today,
@@ -156,15 +155,17 @@ export async function saveOnboarding(
     reading_writing_score: step1.currentScore - mathEstimate,
     notes: 'Baseline score from onboarding',
   })
+  if (scoreErr) return { error: scoreErr.message }
 
-  // 6. Welcome notification
-  await supabase.from('notifications').insert({
+  // 6. Welcome notification (non-fatal — does not block onboarding completion)
+  const { error: notifErr } = await supabase.from('notifications').insert({
     user_id: user.id,
     title: '🎉 Welcome to SAT Study Planner!',
     message: `Your study plan is ready. You have ${analysis.studyDays} days to reach ${step1.targetScore}. Let's get started!`,
     type: 'system',
     is_read: false,
   })
+  if (notifErr) console.error('[saveOnboarding] notification insert failed:', notifErr.message)
 
   // Trigger initial replanning pass now that diagnostic sessions and plan exist.
   // Fire-and-forget — onboarding completion should not block on this.
@@ -176,17 +177,3 @@ export async function saveOnboarding(
   return {}
 }
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
-
-function estimateSectionScore(step2: OnboardingStep2Data, section: 'math' | 'reading_writing'): number {
-  const cats = section === 'math'
-    ? Object.values(step2.math)
-    : Object.values(step2.reading_writing)
-
-  const totAttempted = cats.reduce((s, c) => s + c.attempted, 0)
-  const totCorrect   = cats.reduce((s, c) => s + c.correct, 0)
-  if (totAttempted === 0) return 550
-
-  const accuracy = totCorrect / totAttempted
-  return Math.round(200 + accuracy * 600)
-}

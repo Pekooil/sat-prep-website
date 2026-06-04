@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
@@ -5,8 +6,9 @@ interface ScoreCardProps {
   label: string
   value: number | null
   suffix?: string
-  color: 'blue' | 'indigo' | 'emerald' | 'amber' | 'red'
+  color: 'blue' | 'indigo' | 'emerald' | 'amber' | 'red' | 'violet'
   description?: string
+  href?: string
 }
 
 const colorMap = {
@@ -35,12 +37,17 @@ const colorMap = {
     text: 'text-red-600 dark:text-red-400',
     dot: 'bg-red-500',
   },
+  violet: {
+    bg: 'bg-violet-50 dark:bg-violet-900/20',
+    text: 'text-violet-600 dark:text-violet-400',
+    dot: 'bg-violet-500',
+  },
 }
 
-export function ScoreCard({ label, value, suffix = '', color, description }: ScoreCardProps) {
+export function ScoreCard({ label, value, suffix = '', color, description, href }: ScoreCardProps) {
   const colors = colorMap[color]
-  return (
-    <Card className="overflow-hidden">
+  const card = (
+    <Card className={cn('overflow-hidden', href && 'cursor-pointer hover:shadow-md transition-shadow')}>
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="min-w-0">
@@ -64,4 +71,6 @@ export function ScoreCard({ label, value, suffix = '', color, description }: Sco
       </CardContent>
     </Card>
   )
+  if (href) return <Link href={href}>{card}</Link>
+  return card
 }

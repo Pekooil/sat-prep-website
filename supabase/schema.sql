@@ -200,6 +200,94 @@ ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS student_answer        TEXT CHECK
 ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS correct_answer        TEXT CHECK (correct_answer IN ('A','B','C','D'));
 CREATE INDEX IF NOT EXISTS idx_error_logs_user_archived ON error_logs(user_id, archived);
 
+-- ─── Adaptive Replanner v2 — new tables ────────────────────────────────────
+
+-- topic_mastery: computed 6-factor mastery snapshot (0-100) per domain per user
+CREATE TABLE IF NOT EXISTS topic_mastery (
+  id                        UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id                   UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  domain_key                TEXT        NOT NULL,
+  domain_label              TEXT        NOT NULL,
+  subject                   TEXT        NOT NULL CHECK (subject IN ('math','reading_writing')),
+  mastery_score             NUMERIC     NOT NULL DEFAULT 0 CHECK (mastery_score BETWEEN 0 AND 100),
+  accuracy_score            NUMERIC     DEFAULT 0,
+  recent_accuracy           NUMERIC     DEFAULT 0,
+  improvement_factor        NUMERIC     DEFAULT 0,
+  mistake_cleanliness       NUMERIC     DEFAULT 0,
+  confidence_factor         NUMERIC     DEFAULT 0,
+  consistency_factor        NUMERIC     DEFAULT 0,
+  total_questions_attempted INTEGER     DEFAULT 0,
+  total_sessions            INTEGER     DEFAULT 0,
+  computed_at               TIMESTAMPTZ DEFAULT NOW(),
+  created_at                TIMESTAMPTZ DEFAULT NOW(),
+  updated_at                TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, domain_key)
+);
+ALTER TABLE topic_mastery ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage own mastery" ON topic_mastery FOR ALL USING (auth.uid() = user_id);
+CREATE INDEX IF NOT EXISTS idx_topic_mastery_user ON topic_mastery(user_id);
+
+-- plan_versions: snapshot of future tasks before each replan (for compare/restore)
+CREATE TABLE IF NOT EXISTS plan_versions (
+  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  study_plan_id   UUID        REFERENCES study_plans(id) ON DELETE SET NULL,
+  version_number  INTEGER     NOT NULL DEFAULT 1,
+  triggered_by    TEXT        NOT NULL,
+  reason          TEXT,
+  tasks_snapshot  JSONB       NOT NULL DEFAULT '[]',
+  tasks_updated   INTEGER     DEFAULT 0,
+  predicted_score NUMERIC,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE plan_versions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage own versions" ON plan_versions FOR ALL USING (auth.uid() = user_id);
+CREATE INDEX IF NOT EXISTS idx_plan_versions_user ON plan_versions(user_id, created_at DESC);
+
+-- score_predictions: history of predicted SAT scores with confidence intervals
+CREATE TABLE IF NOT EXISTS score_predictions (
+  id                 UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id            UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  predicted_score    INTEGER     NOT NULL,
+  confidence_low     INTEGER     NOT NULL,
+  confidence_high    INTEGER     NOT NULL,
+  baseline_score     INTEGER,
+  consistency_factor NUMERIC,
+  session_count      INTEGER,
+  mastery_snapshot   JSONB,
+  notes              TEXT,
+  created_at         TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE score_predictions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage own predictions" ON score_predictions FOR ALL USING (auth.uid() = user_id);
+CREATE INDEX IF NOT EXISTS idx_score_predictions_user ON score_predictions(user_id, created_at DESC);
+
+-- adaptive_recommendations: AI coach messages generated per replan
+CREATE TABLE IF NOT EXISTS adaptive_recommendations (
+  id                   UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id              UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  replan_audit_log_id  UUID        REFERENCES replan_audit_logs(id) ON DELETE SET NULL,
+  domain_key           TEXT,
+  domain_label         TEXT,
+  recommendation_type  TEXT        NOT NULL CHECK (recommendation_type IN (
+    'increase_volume','reduce_volume','intervention',
+    'maintenance','schedule_change','recovery','general'
+  )),
+  message              TEXT        NOT NULL,
+  old_mastery          NUMERIC,
+  new_mastery          NUMERIC,
+  is_read              BOOLEAN     DEFAULT FALSE,
+  created_at           TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE adaptive_recommendations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage own recommendations" ON adaptive_recommendations FOR ALL USING (auth.uid() = user_id);
+CREATE INDEX IF NOT EXISTS idx_adaptive_recommendations_user ON adaptive_recommendations(user_id, created_at DESC);
+
+-- Extend replan_audit_logs to accept 'behind_schedule' trigger
+ALTER TABLE replan_audit_logs DROP CONSTRAINT IF EXISTS replan_audit_logs_triggered_by_check;
+ALTER TABLE replan_audit_logs ADD CONSTRAINT replan_audit_logs_triggered_by_check
+  CHECK (triggered_by IN ('question_session','error_log','practice_test_score','manual','behind_schedule'));
+
 -- RLS Policies
 CREATE POLICY "Users can manage own profile" ON users FOR ALL USING (auth.uid() = id);
 CREATE POLICY "Users can manage own diagnostics" ON diagnostic_tests FOR ALL USING (auth.uid() = user_id);
