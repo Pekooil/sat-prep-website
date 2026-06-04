@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import { ErrorLogClient } from '@/components/error-log/error-log-client'
+
+export const metadata: Metadata = {
+  title: 'Error Log',
+  description: 'Track mistakes, categorise error types, analyse patterns, and monitor topic mastery progress.',
+}
 
 export default function ErrorLogPage() {
   return (

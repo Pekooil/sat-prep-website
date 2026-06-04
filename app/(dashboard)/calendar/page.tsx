@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import { CalendarClient } from '@/components/calendar/calendar-client'
+
+export const metadata: Metadata = {
+  title: 'Calendar',
+  description: 'View and manage your daily SAT study tasks, drag-and-drop rescheduling, and session logging.',
+}
 
 export default function CalendarPage() {
   return (

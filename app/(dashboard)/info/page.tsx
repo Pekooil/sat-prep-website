@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import { AboutSection } from '@/components/info/about-section'
+
+export const metadata: Metadata = {
+  title: 'Info & Contact',
+  description: 'Learn how SAT Study Planner AI works, read FAQs, and get in touch.',
+}
 import { FAQAccordion } from '@/components/info/faq-accordion'
 import { ContactForm } from '@/components/info/contact-form'
 

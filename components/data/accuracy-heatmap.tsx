@@ -9,6 +9,58 @@ interface AccuracyHeatmapProps {
   sessions: QuestionSession[]
 }
 
+// DomainGrid must live at module level (not inside AccuracyHeatmap) to satisfy
+// the react-hooks/no-unstable-components rule.
+function DomainGrid({
+  domains,
+  acc,
+}: {
+  domains: typeof DOMAIN_CATALOG
+  acc: (label: string) => number | null
+}) {
+  return (
+    <div className="space-y-3">
+      {domains.map(domain => {
+        const domAcc = acc(domain.label)
+        return (
+          <div key={domain.key}>
+            <div className="flex items-center gap-2 mb-1">
+              <div
+                title={domAcc !== null ? `${domAcc}%` : 'No data'}
+                className={cn('h-5 w-5 rounded shrink-0', cellBg(domAcc))}
+              />
+              <span className="text-xs font-medium text-[var(--foreground)] truncate">
+                {domain.label}
+              </span>
+              {domAcc !== null && (
+                <span className="ml-auto text-xs font-bold tabular-nums shrink-0">
+                  {domAcc}%
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1 pl-7">
+              {domain.skills.map(skill => (
+                <span
+                  key={skill.label}
+                  title={`${skill.label} · ${skill.difficulty}`}
+                  className={cn(
+                    'inline-block rounded px-2 py-0.5 text-[10px] font-medium truncate max-w-[180px]',
+                    domAcc !== null
+                      ? `${cellBg(domAcc)} text-white`
+                      : 'bg-slate-100 dark:bg-slate-800 text-[var(--muted-foreground)]',
+                  )}
+                >
+                  {skill.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function cellBg(acc: number | null): string {
   if (acc === null) return 'bg-slate-100 dark:bg-slate-800/50'
   if (acc >= 90)   return 'bg-emerald-500 dark:bg-emerald-600'
@@ -57,57 +109,6 @@ export function AccuracyHeatmap({ sessions }: AccuracyHeatmapProps) {
     )
   }
 
-  function DomainGrid({ domains }: { domains: typeof DOMAIN_CATALOG }) {
-    return (
-      <div className="space-y-3">
-        {domains.map(domain => {
-          const domAcc = acc(domain.label)
-          return (
-            <div key={domain.key}>
-              {/* Domain header row */}
-              <div className="flex items-center gap-2 mb-1">
-                <div
-                  title={domAcc !== null ? `${domAcc}%` : 'No data'}
-                  className={cn(
-                    'h-5 w-5 rounded shrink-0',
-                    cellBg(domAcc),
-                  )}
-                />
-                <span className="text-xs font-medium text-[var(--foreground)] truncate">
-                  {domain.label}
-                </span>
-                {domAcc !== null && (
-                  <span className="ml-auto text-xs font-bold tabular-nums shrink-0">
-                    {domAcc}%
-                  </span>
-                )}
-              </div>
-
-              {/* Skill chips */}
-              <div className="flex flex-wrap gap-1 pl-7">
-                {domain.skills.map(skill => (
-                  <span
-                    key={skill.label}
-                    title={`${skill.label} · ${skill.difficulty}`}
-                    className={cn(
-                      'inline-block rounded px-2 py-0.5 text-[10px] font-medium truncate max-w-[180px]',
-                      // skills inherit domain color (no per-skill session data)
-                      domAcc !== null
-                        ? `${cellBg(domAcc)} text-white`
-                        : 'bg-slate-100 dark:bg-slate-800 text-[var(--muted-foreground)]',
-                    )}
-                  >
-                    {skill.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    )
-  }
-
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -120,11 +121,11 @@ export function AccuracyHeatmap({ sessions }: AccuracyHeatmapProps) {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
             <p className="text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-3">Math</p>
-            <DomainGrid domains={mathDomains} />
+            <DomainGrid domains={mathDomains} acc={acc} />
           </div>
           <div>
             <p className="text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-3">Reading &amp; Writing</p>
-            <DomainGrid domains={rwDomains} />
+            <DomainGrid domains={rwDomains} acc={acc} />
           </div>
         </div>
 

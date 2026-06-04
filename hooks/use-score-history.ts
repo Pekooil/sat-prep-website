@@ -7,7 +7,7 @@ import type { ScoreHistory, ScoreChartPoint } from '@/types'
 export function useScoreHistory() {
   const [scores, setScores] = React.useState<ScoreHistory[]>([])
   const [loading, setLoading] = React.useState(true)
-  const supabase = createClient()
+  const supabase = React.useMemo(() => createClient(), [])
 
   React.useEffect(() => {
     async function load() {
@@ -19,7 +19,7 @@ export function useScoreHistory() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [supabase])
 
   const chartData: ScoreChartPoint[] = scores.map(s => ({
     date: s.test_date,

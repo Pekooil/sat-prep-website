@@ -320,3 +320,73 @@ CREATE POLICY "Users can manage own notification_preferences"
   ON notification_preferences FOR ALL USING (auth.uid() = user_id);
 CREATE INDEX IF NOT EXISTS idx_notification_preferences_user
   ON notification_preferences(user_id);
+
+-- ─── Performance Indexes (Block 5 — add without breaking existing) ──────────
+
+-- calendar_tasks: most common query patterns
+CREATE INDEX IF NOT EXISTS idx_calendar_tasks_user_date
+  ON calendar_tasks(user_id, task_date);
+CREATE INDEX IF NOT EXISTS idx_calendar_tasks_user_completed
+  ON calendar_tasks(user_id, is_completed);
+CREATE INDEX IF NOT EXISTS idx_calendar_tasks_user_locked
+  ON calendar_tasks(user_id, replan_locked);
+CREATE INDEX IF NOT EXISTS idx_calendar_tasks_category
+  ON calendar_tasks(user_id, category) WHERE category IS NOT NULL;
+
+-- question_sessions: aggregate queries by user + category
+CREATE INDEX IF NOT EXISTS idx_question_sessions_user_date
+  ON question_sessions(user_id, session_date);
+CREATE INDEX IF NOT EXISTS idx_question_sessions_user_category
+  ON question_sessions(user_id, category);
+
+-- error_logs: filter by archived + user
+CREATE INDEX IF NOT EXISTS idx_error_logs_user_category
+  ON error_logs(user_id, category);
+
+-- notifications: fast unread count per user
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read_created
+  ON notifications(user_id, is_read, created_at DESC);
+
+-- score_predictions: latest prediction per user
+CREATE INDEX IF NOT EXISTS idx_score_predictions_user_latest
+  ON score_predictions(user_id, created_at DESC);
+
+-- topic_mastery: sort by mastery score
+CREATE INDEX IF NOT EXISTS idx_topic_mastery_user_score
+  ON topic_mastery(user_id, mastery_score);
+
+-- adaptive_recommendations: unread per user
+CREATE INDEX IF NOT EXISTS idx_adaptive_recs_user_unread
+  ON adaptive_recommendations(user_id, is_read, created_at DESC);
+
+-- ─── Additional RLS Policies ────────────────────────────────────────────────
+
+-- plan_versions
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'plan_versions' AND policyname = 'Users can manage own plan_versions'
+  ) THEN
+    CREATE POLICY "Users can manage own plan_versions"
+      ON plan_versions FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- topic_mastery
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'topic_mastery' AND policyname = 'Users can manage own topic_mastery'
+  ) THEN
+    CREATE POLICY "Users can manage own topic_mastery"
+      ON topic_mastery FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- score_predictions
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'score_predictions' AND policyname = 'Users can manage own predictions'
+  ) THEN
+    CREATE POLICY "Users can manage own predictions"
+      ON score_predictions FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;

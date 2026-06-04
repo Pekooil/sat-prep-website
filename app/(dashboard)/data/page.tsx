@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import { unstable_noStore as noStore } from 'next/cache'
+
+export const metadata: Metadata = {
+  title: 'Analytics',
+  description: 'Deep-dive analytics: score trends, topic mastery, accuracy heatmap, study habits, and AI planning insights.',
+}
 import { createClient } from '@/lib/supabase/server'
 import { DataClient } from '@/components/data/data-client'
 

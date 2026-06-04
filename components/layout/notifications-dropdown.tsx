@@ -18,18 +18,15 @@ interface NotificationsDropdownProps {
 export function NotificationsDropdown({ userId }: NotificationsDropdownProps) {
   const [notifications, setNotifications] = React.useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = React.useState(0)
-  const supabase = createClient()
+  // Stable client reference — createClient() must not be called on every render
+  const supabase = React.useMemo(() => createClient(), [])
 
-  React.useEffect(() => {
+  const loadNotifications = React.useCallback(async () => {
     if (!userId) return
-    loadNotifications()
-  }, [userId])
-
-  async function loadNotifications() {
     const { data } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', userId!)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(10)
 
@@ -37,9 +34,13 @@ export function NotificationsDropdown({ userId }: NotificationsDropdownProps) {
       setNotifications(data)
       setUnreadCount(data.filter(n => !n.is_read).length)
     }
-  }
+  }, [userId, supabase])
 
-  async function markAllRead() {
+  React.useEffect(() => {
+    loadNotifications()
+  }, [loadNotifications])
+
+  const markAllRead = React.useCallback(async () => {
     if (!userId) return
     await supabase
       .from('notifications')
@@ -48,7 +49,7 @@ export function NotificationsDropdown({ userId }: NotificationsDropdownProps) {
       .eq('is_read', false)
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
     setUnreadCount(0)
-  }
+  }, [userId, supabase])
 
   const typeIcon: Record<string, string> = {
     reminder: '⏰',

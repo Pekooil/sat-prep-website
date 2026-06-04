@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+
+export const metadata: Metadata = {
+  title: 'Home',
+  description: 'Your SAT study dashboard — today\'s tasks, score progress, streak, and AI plan generator.',
+}
 import { WelcomeBanner } from '@/components/home/welcome-banner'
 import { ScoreCard } from '@/components/home/score-card'
 import { UpcomingTasks } from '@/components/home/upcoming-tasks'

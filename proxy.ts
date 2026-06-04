@@ -1,54 +1,78 @@
+/**
+ * proxy.ts — Next.js 16 Edge Proxy (replaces middleware.ts)
+ *
+ * Responsibilities:
+ *  1. Refresh the Supabase session on every request (SSR cookie hygiene).
+ *  2. Redirect unauthenticated users to /login with a ?next= return URL.
+ *  3. Redirect authenticated users away from auth pages.
+ *  4. Attach security headers to every response.
+ */
+
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Routes that require a valid session
+const PROTECTED_PREFIXES = [
+  '/home', '/calendar', '/data', '/error-log',
+  '/settings', '/info', '/tutorial', '/onboarding',
+]
+
+// Routes only accessible when NOT logged in
+const AUTH_ROUTES = ['/login', '/signup']
+
 export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  const { pathname } = request.nextUrl
+
+  // ── 1. Supabase session refresh ───────────────────────────────────────────
+  let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookiesToSet) => {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
+            request.cookies.set(name, value),
           )
-          supabaseResponse = NextResponse.next({ request })
+          response = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            response.cookies.set(name, value, options),
           )
         },
       },
-    }
+    },
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  const { pathname } = request.nextUrl
 
-  const isAuthRoute = pathname === '/login' || pathname === '/signup'
-  const isPublicRoute = isAuthRoute || pathname === '/'
+  // ── 2. Route guards ───────────────────────────────────────────────────────
+  const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
+  const isAuthPage  = AUTH_ROUTES.some(p => pathname.startsWith(p))
 
-  // Unauthenticated → redirect to login for all protected routes
-  if (!user && !isPublicRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+  if (isProtected && !user) {
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = '/login'
+    loginUrl.searchParams.set('next', pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
-  // Authenticated + on auth page → send to home
-  if (user && isAuthRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/home'
-    return NextResponse.redirect(url)
+  if (isAuthPage && user) {
+    const homeUrl = request.nextUrl.clone()
+    homeUrl.pathname = '/home'
+    homeUrl.searchParams.delete('next')
+    return NextResponse.redirect(homeUrl)
   }
 
-  // Onboarding completion is enforced in the dashboard layout,
-  // not here, to avoid an extra DB round-trip on every request.
+  // ── 3. Security headers ───────────────────────────────────────────────────
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options',         'DENY')
+  response.headers.set('X-XSS-Protection',        '1; mode=block')
+  response.headers.set('Referrer-Policy',         'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy',      'camera=(), microphone=(), geolocation=()')
 
-  return supabaseResponse
+  return response
 }
 
 export const config = {
