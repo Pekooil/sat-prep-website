@@ -11,8 +11,6 @@ export interface NotificationPrefsInput {
   daily_assignment_reminder: boolean
   overdue_reminder: boolean
   practice_test_reminder: boolean
-  /** "HH:MM" format — stored as "HH:MM:SS" in Postgres TIME */
-  reminder_time: string
   timezone: string
 }
 
@@ -22,7 +20,6 @@ const DEFAULTS: NotificationPrefsInput = {
   daily_assignment_reminder: true,
   overdue_reminder: true,
   practice_test_reminder: true,
-  reminder_time: '08:00',
   timezone: 'America/New_York',
 }
 
@@ -55,8 +52,6 @@ export async function getNotificationPreferences(): Promise<{
       daily_assignment_reminder: data.daily_assignment_reminder ?? true,
       overdue_reminder: data.overdue_reminder ?? true,
       practice_test_reminder: data.practice_test_reminder ?? true,
-      // Postgres TIME comes back as "HH:MM:SS" — trim to "HH:MM" for <input type="time">
-      reminder_time: (data.reminder_time as string)?.slice(0, 5) ?? '08:00',
       timezone: data.timezone ?? 'America/New_York',
     },
     error: null,
@@ -82,10 +77,6 @@ export async function saveNotificationPreferences(
       daily_assignment_reminder: prefs.daily_assignment_reminder,
       overdue_reminder: prefs.overdue_reminder,
       practice_test_reminder: prefs.practice_test_reminder,
-      // Store as "HH:MM:SS" so Postgres accepts it as a TIME literal
-      reminder_time: prefs.reminder_time.length === 5
-        ? prefs.reminder_time + ':00'
-        : prefs.reminder_time,
       timezone: prefs.timezone,
       updated_at: new Date().toISOString(),
     },

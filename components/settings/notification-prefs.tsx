@@ -1,12 +1,11 @@
 'use client'
 
 import * as React from 'react'
-import { Save, Loader2, Bell, Mail, BellOff, TestTube2, CheckCircle2 } from 'lucide-react'
+import { Save, Loader2, Bell, Mail, BellOff, TestTube2, CheckCircle2, Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -197,34 +196,17 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <span className="text-base">⏰</span>
+            <Clock className="h-4 w-4 text-blue-500" />
             Reminder Schedule
           </CardTitle>
           <p className="text-xs text-[var(--muted-foreground)]">
-            Reminders fire once daily at your chosen time.
+            Reminders are sent once daily at <strong>8:00 AM</strong> in your timezone.
           </p>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="reminder_time" className="text-sm font-medium">
-              Reminder Time
-            </Label>
-            <Input
-              id="reminder_time"
-              type="time"
-              value={prefs.reminder_time}
-              onChange={e => set('reminder_time', e.target.value)}
-              className="h-10"
-              disabled={!anyEnabled}
-            />
-            <p className="text-xs text-[var(--muted-foreground)]">
-              Time in your selected timezone
-            </p>
-          </div>
-
+        <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="timezone" className="text-sm font-medium">
-              Timezone
+              Your Timezone
             </Label>
             <Select
               value={prefs.timezone}
@@ -243,7 +225,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
               </SelectContent>
             </Select>
             <p className="text-xs text-[var(--muted-foreground)]">
-              IANA timezone used to schedule your reminders
+              Used to calculate your local &ldquo;today&rdquo; when fetching tasks.
             </p>
           </div>
         </CardContent>

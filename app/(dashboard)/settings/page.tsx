@@ -15,8 +15,8 @@ export default async function SettingsPage() {
           Notification Settings
         </h1>
         <p className="text-sm text-[var(--muted-foreground)] mt-1">
-          Configure when and how you receive SAT study reminders.
-          Reminders are sent once daily at your preferred time.
+          Configure how you receive SAT study reminders.
+          Reminders are sent once daily at 8:00 AM in your timezone.
         </p>
       </div>
 
