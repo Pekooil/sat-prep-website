@@ -21,7 +21,7 @@ actions/
   calendar.ts               getCalendarTasks, createCalendarTask, updateCalendarTask,
                             toggleTaskComplete (sets replan_locked), deleteCalendarTask,
                             rescheduleCalendarTask (drag-and-drop: updates task_date only)
-  error-logs.ts             CRUD; createErrorLog triggers replanning
+  error-logs.ts             createErrorLog, updateErrorLog, archiveErrorLog, markErrorMastered, deleteErrorLog; createErrorLog triggers replanning
   onboarding.ts             saveOnboarding; triggers initial replanning after diagnostic insert
   question-sessions.ts      createQuestionSession(data, missedAnalysis?); triggers replanning; auto-creates error_log entries for tagged missed questions; returns DomainChange[] + predictedScore + SessionMetrics (accuracy, improvementPct, topicMastery)
   score-history.ts          addScoreEntry; triggers replanning for practice/official/full_length
@@ -253,6 +253,18 @@ ALTER TABLE replan_audit_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own replan logs" ON replan_audit_logs FOR ALL USING (auth.uid() = user_id);
 ```
 
+```sql
+-- Error Log enhancements (sessions 3–5) — run ALL at once
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS corrected_explanation TEXT;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS confidence_rating     INTEGER CHECK (confidence_rating BETWEEN 1 AND 5);
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS archived              BOOLEAN DEFAULT FALSE;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS custom_mistake_type   TEXT;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS question_id           TEXT;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS student_answer        TEXT CHECK (student_answer IN ('A','B','C','D'));
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS correct_answer        TEXT CHECK (correct_answer IN ('A','B','C','D'));
+CREATE INDEX IF NOT EXISTS idx_error_logs_user_archived ON error_logs(user_id, archived);
+```
+
 Verify:
 ```sql
 SELECT column_name FROM information_schema.columns
@@ -262,6 +274,12 @@ WHERE table_name = 'calendar_tasks'
 -- must return 6 rows
 
 SELECT COUNT(*) FROM replan_audit_logs; -- must not error
+
+SELECT column_name FROM information_schema.columns
+WHERE table_name = 'error_logs'
+  AND column_name IN ('corrected_explanation','confidence_rating','archived',
+                      'custom_mistake_type','question_id','student_answer','correct_answer');
+-- must return 7 rows
 ```
 
 ---
@@ -272,6 +290,8 @@ SELECT COUNT(*) FROM replan_audit_logs; -- must not error
 2. **Tailwind CSS v4** — use `@import "tailwindcss"` in `globals.css`. Never use `@tailwind base/components/utilities`. Dark mode: `@custom-variant dark (&:where(.dark, .dark *))` + `.dark` class on `<html>`.
 3. **TypeScript strict mode.** No `any` except intentional Supabase cast workarounds (marked with comments).
 4. **`schema.sql` is a reference, not an auto-migration.** Always apply changes manually in Supabase and verify.
+5. **Never store SAT question content.** The `question_id` field is an 8-char alphanumeric identifier only — it lets students reference their own questions without storing any content.
+6. **Answer choices stored as letters only (A/B/C/D).** `student_answer` and `correct_answer` store single letters; never store answer-choice text.
 5. **Next.js 16 async params** — dynamic route segments must `await params` before use.
 6. **`replan_locked = true` tasks are immutable to the replanner.** Set by `toggleTaskComplete`; removed on un-complete.
 7. **Replanner never deletes or rebuilds.** Only UPDATEs. Manual tasks are always preserved.

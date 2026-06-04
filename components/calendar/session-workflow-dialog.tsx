@@ -227,8 +227,10 @@ export function SessionWorkflowDialog({
     setMissedRows(
       missed.map(({ i }) => ({
         questionIndex: i,
-        subtopic:     prefilledSubtopic,
-        mistakeType:  null,
+        subtopic:      prefilledSubtopic,
+        mistakeType:   null,
+        studentAnswer: rows[i].yourAnswer,
+        correctAnswer: rows[i].correctAnswer,
       }))
     )
     setPhase('missed_analysis')
@@ -272,6 +274,14 @@ export function SessionWorkflowDialog({
     if (result.error) {
       toast({ title: 'Error saving session', description: result.error, variant: 'destructive' })
       return
+    }
+
+    if (result.errorLogWarning) {
+      toast({
+        title: 'Error log not created',
+        description: `Session saved, but mistakes could not be logged: ${result.errorLogWarning}`,
+        variant: 'destructive',
+      })
     }
 
     await toggleTaskComplete(task.id, true)

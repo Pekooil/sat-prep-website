@@ -228,6 +228,13 @@ export interface Database {
           description: string
           my_answer: string | null
           correct_approach: string | null
+          corrected_explanation: string | null
+          confidence_rating: number | null
+          archived: boolean
+          custom_mistake_type: string | null
+          question_id: string | null
+          student_answer: 'A' | 'B' | 'C' | 'D' | null
+          correct_answer: 'A' | 'B' | 'C' | 'D' | null
           college_board_domain: string | null
           college_board_skill: string | null
           mastered: boolean
@@ -247,6 +254,13 @@ export interface Database {
           description: string
           my_answer?: string | null
           correct_approach?: string | null
+          corrected_explanation?: string | null
+          confidence_rating?: number | null
+          archived?: boolean
+          custom_mistake_type?: string | null
+          question_id?: string | null
+          student_answer?: 'A' | 'B' | 'C' | 'D' | null
+          correct_answer?: 'A' | 'B' | 'C' | 'D' | null
           college_board_domain?: string | null
           college_board_skill?: string | null
           mastered?: boolean
@@ -263,6 +277,13 @@ export interface Database {
           description?: string
           my_answer?: string | null
           correct_approach?: string | null
+          corrected_explanation?: string | null
+          confidence_rating?: number | null
+          archived?: boolean
+          custom_mistake_type?: string | null
+          question_id?: string | null
+          student_answer?: 'A' | 'B' | 'C' | 'D' | null
+          correct_answer?: 'A' | 'B' | 'C' | 'D' | null
           college_board_domain?: string | null
           college_board_skill?: string | null
           mastered?: boolean

@@ -86,7 +86,7 @@ export const RW_DOMAINS = [
 export const ERROR_TYPES = [
   { label: 'Concept Gap', value: 'concept' },
   { label: 'Careless Error', value: 'careless' },
-  { label: 'Time Management', value: 'time' },
+  { label: 'Timing Issue', value: 'time' },
   { label: 'Strategy Error', value: 'strategy' },
   { label: 'Other', value: 'other' },
 ] as const

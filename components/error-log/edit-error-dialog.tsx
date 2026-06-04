@@ -12,14 +12,16 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { createErrorLog } from '@/actions/error-logs'
+import { updateErrorLog } from '@/actions/error-logs'
 import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 import { MATH_DOMAINS, RW_DOMAINS, ERROR_TYPES } from '@/lib/constants'
+import type { ErrorLog } from '@/types'
 
-interface AddErrorDialogProps {
+interface EditErrorDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  error: ErrorLog
   onSuccess?: () => void
 }
 
@@ -35,36 +37,53 @@ const CONFIDENCE_COLORS: Record<number, string> = {
 }
 const ANSWER_LETTERS = ['A', 'B', 'C', 'D'] as const
 
-export function AddErrorDialog({ open, onOpenChange, onSuccess }: AddErrorDialogProps) {
+export function EditErrorDialog({ open, onOpenChange, error, onSuccess }: EditErrorDialogProps) {
   const { toast } = useToast()
   const [loading, setLoading] = React.useState(false)
 
-  // Form state
-  const [subject, setSubject]               = React.useState<'math' | 'reading_writing'>('math')
-  const [selectedDomain, setSelectedDomain] = React.useState('')
-  const [selectedSkill, setSelectedSkill]   = React.useState('')
-  const [errorType, setErrorType]           = React.useState('')
-  const [customMistakeType, setCustomMistakeType] = React.useState('')
-  const [questionId, setQuestionId]         = React.useState('')
-  const [studentAnswer, setStudentAnswer]   = React.useState('__none__')
-  const [correctAnswer, setCorrectAnswer]   = React.useState('__none__')
-  const [confidenceRating, setConfidenceRating] = React.useState<number | null>(null)
+  const allDomains = [...MATH_DOMAINS, ...RW_DOMAINS]
+  const initialDomain = allDomains.find(d => d.label === error.category)
+
+  const [subject, setSubject]               = React.useState<'math' | 'reading_writing'>(error.subject)
+  const [selectedDomain, setSelectedDomain] = React.useState(initialDomain?.value ?? '')
+  const [selectedSkill, setSelectedSkill]   = React.useState(error.subcategory ?? '')
+  const [errorType, setErrorType]           = React.useState(error.error_type)
+  const [customMistakeType, setCustomMistakeType] = React.useState(error.custom_mistake_type ?? '')
+  const [questionId, setQuestionId]         = React.useState(error.question_id ?? '')
+  const [studentAnswer, setStudentAnswer]   = React.useState(error.student_answer ?? '__none__')
+  const [correctAnswer, setCorrectAnswer]   = React.useState(error.correct_answer ?? '__none__')
+  const [description, setDescription]       = React.useState(error.description)
+  const [myAnswer, setMyAnswer]             = React.useState(error.my_answer ?? '')
+  const [correctApproach, setCorrectApproach]       = React.useState(error.correct_approach ?? '')
+  const [correctedExplanation, setCorrectedExplanation] = React.useState(error.corrected_explanation ?? '')
+  const [confidenceRating, setConfidenceRating]     = React.useState<number | null>(error.confidence_rating ?? null)
+
+  // Re-sync when a different error is opened
+  React.useEffect(() => {
+    if (!open) return
+    const dom = allDomains.find(d => d.label === error.category)
+    setSubject(error.subject)
+    setSelectedDomain(dom?.value ?? '')
+    setSelectedSkill(error.subcategory ?? '')
+    setErrorType(error.error_type)
+    setCustomMistakeType(error.custom_mistake_type ?? '')
+    setQuestionId(error.question_id ?? '')
+    setStudentAnswer(error.student_answer ?? '__none__')
+    setCorrectAnswer(error.correct_answer ?? '__none__')
+    setDescription(error.description)
+    setMyAnswer(error.my_answer ?? '')
+    setCorrectApproach(error.correct_approach ?? '')
+    setCorrectedExplanation(error.corrected_explanation ?? '')
+    setConfidenceRating(error.confidence_rating ?? null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, error.id])
 
   const domains = subject === 'math' ? MATH_DOMAINS : RW_DOMAINS
   const skills  = domains.find(d => d.value === selectedDomain)?.skills ?? []
 
-  function resetForm() {
-    setSubject('math'); setSelectedDomain(''); setSelectedSkill('')
-    setErrorType(''); setCustomMistakeType('')
-    setQuestionId(''); setStudentAnswer('__none__'); setCorrectAnswer('__none__')
-    setConfidenceRating(null)
-  }
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    const description = (fd.get('description') as string).trim()
-    if (!description) return
+    if (!description.trim()) return
 
     if (questionId && questionId.length !== 8) {
       toast({ title: 'Invalid Question ID', description: 'Must be exactly 8 characters (A–Z, 0–9).', variant: 'destructive' })
@@ -74,19 +93,19 @@ export function AddErrorDialog({ open, onOpenChange, onSuccess }: AddErrorDialog
     setLoading(true)
     const domainData = domains.find(d => d.value === selectedDomain)
 
-    const result = await createErrorLog({
+    const result = await updateErrorLog(error.id, {
       subject,
-      category:              domainData?.label ?? 'Other',
+      category:              domainData?.label ?? error.category,
       subcategory:           selectedSkill || null,
-      error_type:            (errorType || 'other') as 'concept' | 'careless' | 'time' | 'strategy' | 'other',
+      error_type:            errorType,
       custom_mistake_type:   errorType === 'other' ? customMistakeType.trim() || null : null,
-      question_id:           questionId || null,
+      question_id:           questionId.trim().toUpperCase() || null,
       student_answer:        studentAnswer !== '__none__' ? studentAnswer as 'A' | 'B' | 'C' | 'D' : null,
       correct_answer:        correctAnswer !== '__none__' ? correctAnswer as 'A' | 'B' | 'C' | 'D' : null,
-      description,
-      my_answer:             (fd.get('my_answer') as string).trim() || null,
-      correct_approach:      (fd.get('correct_approach') as string).trim() || null,
-      corrected_explanation: (fd.get('corrected_explanation') as string).trim() || null,
+      description:           description.trim(),
+      my_answer:             myAnswer.trim() || null,
+      correct_approach:      correctApproach.trim() || null,
+      corrected_explanation: correctedExplanation.trim() || null,
       confidence_rating:     confidenceRating,
       college_board_domain:  domainData?.label ?? null,
       college_board_skill:   selectedSkill || null,
@@ -96,8 +115,7 @@ export function AddErrorDialog({ open, onOpenChange, onSuccess }: AddErrorDialog
     if (result.error) {
       toast({ title: 'Error', description: result.error, variant: 'destructive' })
     } else {
-      toast({ title: 'Error logged!', description: "Keep tracking and you'll master it soon." })
-      resetForm()
+      toast({ title: 'Error updated!' })
       onOpenChange(false)
       onSuccess?.()
     }
@@ -106,9 +124,7 @@ export function AddErrorDialog({ open, onOpenChange, onSuccess }: AddErrorDialog
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Log an Error</DialogTitle>
-        </DialogHeader>
+        <DialogHeader><DialogTitle>Edit Error</DialogTitle></DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Section */}
@@ -134,7 +150,7 @@ export function AddErrorDialog({ open, onOpenChange, onSuccess }: AddErrorDialog
           {/* Domain */}
           <div className="space-y-2">
             <Label>Domain</Label>
-            <Select onValueChange={v => { setSelectedDomain(v); setSelectedSkill('') }}>
+            <Select value={selectedDomain} onValueChange={v => { setSelectedDomain(v); setSelectedSkill('') }}>
               <SelectTrigger><SelectValue placeholder="Select domain" /></SelectTrigger>
               <SelectContent>
                 {domains.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
@@ -146,7 +162,7 @@ export function AddErrorDialog({ open, onOpenChange, onSuccess }: AddErrorDialog
           {skills.length > 0 && (
             <div className="space-y-2">
               <Label>Skill <span className="text-[var(--muted-foreground)] font-normal">(optional)</span></Label>
-              <Select onValueChange={v => setSelectedSkill(v === '__none__' ? '' : v)}>
+              <Select value={selectedSkill || '__none__'} onValueChange={v => setSelectedSkill(v === '__none__' ? '' : v)}>
                 <SelectTrigger><SelectValue placeholder="Select skill" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__" className="text-[var(--muted-foreground)]">— none —</SelectItem>
@@ -158,9 +174,9 @@ export function AddErrorDialog({ open, onOpenChange, onSuccess }: AddErrorDialog
 
           {/* Mistake type */}
           <div className="space-y-2">
-            <Label>Mistake Type *</Label>
-            <Select value={errorType} onValueChange={setErrorType} required>
-              <SelectTrigger><SelectValue placeholder="What kind of mistake?" /></SelectTrigger>
+            <Label>Mistake Type</Label>
+            <Select value={errorType} onValueChange={v => setErrorType(v as typeof errorType)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {ERROR_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
               </SelectContent>
@@ -179,7 +195,7 @@ export function AddErrorDialog({ open, onOpenChange, onSuccess }: AddErrorDialog
           <div className="space-y-2">
             <Label>Question ID <span className="text-[var(--muted-foreground)] font-normal">(optional)</span></Label>
             <p className="text-xs text-[var(--muted-foreground)]">
-              8-character identifier from the question bank (e.g.&nbsp;CBFB2B8D). Question content is never stored.
+              8-character identifier from the question bank. Question content is never stored.
             </p>
             <Input
               value={questionId}
@@ -219,37 +235,36 @@ export function AddErrorDialog({ open, onOpenChange, onSuccess }: AddErrorDialog
 
           {/* What went wrong */}
           <div className="space-y-2">
-            <Label htmlFor="add-desc">What went wrong? *</Label>
-            <Textarea id="add-desc" name="description" required className="h-20"
+            <Label>What went wrong? *</Label>
+            <Textarea value={description} onChange={e => setDescription(e.target.value)} required className="h-20"
               placeholder="Describe the mistake or concept you struggled with…" />
           </div>
 
           {/* What did you do */}
           <div className="space-y-2">
-            <Label htmlFor="add-my-answer">What did you do? <span className="text-[var(--muted-foreground)] font-normal">(optional)</span></Label>
-            <Textarea id="add-my-answer" name="my_answer" className="h-14"
+            <Label>What did you do? <span className="text-[var(--muted-foreground)] font-normal">(optional)</span></Label>
+            <Textarea value={myAnswer} onChange={e => setMyAnswer(e.target.value)} className="h-14"
               placeholder="Your incorrect reasoning or approach…" />
           </div>
 
           {/* Correct approach */}
           <div className="space-y-2">
-            <Label htmlFor="add-correct">Correct approach <span className="text-[var(--muted-foreground)] font-normal">(optional)</span></Label>
-            <Textarea id="add-correct" name="correct_approach" className="h-14"
+            <Label>Correct approach <span className="text-[var(--muted-foreground)] font-normal">(optional)</span></Label>
+            <Textarea value={correctApproach} onChange={e => setCorrectApproach(e.target.value)} className="h-14"
               placeholder="The right way to solve this type of problem…" />
           </div>
 
           {/* Corrected explanation */}
           <div className="space-y-2">
-            <Label htmlFor="add-explanation">Your corrected explanation <span className="text-[var(--muted-foreground)] font-normal">(optional)</span></Label>
+            <Label>Your corrected explanation <span className="text-[var(--muted-foreground)] font-normal">(optional)</span></Label>
             <p className="text-xs text-[var(--muted-foreground)]">In your own words — writing it helps it stick.</p>
-            <Textarea id="add-explanation" name="corrected_explanation" className="h-20"
+            <Textarea value={correctedExplanation} onChange={e => setCorrectedExplanation(e.target.value)} className="h-20"
               placeholder="In my own words, the correct approach is…" />
           </div>
 
           {/* Confidence */}
           <div className="space-y-2">
             <Label>Confidence <span className="text-[var(--muted-foreground)] font-normal">(optional)</span></Label>
-            <p className="text-xs text-[var(--muted-foreground)]">How confident are you that you won&apos;t repeat this?</p>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map(n => (
                 <button key={n} type="button"
@@ -269,9 +284,9 @@ export function AddErrorDialog({ open, onOpenChange, onSuccess }: AddErrorDialog
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading || !errorType}>
+            <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Log Error
+              Save Changes
             </Button>
           </DialogFooter>
         </form>

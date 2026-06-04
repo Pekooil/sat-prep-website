@@ -69,6 +69,23 @@ export async function markErrorMastered(id: string, mastered: boolean) {
   return { success: true }
 }
 
+export async function archiveErrorLog(id: string, archived: boolean) {
+  'use server'
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const { error } = await supabase
+    .from('error_logs')
+    .update({ archived, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/error-log')
+  return { success: true }
+}
+
 export async function deleteErrorLog(id: string) {
   'use server'
   const supabase = await createClient()

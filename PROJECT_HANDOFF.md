@@ -6,7 +6,7 @@ This document is updated at the end of every session. It records the current fea
 
 ## Last Updated
 
-2026-06-03 (session 3)
+2026-06-03 (session 5)
 
 ---
 
@@ -40,131 +40,166 @@ This document is updated at the end of every session. It records the current fea
 - Writes an audit log row to `replan_audit_logs` on each run
 
 ### Calendar (`/calendar`)
-- **Month view** — 7-column grid; task chips show domain + question count; color-coded by category; drag-and-drop between days; today highlighted
-- **Week view** — 7-column grid (current week); task cards with domain, question count, subject, status; today column highlighted in blue; horizontally scrollable on mobile
-- **Agenda view** — chronological list grouped by date; full task cards with subject badge, question count, duration, QB filter preview tags (domain / skill / difficulty)
-- **Task Drawer** — right-side slide-over on any task click:
-  - Domain label, section, duration, question count
-  - College Board QB filters (domain / skill / difficulty / target questions) with difficulty color badge
-  - Link to College Board Question Bank (correct URL: `https://satsuiteeducatorquestionbank.collegeboard.org/digital/search`)
-  - 7-step instructions for obtaining QB questions (or 6-step practice test instructions)
-  - Expected completion time with exam-pace estimate (71 s/q R&W, 95 s/q Math)
-  - Adaptive Planner stats (priority score / score impact / mastery goal)
-  - Footer: "Log Session" → `SessionWorkflowDialog`, "Enter Score" → `PracticeTestScoreDialog`, or "Mark Complete" for manual tasks
-- **Drag-and-drop rescheduling** — HTML5 drag API; `rescheduleCalendarTask` server action updates Supabase immediately; toast confirmation on success
-- **Add Task** button opens `TaskFormDialog` for manual task creation
+- **Month / Week / Agenda views** with view switcher; color-coded task chips; drag-and-drop rescheduling
+- **Task Drawer** — QB filters, step-by-step instructions, expected time, adaptive-planner stats
+- Footer actions: "Log Session" → `SessionWorkflowDialog`, "Enter Score" → `PracticeTestScoreDialog`
 
-### Session Workflow (`SessionWorkflowDialog`) — updated session 3
+### Session Workflow (`SessionWorkflowDialog`) — updated sessions 3 & 5
 - **6-phase UX:** idle → active → review → results → missed_analysis → plan_updated
-- Countdown timer (71s/q R&W, 95s/q Math), per-question A/B/C/D entry, correct-answer entry, accuracy vs 90% target, overtime tracking
-- **Missed-question analysis phase** (new): for each wrong answer, user selects a subtopic (domain skills from `DOMAIN_CATALOG`) and a mistake type (Concept Gap / Careless Error / Timing Issue / Misread Question / Strategy Error). Skippable with "Skip Analysis". If 0 missed questions, phase is auto-skipped.
-- On save: inserts `question_sessions` → auto-creates `error_logs` for tagged mistakes → triggers replanning → returns `SessionMetrics` (accuracy %, improvement % vs prior sessions, topic mastery rolling avg)
-- **Plan Updated phase** (enhanced): shows improvement % (green/red) and topic mastery progress bar in addition to the replanner domain-change list; shows notice if error logs were auto-created
+- Countdown timer (71s/q R&W, 95s/q Math), per-question A/B/C/D entry, correct-answer review, accuracy vs 90% target
+- **Missed-analysis phase:** per-wrong-answer selects for subtopic + mistake type; answers (A–D) passed through automatically to auto-created error logs; "Skip Analysis" skips tagging; auto-skipped on 100% accuracy
+- **Auto error log creation:** `student_answer` + `correct_answer` now stored in auto-created error_log rows
+- **Plan Updated phase:** improvement %, topic mastery bar, auto-created error log notice
 
-### Error Log (`/error-log`)
-- Create, review, and master individual errors
-- `createErrorLog` triggers replanning after each new entry
+### Error Log (`/error-log`) — fully rebuilt sessions 4 & 5
+
+#### Database columns on `error_logs` (all new — apply migration below):
+| Column | Type | Notes |
+|---|---|---|
+| `corrected_explanation` | TEXT | Student's own explanation after review |
+| `confidence_rating` | INTEGER 1–5 | How confident they won't repeat |
+| `archived` | BOOLEAN DEFAULT FALSE | Soft-delete |
+| `custom_mistake_type` | TEXT | Free-text label when `error_type = 'other'` |
+| `question_id` | TEXT | 8-char alphanumeric QB identifier (no question content stored) |
+| `student_answer` | TEXT ('A'–'D') | Wrong answer the student chose |
+| `correct_answer` | TEXT ('A'–'D') | Correct answer |
+
+#### Features
+- **Search** — full-text across description, domain, skill, approaches, corrected explanation
+- **Filters** — section, domain, mistake type, mastery status (collapsible panel with filter-count badge)
+- **Sort** — newest / oldest / domain A–Z / mistake type / confidence low→high / confidence high→low
+- **Active / Archived tabs** with entry counts; archive/restore per row
+- **Edit dialog** (`EditErrorDialog`) — pre-populated form for all fields
+- **Mistake-type badges** (`MistakeTypeBadge`) — color+icon: BookOpen (Concept Gap) / Zap (Careless Error) / Clock (Timing Issue) / Target (Strategy Error) / HelpCircle (Other/custom)
+- **Custom mistake type** — when "Other" is selected, a text field captures any label; shown in badge
+- **Question ID chip** — monospace, `#CBFB2B8D` style; 8-char alphanumeric, validated, stored uppercase
+- **Answer display** — red chip (wrong) + arrow + green chip (correct) in badge row and expanded view
+- **Confidence rating** — 1–5 picker (colored red→green); shown as colored pill on each row
+- **Corrected explanation** — blue-highlighted block in expanded view
+- **"Most Frequent Mistakes" summary card** — mistake-type breakdown bars (active/total counts), weakest domains, mastery %
+- **`archiveErrorLog(id, archived)`** action added to `actions/error-logs.ts`
+- All filtering/sorting client-side in `error-log-client.tsx`; hook loads all errors once
+
+#### Label changes (UI only, DB columns unchanged)
+- "Category" → **"Domain"** throughout error log UI and filter panel
+- "Subcategory" → **"Skill"** throughout error log UI and filter panel
 
 ### Data / Analytics (`/data`)
 - Score timeline, accuracy charts, category stats, session summary cards
 - `addScoreEntry` triggers replanning for practice/official/full_length test types
 
 ### QB Tutorial (`/tutorial`)
-- **Route:** `app/(dashboard)/tutorial/page.tsx` — protected dashboard route, no DB queries
-- **Component:** `components/tutorial/tutorial-client.tsx` — full client component (all interactive state)
-- **7 steps:** Go to QB → Select section → Apply domain/skill filters → Set difficulty → Export/begin questions → Complete questions → Log session in app
-- **Screenshot placeholders:** Each step has a styled `div` with `role="img"` and mock browser chrome; swap in real screenshots by replacing the `ScreenshotPlaceholder` component with an `<Image>` per step
-- **Per-step help accordions:** 3–5 collapsible Q&A items built with `@radix-ui/react-accordion` (same pattern as `FAQAccordion` in `/info`)
-- **Progress tracker:** `useState<boolean[]>` array persisted to `localStorage` under key `'sat-planner-tutorial-progress'`; progress bar (`components/ui/progress.tsx`); step pills that scroll to the corresponding step card; Reset button; "all done" banner with Calendar link
-- **FAQ:** 8 questions at the bottom of the page
-- **Nav link:** `'QB Tutorial'` added to `NAV_LINKS` in `lib/constants.ts` (between Data and Info & Contact)
-- **Copyright:** No SAT content. Explains the workflow only. Links to `COLLEGE_BOARD_QB_URL`.
+- 7-step interactive onboarding for the College Board QB workflow; per-step help accordions; progress tracker (localStorage); FAQ section; bottom CTA
 
 ### Info Page (`/info`)
 - About, FAQ accordion, contact form
 
 ---
 
-## In-Progress / Unfinished Features
+## Required DB Migrations
 
-1. **`log-session-dialog.tsx`** — superseded by `SessionWorkflowDialog` but still exists at `components/calendar/log-session-dialog.tsx`. Safe to delete once confirmed stable.
+**Apply ALL of the following in Supabase Dashboard → SQL Editor.** The schema.sql file is the reference.
 
-2. **"Replan Now" button** — no UI to force a manual replanning pass without submitting session data.
-   - Add `triggerManualReplan()` to `actions/study-plan.ts` calling `runAdaptiveReplanner(..., 'manual')`
-   - Wire to a button in the calendar header (next to "Add Task")
-   - Show a toast with `tasksUpdated` count and `predictedScore` on completion
+```sql
+-- calendar_tasks: Adaptive Replanner columns
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS priority_score         NUMERIC    DEFAULT 0;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS mastery_target         INTEGER    DEFAULT 0;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS estimated_score_impact NUMERIC    DEFAULT 0;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replanning_weight      NUMERIC    DEFAULT 0;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replan_locked          BOOLEAN    DEFAULT FALSE;
+ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS last_replanned_at      TIMESTAMPTZ;
 
-3. **Notifications UI** — `notifications` table is populated but there is no real-time badge or alert display beyond the navbar stub.
+CREATE INDEX IF NOT EXISTS idx_calendar_tasks_replanner
+  ON calendar_tasks(user_id, task_date, replanning_weight) WHERE NOT replan_locked;
+
+CREATE TABLE IF NOT EXISTS replan_audit_logs (
+  id                    UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id               UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  triggered_by          TEXT        NOT NULL CHECK (triggered_by IN ('question_session','error_log','practice_test_score','manual')),
+  trigger_id            UUID,
+  tasks_updated         INTEGER     DEFAULT 0,
+  domains_reprioritized JSONB,
+  changes_summary       TEXT,
+  created_at            TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_replan_audit_user ON replan_audit_logs(user_id, created_at DESC);
+ALTER TABLE replan_audit_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own replan logs" ON replan_audit_logs FOR ALL USING (auth.uid() = user_id);
+
+-- error_logs: all new columns (sessions 3–5)
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS corrected_explanation TEXT;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS confidence_rating     INTEGER CHECK (confidence_rating BETWEEN 1 AND 5);
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS archived              BOOLEAN DEFAULT FALSE;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS custom_mistake_type   TEXT;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS question_id           TEXT;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS student_answer        TEXT CHECK (student_answer IN ('A','B','C','D'));
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS correct_answer        TEXT CHECK (correct_answer IN ('A','B','C','D'));
+CREATE INDEX IF NOT EXISTS idx_error_logs_user_archived ON error_logs(user_id, archived);
+```
+
+**Verify with:**
+```sql
+-- Should return 6 rows
+SELECT column_name FROM information_schema.columns
+WHERE table_name = 'calendar_tasks'
+  AND column_name IN ('priority_score','mastery_target','estimated_score_impact',
+                      'replanning_weight','replan_locked','last_replanned_at');
+
+-- Should not error
+SELECT COUNT(*) FROM replan_audit_logs;
+
+-- Should return 7 rows
+SELECT column_name FROM information_schema.columns
+WHERE table_name = 'error_logs'
+  AND column_name IN ('corrected_explanation','confidence_rating','archived',
+                      'custom_mistake_type','question_id','student_answer','correct_answer');
+```
 
 ---
 
-## Known Bugs
+## In-Progress / Unfinished Features
 
-None known as of this session. The following DB migrations must be applied in Supabase if not already done (see `AI_HANDOFF.md` for the full SQL):
+1. **`log-session-dialog.tsx`** — superseded by `SessionWorkflowDialog`. Safe to delete: `components/calendar/log-session-dialog.tsx` and `components/calendar/day-tasks-panel.tsx`.
 
-- `priority_score`, `mastery_target`, `estimated_score_impact`, `replanning_weight`, `replan_locked`, `last_replanned_at` columns on `calendar_tasks`
-- `replan_audit_logs` table + RLS policy + index
+2. **"Replan Now" button** — no UI to force a manual replanning pass.
+   - Add `triggerManualReplan()` to `actions/study-plan.ts` → calls `runAdaptiveReplanner(..., 'manual')`
+   - Add a `ReplanButton` in the calendar header; show toast with `tasksUpdated` + `predictedScore`
+
+3. **Notifications UI** — `notifications` table is populated but no real-time badge in the navbar.
+
+---
+
+## Known Issues
+
+None known. If the Supabase schema cache error appears (`Could not find column X in schema cache`), the DB migrations above have not been applied yet. Run the SQL block, then reload the Supabase schema cache via **Supabase Dashboard → Database → Reload Schema Cache**.
 
 ---
 
 ## Next Recommended Tasks
 
-### Option A — Add a "Replan Now" button (calendar header)
+### Option A — Notifications badge in navbar
+Wire up the `notifications` table to a live unread-count badge on the bell icon in `components/layout/navbar.tsx`. The `NotificationsDropdown` component already exists — add a `useEffect` that subscribes to Supabase realtime or fetches on mount.
 
-1. Add `triggerManualReplan()` to `actions/study-plan.ts`:
-   ```typescript
-   export async function triggerManualReplan() {
-     'use server'
-     const supabase = await createClient()
-     const { data: { user } } = await supabase.auth.getUser()
-     if (!user) return { error: 'Unauthorized' }
-     return runAdaptiveReplanner(supabase, user.id, 'manual')
-   }
-   ```
-2. Add a `ReplanButton` client component in the calendar header that calls this action, shows a loading spinner, and displays a toast with `tasksUpdated` and `predictedScore`.
-3. Call `reload()` on success to refresh the task list.
+### Option B — "Replan Now" button
+Add a manual replanning trigger to the calendar header so users can force a plan refresh at any time.
 
-### Option B — Replace tutorial screenshot placeholders with real screenshots
+### Option C — QB Tutorial screenshots
+Replace `ScreenshotPlaceholder` in each step of `components/tutorial/tutorial-client.tsx` with real `<Image>` tags. Save screenshots to `public/tutorial/step-{1–7}.png`.
 
-Each step in `components/tutorial/tutorial-client.tsx` has a `ScreenshotPlaceholder` component. To replace with real screenshots:
-1. Take screenshots of the QB site at each step (with filters applied) and save to `public/tutorial/step-{n}.png`
-2. Replace the `<ScreenshotPlaceholder>` call inside each `StepCard` with:
-   ```tsx
-   <Image src={`/tutorial/step-${step.id}.png`} alt={step.screenshotAlt}
-     width={1200} height={525} className="w-full rounded-xl border border-[var(--border)]" />
-   ```
-3. Remove the `ScreenshotPlaceholder` component and `Image` icon import from `tutorial-client.tsx`.
-
-### Option C — Notifications UI
-
-Wire up the `notifications` table to a real-time badge in the navbar. The `NotificationsDropdown` component (`components/layout/notifications-dropdown.tsx`) already exists — it just needs a live count badge added to its trigger button.
+### Option D — Error Log analytics on /data page
+Surface the error log data on the `/data` page: a breakdown chart of mistake types over time, domain weakness heatmap, confidence trend line.
 
 ---
 
-## Important Implementation Decisions
+## Implementation Rules (never violate)
 
-1. **No OpenAI.** All planning and replanning is deterministic TypeScript. Do not introduce an LLM dependency.
-
-2. **Tailwind CSS v4** — `@import "tailwindcss"` in `globals.css`. Do NOT use `@tailwind base/components/utilities`. Dark mode uses `@custom-variant dark (&:where(.dark, .dark *))` and the `.dark` class on `<html>`.
-
-3. **Calendar drawer is purely informational.** The session workflow dialogs (`SessionWorkflowDialog`, `PracticeTestScoreDialog`) are untouched — the drawer launches them via callback props. Do not embed session logic in the drawer.
-
-4. **Drag-and-drop uses the HTML5 drag API** — no extra library. Completed tasks (`is_completed = true`) are not draggable. The drop handler no-ops if the task is dropped on its own date.
-
-5. **`rescheduleCalendarTask` only updates `task_date`.** It does not change `replan_locked`. The replanner will re-examine rescheduled incomplete tasks on its next run.
-
-6. **Category colors are the single source of truth** in `components/calendar/task-colors.ts`. If new domains are added to `DOMAIN_CATALOG`, add a matching entry there.
-
-7. **`priority_score` is 1–100 normalized.** Practice tests are fixed at 100. `mastery_target` is fixed at 90 for all study/review tasks.
-
-8. **Replanner updates in-place, never rebuilds.** Only UPDATE operations — no DELETEs or re-inserts.
-
-9. **`replan_locked` is the single source of truth for replanner eligibility.** Set by `toggleTaskComplete`.
-
-10. **QB URL** — the correct College Board Educator Question Bank URL is `https://satsuiteeducatorquestionbank.collegeboard.org/digital/search`. This is set via `COLLEGE_BOARD_QB_URL` in `lib/constants.ts` and used in both the task drawer and the day-tasks panel.
-
-11. **`schema.sql` is a reference file, not an auto-migration.** Always run schema changes manually in the Supabase dashboard.
-
-12. **Next.js 16 async params** — dynamic route segments must `await params`.
-
-13. **Supabase `as any` casts** are intentional workarounds for hand-written type definitions.
+1. **No OpenAI.** All planning is deterministic TypeScript. Never introduce an LLM dependency.
+2. **Tailwind CSS v4** — use `@import "tailwindcss"` in `globals.css`. Never use `@tailwind base/components/utilities`.
+3. **TypeScript strict mode.** No `any` except intentional Supabase cast workarounds (marked with comments).
+4. **`schema.sql` is a reference, not an auto-migration.** Always apply changes manually in Supabase.
+5. **Never store SAT question content.** Question ID is an 8-char identifier only.
+6. **Answer choices stored as A/B/C/D letters only.** Never store the text of answer choices.
+7. **`replan_locked = true` tasks are immutable to the replanner.** Set by `toggleTaskComplete`.
+8. **Replanner never deletes.** Only UPDATEs.
+9. **Supabase `as any` casts** are intentional type workarounds — mark with comments.
+10. **QB URL:** `https://satsuiteeducatorquestionbank.collegeboard.org/digital/search` — in `lib/constants.ts`.

@@ -21,6 +21,10 @@ export interface MissedAnalysisEntry {
   questionIndex: number
   subtopic: string | null
   mistakeType: MistakeType | null
+  /** Letter the student chose (A–D). Stored in error_log.student_answer. */
+  studentAnswer: 'A' | 'B' | 'C' | 'D' | null
+  /** Correct letter (A–D). Stored in error_log.correct_answer. */
+  correctAnswer: 'A' | 'B' | 'C' | 'D' | null
 }
 
 export interface SessionMetrics {
@@ -34,17 +38,33 @@ export interface SessionMetrics {
 export interface CreateSessionResult {
   success?: true
   error?: string
+  /** Non-null when the session saved but auto-creating error_log rows failed */
+  errorLogWarning?: string
   replanner?: Pick<ReplannerResult, 'tasksUpdated' | 'taskChanges' | 'predictedScore' | 'changesSummary'>
   metrics?: SessionMetrics
 }
 
-// Maps our display mistake types to the error_logs DB enum
+// Maps our session-workflow MistakeType → error_logs DB enum value
 const ERROR_TYPE_MAP: Record<MistakeType, 'concept' | 'careless' | 'time' | 'strategy' | 'other'> = {
   concept_gap:      'concept',
   careless_error:   'careless',
   timing_issue:     'time',
   misread_question: 'other',
   strategy_error:   'strategy',
+}
+
+// Human-readable label stored in custom_mistake_type when error_type = 'other'
+const CUSTOM_LABEL_MAP: Partial<Record<MistakeType, string>> = {
+  misread_question: 'Misread Question',
+}
+
+// Display label for the auto-generated error description
+const DISPLAY_LABEL: Record<MistakeType, string> = {
+  concept_gap:      'Concept Gap',
+  careless_error:   'Careless Error',
+  timing_issue:     'Timing Issue',
+  misread_question: 'Misread Question',
+  strategy_error:   'Strategy Error',
 }
 
 // ─── Action ───────────────────────────────────────────────────────────────────
@@ -72,7 +92,6 @@ export async function createQuestionSession(
 
   type PrevRow = { questions_attempted: number; questions_correct: number }
 
-  // Last 4 completed sessions for the same category (excludes the one just inserted)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: prevSessions } = await (supabase.from('question_sessions') as any)
     .select('questions_attempted, questions_correct')
@@ -92,7 +111,6 @@ export async function createQuestionSession(
 
   const improvementPct = prevAvg !== null ? accuracy - prevAvg : null
 
-  // Rolling mean of up to 5 sessions (current + previous)
   const allAccuracies = [accuracy, ...prevAccuracies]
   const topicMastery  = Math.round(
     allAccuracies.reduce((a, b) => a + b, 0) / allAccuracies.length
@@ -109,14 +127,22 @@ export async function createQuestionSession(
       category:             data.category,
       subcategory:          ma.subtopic ?? data.subcategory ?? null,
       error_type:           ERROR_TYPE_MAP[ma.mistakeType!],
-      description:          `Q${ma.questionIndex + 1}: ${ma.mistakeType!.replace(/_/g, ' ')}`,
+      custom_mistake_type:  CUSTOM_LABEL_MAP[ma.mistakeType!] ?? null,
+      description:          `Q${ma.questionIndex + 1}: ${DISPLAY_LABEL[ma.mistakeType!]}`,
+      student_answer:       ma.studentAnswer ?? null,
+      correct_answer:       ma.correctAnswer ?? null,
       college_board_domain: data.category,
       college_board_skill:  ma.subtopic ?? cbFilters?.skill ?? null,
     }))
 
+  let errorLogInsertError: string | null = null
   if (errorEntries.length > 0) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from('error_logs') as any).insert(errorEntries)
+    const { error: errorLogErr } = await (supabase.from('error_logs') as any).insert(errorEntries)
+    if (errorLogErr) {
+      console.error('[createQuestionSession] error_log insert failed:', errorLogErr.message)
+      errorLogInsertError = errorLogErr.message
+    }
   }
 
   // ── Adaptive replanner ──────────────────────────────────────────────────────
@@ -129,6 +155,7 @@ export async function createQuestionSession(
 
   return {
     success: true,
+    ...(errorLogInsertError ? { errorLogWarning: errorLogInsertError } : {}),
     replanner: {
       tasksUpdated:   replanResult.tasksUpdated,
       taskChanges:    replanResult.taskChanges,

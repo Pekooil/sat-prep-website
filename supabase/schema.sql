@@ -190,6 +190,16 @@ ALTER TABLE error_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE score_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
+-- Migration: Error Log enhancements (sessions 3 & 4)
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS corrected_explanation TEXT;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS confidence_rating     INTEGER CHECK (confidence_rating BETWEEN 1 AND 5);
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS archived              BOOLEAN DEFAULT FALSE;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS custom_mistake_type   TEXT;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS question_id           TEXT;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS student_answer        TEXT CHECK (student_answer IN ('A','B','C','D'));
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS correct_answer        TEXT CHECK (correct_answer IN ('A','B','C','D'));
+CREATE INDEX IF NOT EXISTS idx_error_logs_user_archived ON error_logs(user_id, archived);
+
 -- RLS Policies
 CREATE POLICY "Users can manage own profile" ON users FOR ALL USING (auth.uid() = id);
 CREATE POLICY "Users can manage own diagnostics" ON diagnostic_tests FOR ALL USING (auth.uid() = user_id);

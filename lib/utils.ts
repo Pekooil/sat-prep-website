@@ -44,7 +44,7 @@ export function errorTypeLabel(type: string): string {
   switch (type) {
     case 'concept': return 'Concept Gap'
     case 'careless': return 'Careless Error'
-    case 'time': return 'Time Management'
+    case 'time': return 'Timing Issue'
     case 'strategy': return 'Strategy Error'
     case 'other': return 'Other'
     default: return type
