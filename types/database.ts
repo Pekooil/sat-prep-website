@@ -497,6 +497,45 @@ export interface Database {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          email_reminders_enabled: boolean
+          inapp_reminders_enabled: boolean
+          daily_assignment_reminder: boolean
+          overdue_reminder: boolean
+          practice_test_reminder: boolean
+          reminder_time: string        // "HH:MM:SS" from PostgreSQL TIME
+          timezone: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_reminders_enabled?: boolean
+          inapp_reminders_enabled?: boolean
+          daily_assignment_reminder?: boolean
+          overdue_reminder?: boolean
+          practice_test_reminder?: boolean
+          reminder_time?: string
+          timezone?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          email_reminders_enabled?: boolean
+          inapp_reminders_enabled?: boolean
+          daily_assignment_reminder?: boolean
+          overdue_reminder?: boolean
+          practice_test_reminder?: boolean
+          reminder_time?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       adaptive_recommendations: {
         Row: {
           id: string

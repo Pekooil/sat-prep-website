@@ -297,3 +297,26 @@ CREATE POLICY "Users can manage own sessions" ON question_sessions FOR ALL USING
 CREATE POLICY "Users can manage own errors" ON error_logs FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users can manage own scores" ON score_history FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users can manage own notifications" ON notifications FOR ALL USING (auth.uid() = user_id);
+
+-- ─── Reminder System — notification_preferences ────────────────────────────
+
+-- Stores per-user reminder settings: channels, types, schedule, timezone.
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  id                        UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id                   UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT notification_preferences_user_id_unique UNIQUE (user_id),
+  email_reminders_enabled   BOOLEAN     NOT NULL DEFAULT TRUE,
+  inapp_reminders_enabled   BOOLEAN     NOT NULL DEFAULT TRUE,
+  daily_assignment_reminder BOOLEAN     NOT NULL DEFAULT TRUE,
+  overdue_reminder          BOOLEAN     NOT NULL DEFAULT TRUE,
+  practice_test_reminder    BOOLEAN     NOT NULL DEFAULT TRUE,
+  reminder_time             TIME        NOT NULL DEFAULT '08:00:00',
+  timezone                  TEXT        NOT NULL DEFAULT 'America/New_York',
+  created_at                TIMESTAMPTZ DEFAULT NOW(),
+  updated_at                TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage own notification_preferences"
+  ON notification_preferences FOR ALL USING (auth.uid() = user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_preferences_user
+  ON notification_preferences(user_id);
