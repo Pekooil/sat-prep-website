@@ -314,24 +314,18 @@ function HelpAccordion({ items }: { items: { q: string; a: string }[] }) {
             <AccordionPrimitive.Trigger
               className={cn(
                 'flex w-full items-center gap-2.5 px-4 py-3 text-sm font-medium text-left',
-                'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors',
-                'data-[state=open]:bg-slate-50 dark:data-[state=open]:bg-slate-800/50',
+                'hover:bg-violet-50/60 dark:hover:bg-violet-950/20 transition-colors',
+                'data-[state=open]:bg-violet-50/60 dark:data-[state=open]:bg-violet-950/20',
                 '[&[data-state=open]>svg:last-child]:rotate-180',
               )}
             >
               <HelpCircle className="h-3.5 w-3.5 flex-shrink-0 text-violet-500" />
               <span className="flex-1 text-[var(--foreground)]">{item.q}</span>
-              <ChevronDown className="h-3.5 w-3.5 flex-shrink-0 text-[var(--muted-foreground)] transition-transform duration-200" />
+              <ChevronDown className="h-3.5 w-3.5 flex-shrink-0 text-violet-400 transition-transform duration-200" />
             </AccordionPrimitive.Trigger>
           </AccordionPrimitive.Header>
           <AccordionPrimitive.Content
-            className={cn(
-              'text-sm text-[var(--muted-foreground)] leading-relaxed',
-              'data-[state=open]:animate-in data-[state=closed]:animate-out',
-              'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-              'overflow-hidden data-[state=closed]:h-0 data-[state=open]:h-auto',
-              'px-4 pb-3 pt-0 ml-6',
-            )}
+            className="text-sm text-[var(--muted-foreground)] leading-relaxed px-4 pb-4 pt-3 ml-6 data-[state=closed]:hidden"
           >
             {item.a}
           </AccordionPrimitive.Content>
@@ -436,8 +430,8 @@ function StepCard({
 
       {/* Help accordion */}
       <div className="px-5 pt-4 pb-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)] mb-2 flex items-center gap-1.5">
-          <HelpCircle className="h-3.5 w-3.5" />
+        <p className="text-xs font-semibold uppercase tracking-wide text-violet-500 mb-2 flex items-center gap-1.5">
+          <HelpCircle className="h-3.5 w-3.5 text-violet-500" />
           Common Questions for This Step
         </p>
         <HelpAccordion items={step.helpItems} />
@@ -543,7 +537,7 @@ export function TutorialClient() {
             )}
             <button
               onClick={resetAll}
-              className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors flex items-center gap-1"
+              className="text-xs text-violet-400 hover:text-violet-600 dark:hover:text-violet-300 transition-colors flex items-center gap-1"
             >
               <RotateCcw className="h-3 w-3" />
               Reset
@@ -614,9 +608,9 @@ export function TutorialClient() {
             {i < STEPS.length - 1 && (
               <div className="flex justify-center mt-4">
                 <div className="flex flex-col items-center gap-1">
-                  <div className="h-4 w-px bg-[var(--border)]" />
-                  <ArrowRight className="h-4 w-4 text-[var(--muted-foreground)] rotate-90" />
-                  <div className="h-4 w-px bg-[var(--border)]" />
+                  <div className="h-4 w-px bg-violet-200 dark:bg-violet-800" />
+                  <ArrowRight className="h-4 w-4 text-violet-400 rotate-90" />
+                  <div className="h-4 w-px bg-violet-200 dark:bg-violet-800" />
                 </div>
               </div>
             )}
@@ -645,23 +639,17 @@ export function TutorialClient() {
                 <AccordionPrimitive.Trigger
                   className={cn(
                     'flex w-full items-center justify-between px-5 py-4 text-sm font-medium text-left',
-                    'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors',
-                    'data-[state=open]:bg-slate-50 dark:data-[state=open]:bg-slate-800/50',
+                    'hover:bg-violet-50/60 dark:hover:bg-violet-950/20 transition-colors',
+                    'data-[state=open]:bg-violet-50/60 dark:data-[state=open]:bg-violet-950/20',
                     '[&[data-state=open]>svg]:rotate-180',
                   )}
                 >
                   {faq.q}
-                  <ChevronDown className="h-4 w-4 shrink-0 text-[var(--muted-foreground)] transition-transform duration-200" />
+                  <ChevronDown className="h-4 w-4 shrink-0 text-violet-500 transition-transform duration-200" />
                 </AccordionPrimitive.Trigger>
               </AccordionPrimitive.Header>
               <AccordionPrimitive.Content
-                className={cn(
-                  'text-sm text-[var(--muted-foreground)] leading-relaxed',
-                  'data-[state=open]:animate-in data-[state=closed]:animate-out',
-                  'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-                  'overflow-hidden data-[state=closed]:h-0 data-[state=open]:h-auto',
-                  'px-5 pb-4 pt-0',
-                )}
+                className="text-sm text-[var(--muted-foreground)] leading-relaxed px-5 pb-5 pt-3 data-[state=closed]:hidden"
               >
                 {faq.a}
               </AccordionPrimitive.Content>
@@ -671,23 +659,32 @@ export function TutorialClient() {
       </section>
 
       {/* ── Bottom CTA ── */}
-      <div className="rounded-2xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/20 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-lg shadow-violet-500/20">
         <div className="flex-1">
-          <p className="font-semibold text-violet-800 dark:text-violet-200">
+          <p className="font-semibold text-white">
             Ready to start studying?
           </p>
-          <p className="text-sm text-violet-600 dark:text-violet-400 mt-0.5">
+          <p className="text-sm text-violet-100 mt-0.5">
             Open your Calendar to see today's task and get your QB filters.
           </p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
-          <Button variant="outline" size="sm" asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
+          >
             <a href={COLLEGE_BOARD_QB_URL} target="_blank" rel="noopener noreferrer">
               Open QB
               <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
             </a>
           </Button>
-          <Button size="sm" asChild>
+          <Button
+            size="sm"
+            asChild
+            className="bg-white text-violet-700 hover:bg-violet-50 hover:text-violet-800"
+          >
             <Link href="/calendar">
               Go to Calendar
               <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
