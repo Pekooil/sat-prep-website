@@ -1,13 +1,81 @@
-import { CalendarDays, TrendingUp, Flame } from 'lucide-react'
+import { CalendarDays, Flame } from 'lucide-react'
 import type { User } from '@/types'
 import { daysUntilTest, formatDate } from '@/lib/utils'
+
+const SCORE_MIN = 400
+const SCORE_MAX = 1600
+const SCORE_RANGE = SCORE_MAX - SCORE_MIN
+
+function ScoreProgressBar({ currentScore, targetScore }: { currentScore: number; targetScore: number }) {
+  const clamp = (v: number) => Math.min(Math.max(v, SCORE_MIN), SCORE_MAX)
+  const pct = (score: number) => ((clamp(score) - SCORE_MIN) / SCORE_RANGE) * 100
+
+  const fillPct = pct(currentScore)
+  const targetPct = pct(targetScore)
+  const ptsAway = Math.max(0, targetScore - currentScore)
+  const milestoneLabels = [400, 600, 800, 1000, 1200, 1400, 1600]
+
+  return (
+    <div className="mt-5">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs text-violet-200 font-medium">Next milestone: {targetScore}</span>
+        {ptsAway > 0 && (
+          <span className="text-xs text-violet-300 font-medium">{ptsAway} pts away</span>
+        )}
+        {ptsAway === 0 && (
+          <span className="text-xs text-emerald-300 font-semibold">Goal reached! 🎉</span>
+        )}
+      </div>
+
+      {/* Bar */}
+      <div className="relative h-3 rounded-full bg-white/15 overflow-visible">
+        {/* Filled portion */}
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-300 to-indigo-300 transition-all duration-700"
+          style={{ width: `${fillPct}%` }}
+        />
+
+        {/* Target marker */}
+        {ptsAway > 0 && (
+          <div
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-4 rounded-sm bg-yellow-300 shadow-sm shadow-yellow-400/50"
+            style={{ left: `${targetPct}%` }}
+          />
+        )}
+
+        {/* Current score dot */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white shadow-md shadow-white/30 border-2 border-indigo-400 z-10"
+          style={{ left: `${fillPct}%` }}
+        />
+
+
+      </div>
+
+      {/* Scale labels */}
+      <div className="relative mt-2 h-4">
+        {milestoneLabels.map(label => (
+          <span
+            key={label}
+            className="absolute text-[10px] text-violet-300 -translate-x-1/2"
+            style={{ left: `${pct(label)}%` }}
+          >
+            {label}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 interface WelcomeBannerProps {
   profile: User | null
   streak?: number
+  currentScore?: number | null
+  targetScore?: number | null
 }
 
-export function WelcomeBanner({ profile, streak = 0 }: WelcomeBannerProps) {
+export function WelcomeBanner({ profile, streak = 0, currentScore, targetScore }: WelcomeBannerProps) {
   const days = daysUntilTest(profile?.test_date ?? null)
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Student'
 
@@ -17,7 +85,19 @@ export function WelcomeBanner({ profile, streak = 0 }: WelcomeBannerProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-violet-700 to-purple-700 p-6 text-white shadow-lg">
       <div className="absolute right-0 top-0 opacity-10">
-        <TrendingUp className="h-48 w-48 -translate-y-8 translate-x-8" />
+        <svg viewBox="0 0 200 200" className="h-48 w-48 -translate-y-8 translate-x-8" aria-hidden="true" fill="currentColor">
+          <defs>
+            <clipPath id="saturn-ring-back">
+              <rect x="0" y="98" width="200" height="102" />
+            </clipPath>
+            <clipPath id="saturn-ring-front">
+              <rect x="0" y="0" width="200" height="98" />
+            </clipPath>
+          </defs>
+          <ellipse cx="100" cy="98" rx="92" ry="24" fill="none" stroke="currentColor" strokeWidth="14" clipPath="url(#saturn-ring-back)" />
+          <circle cx="100" cy="98" r="56" />
+          <ellipse cx="100" cy="98" rx="92" ry="24" fill="none" stroke="currentColor" strokeWidth="14" clipPath="url(#saturn-ring-front)" />
+        </svg>
       </div>
       <div className="relative">
         <div className="flex items-start justify-between gap-4">
@@ -58,6 +138,9 @@ export function WelcomeBanner({ profile, streak = 0 }: WelcomeBannerProps) {
           </div>
         ) : (
           <p className="mt-2 text-sm text-violet-200">Set your test date to get a personalized countdown.</p>
+        )}
+        {currentScore != null && targetScore != null && (
+          <ScoreProgressBar currentScore={currentScore} targetScore={targetScore} />
         )}
       </div>
     </div>

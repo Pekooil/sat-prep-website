@@ -85,7 +85,12 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6">
-      <WelcomeBanner profile={profile} streak={streak} />
+      <WelcomeBanner
+        profile={profile}
+        streak={streak}
+        currentScore={recentScores[0]?.total_score ?? profile?.current_score ?? null}
+        targetScore={profile?.target_score ?? null}
+      />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <ScoreCard
