@@ -69,6 +69,40 @@ const DISPLAY_LABEL: Record<MistakeType, string> = {
 
 // ─── Action ───────────────────────────────────────────────────────────────────
 
+// ─── Session Summary (for completed-task drawer) ─────────────────────────────
+
+export interface SessionSummary {
+  questions_attempted: number
+  questions_correct:   number
+  time_spent_minutes:  number | null
+}
+
+/**
+ * Fetch the most recent question_session linked to a calendar task.
+ * Used by the task drawer to display results on completed tasks.
+ */
+export async function getSessionForTask(taskId: string): Promise<{
+  data: SessionSummary | null
+  error?: string
+}> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { data: null, error: 'Unauthorized' }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase.from('question_sessions') as any)
+    .select('questions_attempted, questions_correct, time_spent_minutes')
+    .eq('user_id', user.id)
+    .eq('calendar_task_id', taskId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  return { data: data ?? null }
+}
+
+// ─── Create Session ───────────────────────────────────────────────────────────
+
 export async function createQuestionSession(
   data: Omit<SessionInsert, 'user_id'>,
   missedAnalysis: MissedAnalysisEntry[] = [],

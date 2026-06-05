@@ -8,7 +8,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { createQuestionSession } from '@/actions/question-sessions'
 import { toggleTaskComplete } from '@/actions/calendar'
 import { useToast } from '@/components/ui/use-toast'
@@ -138,16 +137,6 @@ export function LogSessionDialog({ open, onOpenChange, task, onSuccess }: LogSes
               max={300}
               defaultValue={task.duration_minutes ?? ''}
               placeholder="e.g. 45"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="session-notes">Notes (optional)</Label>
-            <Textarea
-              id="session-notes"
-              name="notes"
-              placeholder="What went well? What was confusing? Any patterns noticed?"
-              className="h-20"
             />
           </div>
 

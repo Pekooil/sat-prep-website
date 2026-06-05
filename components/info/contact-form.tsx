@@ -37,7 +37,9 @@ export function ContactForm() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Send className="h-4 w-4 text-violet-500" />
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/40">
+              <Send className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+            </span>
             Contact Us
           </CardTitle>
           <p className="text-xs text-[var(--muted-foreground)]">

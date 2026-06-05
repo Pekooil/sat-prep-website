@@ -3,7 +3,7 @@
 import * as React from 'react'
 import {
   X, ExternalLink, Clock, BookOpen, Target, ClipboardList,
-  CheckCircle2, Zap, BarChart2, ChevronRight,
+  CheckCircle2, Zap, BarChart2, ChevronRight, AlertCircle, TrendingUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +11,8 @@ import { cn, subjectLabel } from '@/lib/utils'
 import { COLLEGE_BOARD_QB_URL } from '@/lib/constants'
 import type { CalendarTask, CollegeBoardFilter } from '@/types'
 import { getCategoryColor } from './task-colors'
+import { getSessionForTask } from '@/actions/question-sessions'
+import type { SessionSummary } from '@/actions/question-sessions'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -68,6 +70,135 @@ const PRACTICE_TEST_STEPS = [
   'Return here and click "Enter Score" to log your results. Your plan will be updated automatically.',
 ]
 
+// ─── Session Results Panel ────────────────────────────────────────────────────
+
+function SessionResultsPanel({
+  session,
+  masteryTarget,
+}: {
+  session: SessionSummary
+  masteryTarget: number | null | undefined
+}) {
+  const { questions_attempted: attempted, questions_correct: correct, time_spent_minutes: timeSpent } = session
+  const accuracy  = attempted > 0 ? Math.round((correct / attempted) * 100) : 0
+  const goalMet   = masteryTarget != null && masteryTarget > 0 && accuracy >= masteryTarget
+  const gap       = masteryTarget != null && masteryTarget > 0 ? accuracy - masteryTarget : null
+  const hasGoal   = masteryTarget != null && masteryTarget > 0
+
+  return (
+    <div className="space-y-3">
+
+      {/* Score + accuracy cards */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-lg bg-[var(--muted)] p-3 text-center">
+          <p className="text-xl font-bold text-[var(--foreground)] tabular-nums">
+            {correct}<span className="text-sm font-normal text-[var(--muted-foreground)]">/{attempted}</span>
+          </p>
+          <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5 uppercase tracking-wide">Questions Correct</p>
+        </div>
+        <div className={cn(
+          'rounded-lg p-3 text-center border',
+          hasGoal
+            ? goalMet
+              ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800'
+              : 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800'
+            : 'bg-[var(--muted)] border-[var(--border)]',
+        )}>
+          <p className={cn(
+            'text-xl font-bold tabular-nums',
+            hasGoal
+              ? goalMet
+                ? 'text-emerald-700 dark:text-emerald-300'
+                : 'text-amber-700 dark:text-amber-300'
+              : 'text-[var(--foreground)]',
+          )}>
+            {accuracy}%
+          </p>
+          <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5 uppercase tracking-wide">Accuracy</p>
+        </div>
+      </div>
+
+      {/* vs Mastery Goal */}
+      {hasGoal && (
+        <div className={cn(
+          'rounded-xl border p-3.5 space-y-3',
+          goalMet
+            ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800'
+            : 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800',
+        )}>
+          {/* Met / Not Met header */}
+          <div className={cn(
+            'flex items-center gap-2 text-sm font-semibold',
+            goalMet
+              ? 'text-emerald-700 dark:text-emerald-300'
+              : 'text-amber-700 dark:text-amber-300',
+          )}>
+            {goalMet
+              ? <><CheckCircle2 className="h-4 w-4 flex-shrink-0" /> Goal Reached!</>
+              : <><AlertCircle className="h-4 w-4 flex-shrink-0" /> Goal Not Yet Reached</>}
+          </div>
+
+          {/* Progress bar with goal marker */}
+          <div className="space-y-1">
+            <div className="relative h-2.5">
+              {/* Track */}
+              <div className="absolute inset-0 rounded-full bg-[var(--border)]" />
+              {/* Accuracy fill */}
+              <div
+                className={cn(
+                  'absolute inset-y-0 left-0 rounded-full transition-all',
+                  goalMet ? 'bg-emerald-500' : 'bg-amber-500',
+                )}
+                style={{ width: `${Math.min(100, accuracy)}%` }}
+              />
+              {/* Goal marker */}
+              <div
+                className="absolute inset-y-0 w-0.5 rounded-full bg-violet-600 dark:bg-violet-400"
+                style={{ left: `${Math.min(99, masteryTarget!)}%`, transform: 'translateX(-50%)' }}
+              />
+            </div>
+
+            {/* Labels */}
+            <div className="flex items-center justify-between text-[10px]">
+              <span className={cn(
+                'font-medium',
+                goalMet ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400',
+              )}>
+                Your score: {accuracy}%
+              </span>
+              <span className="text-violet-600 dark:text-violet-400 font-medium flex items-center gap-0.5">
+                <span className="inline-block h-2 w-0.5 rounded-full bg-violet-600 dark:bg-violet-400" />
+                Goal: {masteryTarget}%
+              </span>
+            </div>
+          </div>
+
+          {/* Gap description */}
+          <p className={cn(
+            'text-xs leading-relaxed',
+            goalMet ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300',
+          )}>
+            {goalMet
+              ? gap === 0
+                ? `You hit the target exactly. Great consistency!`
+                : `You exceeded the goal by ${gap}%. Excellent work — consider advancing to harder questions.`
+              : `You're ${Math.abs(gap!)}% below the ${masteryTarget}% goal. Keep practicing — log more sessions in this domain to close the gap.`}
+          </p>
+        </div>
+      )}
+
+      {/* Time spent */}
+      {timeSpent != null && timeSpent > 0 && (
+        <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+          <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+          <span>{timeSpent} min spent on this session</span>
+        </div>
+      )}
+
+    </div>
+  )
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 interface TaskDrawerProps {
@@ -100,6 +231,23 @@ export function TaskDrawer({
     document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [open])
+
+  // Fetch session results for completed non-practice-test tasks
+  const [sessionData, setSessionData]       = React.useState<SessionSummary | null>(null)
+  const [sessionLoading, setSessionLoading] = React.useState(false)
+
+  React.useEffect(() => {
+    if (!open || !task?.is_completed || task.category === 'Full Practice Test') {
+      setSessionData(null)
+      return
+    }
+    let cancelled = false
+    setSessionLoading(true)
+    getSessionForTask(task.id).then(({ data }) => {
+      if (!cancelled) { setSessionData(data); setSessionLoading(false) }
+    })
+    return () => { cancelled = true }
+  }, [task?.id, open, task?.is_completed, task?.category])
 
   const colors = getCategoryColor(task?.category)
   const filters = task?.college_board_filters as CollegeBoardFilter | null
@@ -184,6 +332,34 @@ export function TaskDrawer({
             {/* ── Scrollable body ── */}
             <div className="flex-1 overflow-y-auto p-5 space-y-6">
 
+              {/* ── Session Results (completed tasks only) ── */}
+              {task.is_completed && !isPracticeTest && (
+                <section>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)] mb-2 flex items-center gap-1.5">
+                    <TrendingUp className="h-3.5 w-3.5" />
+                    Session Results
+                  </h3>
+                  {sessionLoading ? (
+                    <div className="rounded-xl border border-[var(--border)] p-4 space-y-2 animate-pulse">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="h-14 rounded-lg bg-[var(--muted)]" />
+                        <div className="h-14 rounded-lg bg-[var(--muted)]" />
+                      </div>
+                      <div className="h-20 rounded-lg bg-[var(--muted)]" />
+                    </div>
+                  ) : sessionData ? (
+                    <SessionResultsPanel
+                      session={sessionData}
+                      masteryTarget={task.mastery_target}
+                    />
+                  ) : (
+                    <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)] px-4 py-3 text-xs text-[var(--muted-foreground)]">
+                      No session data found. This task may have been marked complete without logging a session.
+                    </div>
+                  )}
+                </section>
+              )}
+
               {/* QB Filters */}
               {filters && (
                 <section>
@@ -234,22 +410,24 @@ export function TaskDrawer({
                 </section>
               )}
 
-              {/* Instructions */}
-              <section>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)] mb-2">
-                  {isPracticeTest ? 'How to Complete This Test' : 'How to Obtain Your Questions'}
-                </h3>
-                <ol className="space-y-2.5">
-                  {(isPracticeTest ? PRACTICE_TEST_STEPS : QB_STEPS).map((step, i) => (
-                    <li key={i} className="flex gap-3 text-sm text-[var(--muted-foreground)]">
-                      <span className="flex-shrink-0 h-5 w-5 rounded-full bg-[var(--muted)] text-[var(--foreground)] text-[10px] font-semibold flex items-center justify-center mt-0.5">
-                        {i + 1}
-                      </span>
-                      <span className="leading-relaxed">{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </section>
+              {/* Instructions — hidden for completed tasks (already done) */}
+              {!task.is_completed && (
+                <section>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)] mb-2">
+                    {isPracticeTest ? 'How to Complete This Test' : 'How to Obtain Your Questions'}
+                  </h3>
+                  <ol className="space-y-2.5">
+                    {(isPracticeTest ? PRACTICE_TEST_STEPS : QB_STEPS).map((step, i) => (
+                      <li key={i} className="flex gap-3 text-sm text-[var(--muted-foreground)]">
+                        <span className="flex-shrink-0 h-5 w-5 rounded-full bg-[var(--muted)] text-[var(--foreground)] text-[10px] font-semibold flex items-center justify-center mt-0.5">
+                          {i + 1}
+                        </span>
+                        <span className="leading-relaxed">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              )}
 
               {/* Expected Completion Time */}
               <section>
