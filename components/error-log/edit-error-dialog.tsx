@@ -137,7 +137,7 @@ export function EditErrorDialog({ open, onOpenChange, error, onSuccess }: EditEr
                   className={cn(
                     'flex-1 py-2 rounded-md text-sm font-medium border transition-colors',
                     subject === s
-                      ? s === 'math' ? 'bg-blue-600 text-white border-blue-600' : 'bg-violet-600 text-white border-violet-600'
+                      ? s === 'math' ? 'bg-purple-600 text-white border-purple-600' : 'bg-violet-600 text-white border-violet-600'
                       : 'border-[var(--border)] hover:bg-slate-50 dark:hover:bg-slate-800'
                   )}
                 >

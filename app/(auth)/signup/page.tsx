@@ -48,7 +48,7 @@ export default function SignupPage() {
           </p>
           <Link
             href="/login"
-            className="inline-block mt-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+            className="inline-block mt-2 text-sm font-medium text-violet-600 dark:text-violet-400 hover:underline"
           >
             Back to sign in
           </Link>
@@ -135,7 +135,7 @@ export default function SignupPage() {
       <CardFooter className="pt-0">
         <p className="text-sm text-center w-full text-[var(--muted-foreground)]">
           Already have an account?{' '}
-          <Link href="/login" className="font-medium text-blue-600 dark:text-blue-400 hover:underline">
+          <Link href="/login" className="font-medium text-violet-600 dark:text-violet-400 hover:underline">
             Sign in
           </Link>
         </p>

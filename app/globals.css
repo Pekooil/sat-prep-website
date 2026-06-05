@@ -14,12 +14,12 @@
   --card-foreground: #0f172a;
   --border: #e2e8f0;
   --input-border: #e2e8f0;
-  --primary: #2563eb;
+  --primary: #7c3aed;
   --primary-foreground: #ffffff;
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
   --destructive: #ef4444;
-  --ring: #2563eb;
+  --ring: #7c3aed;
   --radius: 0.5rem;
   --sidebar-width: 240px;
 }
@@ -31,12 +31,12 @@
   --card-foreground: #f1f5f9;
   --border: #334155;
   --input-border: #334155;
-  --primary: #3b82f6;
+  --primary: #8b5cf6;
   --primary-foreground: #ffffff;
   --muted: #1e293b;
   --muted-foreground: #94a3b8;
   --destructive: #f87171;
-  --ring: #3b82f6;
+  --ring: #8b5cf6;
 }
 
 body {

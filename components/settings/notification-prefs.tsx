@@ -40,14 +40,14 @@ function PrefRow({
     <div className={cn(
       'flex items-start justify-between gap-4 rounded-xl border p-4 transition-colors',
       checked
-        ? 'border-blue-200 bg-blue-50/40 dark:border-blue-800 dark:bg-blue-950/20'
+        ? 'border-violet-200 bg-violet-50/40 dark:border-violet-800 dark:bg-violet-950/20'
         : 'border-[var(--border)] bg-[var(--card)]',
       disabled && 'opacity-50',
     )}>
       <div className="flex items-start gap-3">
         <div className={cn(
           'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg',
-          checked ? 'bg-blue-100 dark:bg-blue-900/40' : 'bg-[var(--muted)]',
+          checked ? 'bg-violet-100 dark:bg-violet-900/40' : 'bg-[var(--muted)]',
         )}>
           {icon}
         </div>
@@ -119,7 +119,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Bell className="h-4 w-4 text-blue-500" />
+            <Bell className="h-4 w-4 text-violet-500" />
             Delivery Channels
           </CardTitle>
           <p className="text-xs text-[var(--muted-foreground)]">
@@ -128,7 +128,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
         </CardHeader>
         <CardContent className="space-y-3">
           <PrefRow
-            icon={<Mail className="h-4 w-4 text-blue-600" />}
+            icon={<Mail className="h-4 w-4 text-violet-600" />}
             label="Email Reminders"
             description="Daily digest sent to your registered email address"
             checked={prefs.email_reminders_enabled}
@@ -196,7 +196,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="h-4 w-4 text-blue-500" />
+            <Clock className="h-4 w-4 text-violet-500" />
             Reminder Schedule
           </CardTitle>
           <p className="text-xs text-[var(--muted-foreground)]">

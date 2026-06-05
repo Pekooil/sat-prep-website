@@ -47,10 +47,10 @@ const LEVEL_CONFIG: Record<MasteryLevel, {
   },
   proficient: {
     label:       'Proficient',
-    badgeClass:  'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-    barClass:    '[&>div]:bg-blue-500',
-    borderClass: 'border-blue-200 dark:border-blue-800',
-    bgClass:     'bg-blue-50/50 dark:bg-blue-950/20',
+    badgeClass:  'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
+    barClass:    '[&>div]:bg-violet-500',
+    borderClass: 'border-violet-200 dark:border-violet-800',
+    bgClass:     'bg-violet-50/50 dark:bg-violet-950/20',
   },
   developing: {
     label:       'Developing',

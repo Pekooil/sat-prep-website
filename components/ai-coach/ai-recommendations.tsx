@@ -54,9 +54,9 @@ const TYPE_CONFIG: Record<RecommendationType, {
   },
   recovery: {
     icon: RefreshCw, label: 'Recovery',
-    iconClass: 'text-blue-600',
-    borderClass: 'border-blue-200 dark:border-blue-800',
-    bgClass: 'bg-blue-50/60 dark:bg-blue-950/20',
+    iconClass: 'text-violet-600',
+    borderClass: 'border-violet-200 dark:border-violet-800',
+    bgClass: 'bg-violet-50/60 dark:bg-violet-950/20',
   },
   reduce_volume: {
     icon: BookOpen, label: 'Reduce Volume',
@@ -72,9 +72,9 @@ const TYPE_CONFIG: Record<RecommendationType, {
   },
   general: {
     icon: Info, label: 'Note',
-    iconClass: 'text-blue-600',
-    borderClass: 'border-blue-200 dark:border-blue-800',
-    bgClass: 'bg-blue-50/60 dark:bg-blue-950/20',
+    iconClass: 'text-violet-600',
+    borderClass: 'border-violet-200 dark:border-violet-800',
+    bgClass: 'bg-violet-50/60 dark:bg-violet-950/20',
   },
 }
 

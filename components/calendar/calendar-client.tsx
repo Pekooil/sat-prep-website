@@ -236,7 +236,7 @@ function MonthView({
               key={ds}
               className={cn(
                 'bg-[var(--card)] min-h-[100px] sm:min-h-[110px] p-1.5 flex flex-col transition-colors',
-                isOver && 'bg-blue-50 dark:bg-blue-900/20',
+                isOver && 'bg-violet-50 dark:bg-violet-900/20',
               )}
               onDragOver={(e) => onDragOver(e, ds)}
               onDragLeave={onDragLeave}
@@ -245,7 +245,7 @@ function MonthView({
               {/* Day number */}
               <span className={cn(
                 'self-start flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium mb-1',
-                todayCell ? 'bg-blue-600 text-white' : 'text-[var(--foreground)]',
+                todayCell ? 'bg-violet-600 text-white' : 'text-[var(--foreground)]',
               )}>
                 {day}
               </span>
@@ -323,7 +323,7 @@ function WeekView({
                 key={ds}
                 className={cn(
                   'flex flex-col rounded-xl border border-[var(--border)] transition-colors overflow-hidden',
-                  isOver && 'ring-2 ring-blue-400 border-blue-400 bg-blue-50 dark:bg-blue-900/20',
+                  isOver && 'ring-2 ring-violet-400 border-violet-400 bg-violet-50 dark:bg-violet-900/20',
                 )}
                 onDragOver={(e) => onDragOver(e, ds)}
                 onDragLeave={onDragLeave}
@@ -332,7 +332,7 @@ function WeekView({
                 {/* Column header */}
                 <div className={cn(
                   'px-2 py-1.5 text-center border-b border-[var(--border)]',
-                  todayCell ? 'bg-blue-600' : 'bg-[var(--muted)]',
+                  todayCell ? 'bg-violet-600' : 'bg-[var(--muted)]',
                 )}>
                   <p className={cn(
                     'text-[10px] font-medium',
@@ -421,7 +421,7 @@ function AgendaView({
             <div className="flex items-center gap-2 mb-2">
               <span className={cn(
                 'text-sm font-semibold',
-                isToday_ ? 'text-blue-600 dark:text-blue-400' : 'text-[var(--foreground)]',
+                isToday_ ? 'text-violet-600 dark:text-violet-400' : 'text-[var(--foreground)]',
               )}>
                 {isToday_ ? 'Today' : format(date, 'EEEE')}
               </span>
@@ -429,7 +429,7 @@ function AgendaView({
                 {format(date, 'MMM d, yyyy')}
               </span>
               {isToday_ && (
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                <span className="h-1.5 w-1.5 rounded-full bg-violet-600" />
               )}
             </div>
 
@@ -488,7 +488,7 @@ function AgendaView({
                         {filters && (
                           <div className="mt-2 flex items-center gap-2 flex-wrap">
                             {filters.domain && (
-                              <span className="text-[10px] bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                              <span className="text-[10px] bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded">
                                 {filters.domain}
                               </span>
                             )}
@@ -789,7 +789,7 @@ function ViewTab({
         'flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors',
         'border-r border-[var(--border)] last:border-r-0',
         active
-          ? 'bg-blue-600 text-white'
+          ? 'bg-violet-600 text-white'
           : 'bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]',
       )}
     >

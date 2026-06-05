@@ -1,6 +1,6 @@
 # SAT Study Planner AI — Complete Handoff
 
-**Last updated:** 2026-06-04 (Session 8)
+**Last updated:** 2026-06-05 (Session 9)
 **Project root:** `/Users/darcywang/sat-prep-website`
 **Stack:** Next.js 16.2.7 (App Router), React 19, TypeScript 5 strict, Tailwind CSS v4, Supabase
 **No external AI API** — all planning logic is deterministic TypeScript.
@@ -397,6 +397,20 @@ Supabase Dashboard → Authentication → Settings → uncheck "Enable email con
 | Mobile (mobile-nav.tsx) | Home · Calendar · Errors · Data · Info |
 
 The `/ai-coach` route was **deleted** in session 8. `components/ai-coach/` components remain because the Data tab imports them.
+
+---
+
+## Theme Colors (Session 9)
+
+The app uses **violet/purple** as the primary theme color (`#7c3aed` = `violet-600`), matching the logo.
+
+**Intentionally kept blue (do not change):**
+- `components/home/score-card.tsx` — `blue` colorMap entry (Current Score card)
+- `components/home/quick-stats.tsx` — Study Time stat icon
+- `components/calendar/task-colors.ts` — Algebra domain color
+- `components/error-log/mistake-type-badge.tsx` — Timing Issue badge (`time` key)
+- `components/info/about-section.tsx` — Step 1 "Generate Your AI Plan" icon background
+- `components/data/` — All chart colors (score-timeline, accuracy-trends, accuracy-chart, score-trend, mistake-frequency, category-stats, replan-timeline, stats-cards, data-client)
 
 ---
 

@@ -35,15 +35,15 @@ const steps = [
 export function AboutSection() {
   return (
     <section className="space-y-6">
-      <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
+      <div className="rounded-2xl bg-gradient-to-r from-violet-600 to-purple-700 p-6 text-white">
         <h2 className="text-xl font-bold">About SaturnPath</h2>
-        <p className="mt-2 text-blue-100 text-sm leading-relaxed">
+        <p className="mt-2 text-violet-100 text-sm leading-relaxed">
           SaturnPath is a smart, personalized preparation platform that helps students maximize their
           SAT score through data-driven planning, error tracking, and AI-powered guidance.
         </p>
         <div className="mt-4 rounded-xl bg-white/10 p-4 border border-white/20">
-          <p className="text-xs font-semibold text-blue-200 uppercase tracking-wide mb-1">Copyright Notice</p>
-          <p className="text-sm text-blue-100">
+          <p className="text-xs font-semibold text-violet-200 uppercase tracking-wide mb-1">Copyright Notice</p>
+          <p className="text-sm text-violet-100">
             This platform does <strong className="text-white">not</strong> display, store, reproduce, or distribute
             any SAT questions or College Board content. All practice questions must be accessed directly from the
             official College Board website. We only store your personal study plans, progress data, and error logs.

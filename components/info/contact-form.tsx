@@ -37,7 +37,7 @@ export function ContactForm() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Send className="h-4 w-4 text-blue-500" />
+            <Send className="h-4 w-4 text-violet-500" />
             Contact Us
           </CardTitle>
           <p className="text-xs text-[var(--muted-foreground)]">
@@ -51,7 +51,7 @@ export function ContactForm() {
               <p className="font-medium">Message sent!</p>
               <p className="text-sm text-[var(--muted-foreground)]">Thanks for reaching out. We&apos;ll get back to you shortly.</p>
               <button
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-2"
+                className="text-xs text-violet-600 dark:text-violet-400 hover:underline mt-2"
                 onClick={() => setSent(false)}
               >
                 Send another message

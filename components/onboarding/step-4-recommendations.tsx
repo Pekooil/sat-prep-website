@@ -22,10 +22,10 @@ export function Step4Recommendations({
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-6">
         <div className="relative">
-          <div className="h-20 w-20 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-            <Sparkles className="h-9 w-9 text-blue-600 dark:text-blue-400" />
+          <div className="h-20 w-20 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+            <Sparkles className="h-9 w-9 text-violet-600 dark:text-violet-400" />
           </div>
-          <div className="absolute inset-0 rounded-full border-4 border-blue-500/30 border-t-blue-600 animate-spin" />
+          <div className="absolute inset-0 rounded-full border-4 border-violet-500/30 border-t-violet-600 animate-spin" />
         </div>
         <div className="text-center space-y-2">
           <p className="font-bold text-lg">Building your personalized plan…</p>
@@ -40,7 +40,7 @@ export function Step4Recommendations({
             'Calculating your optimal study sequence…',
           ].map((msg, i) => (
             <div key={i} className="flex items-center gap-3 text-xs text-slate-500">
-              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-blue-500" />
+              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-violet-500" />
               <span>{msg}</span>
             </div>
           ))}
@@ -61,7 +61,7 @@ export function Step4Recommendations({
         </div>
         <button
           onClick={onRetry}
-          className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
+          className="text-sm text-violet-600 dark:text-violet-400 hover:underline font-medium"
         >
           Try again
         </button>
@@ -87,13 +87,13 @@ export function Step4Recommendations({
       </div>
 
       {/* AI personal message */}
-      <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 p-5 text-white">
+      <div className="rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 p-5 text-white">
         <div className="flex items-start gap-3">
           <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
             <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-blue-200 uppercase tracking-wider mb-1">AI Coach</p>
+            <p className="text-xs font-semibold text-violet-200 uppercase tracking-wider mb-1">AI Coach</p>
             <p className="text-sm leading-relaxed">{aiRecs.message}</p>
           </div>
         </div>
@@ -102,7 +102,7 @@ export function Step4Recommendations({
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { icon: TrendingUp, label: 'Est. Timeline', value: `${aiRecs.estimatedTimelineWeeks}w`, color: 'text-blue-500' },
+          { icon: TrendingUp, label: 'Est. Timeline', value: `${aiRecs.estimatedTimelineWeeks}w`, color: 'text-violet-500' },
           { icon: Clock, label: 'Daily Goal', value: `${dailyStudyMinutes}m`, color: 'text-indigo-500' },
           { icon: BookOpen, label: 'Focus Areas', value: `${analysis.weakDomains.length}`, color: 'text-violet-500' },
         ].map(({ icon: Icon, label, value, color }) => (
@@ -118,7 +118,7 @@ export function Step4Recommendations({
       {aiRecs.weeklyPlanSummary && (
         <div className="rounded-xl border border-[var(--border)] bg-slate-50 dark:bg-slate-800/50 p-4">
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-blue-500" />
+            <span className="h-2 w-2 rounded-full bg-violet-500" />
             Study Approach
           </h3>
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -142,7 +142,7 @@ export function Step4Recommendations({
               <div className="flex items-start gap-3">
                 <div className={cn(
                   'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white mt-0.5',
-                  i === 0 ? 'bg-red-500' : i === 1 ? 'bg-amber-500' : 'bg-blue-500'
+                  i === 0 ? 'bg-red-500' : i === 1 ? 'bg-amber-500' : 'bg-violet-500'
                 )}>
                   {i + 1}
                 </div>
@@ -160,7 +160,7 @@ export function Step4Recommendations({
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{topic.reason}</p>
                   {topic.weeklyGoal && (
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-medium">
+                    <p className="text-xs text-violet-600 dark:text-violet-400 mt-1 font-medium">
                       This week: {topic.weeklyGoal}
                     </p>
                   )}
@@ -169,11 +169,11 @@ export function Step4Recommendations({
 
               {/* College Board QB filter recommendation */}
               {topic.cbFilters && (
-                <div className="ml-9 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-3 space-y-1">
-                  <p className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide">
+                <div className="ml-9 rounded-lg bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900 p-3 space-y-1">
+                  <p className="text-[10px] font-bold text-violet-700 dark:text-violet-400 uppercase tracking-wide">
                     📋 College Board QB Filters
                   </p>
-                  <div className="text-xs text-blue-800 dark:text-blue-300 space-y-0.5">
+                  <div className="text-xs text-violet-800 dark:text-violet-300 space-y-0.5">
                     <p>Domain: <span className="font-semibold">{topic.cbFilters.domain}</span></p>
                     {topic.cbFilters.skill && (
                       <p>Skill: <span className="font-semibold">{topic.cbFilters.skill}</span></p>
@@ -184,7 +184,7 @@ export function Step4Recommendations({
                     href={COLLEGE_BOARD_QB_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-semibold mt-1"
+                    className="inline-flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:underline font-semibold mt-1"
                   >
                     Open College Board Question Bank
                     <ExternalLink className="h-2.5 w-2.5" />

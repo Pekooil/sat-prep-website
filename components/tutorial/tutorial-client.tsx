@@ -319,7 +319,7 @@ function HelpAccordion({ items }: { items: { q: string; a: string }[] }) {
                 '[&[data-state=open]>svg:last-child]:rotate-180',
               )}
             >
-              <HelpCircle className="h-3.5 w-3.5 flex-shrink-0 text-blue-500" />
+              <HelpCircle className="h-3.5 w-3.5 flex-shrink-0 text-violet-500" />
               <span className="flex-1 text-[var(--foreground)]">{item.q}</span>
               <ChevronDown className="h-3.5 w-3.5 flex-shrink-0 text-[var(--muted-foreground)] transition-transform duration-200" />
             </AccordionPrimitive.Trigger>
@@ -364,7 +364,7 @@ function StepCard({
         <button
           onClick={onToggle}
           aria-label={completed ? `Mark step ${step.id} incomplete` : `Mark step ${step.id} complete`}
-          className="mt-0.5 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full"
+          className="mt-0.5 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-full"
         >
           {completed ? (
             <CheckCircle2 className="h-6 w-6 text-emerald-500" />
@@ -397,7 +397,7 @@ function StepCard({
             'flex-shrink-0 h-9 w-9 rounded-lg flex items-center justify-center',
             completed
               ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-              : 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400',
+              : 'bg-violet-50 dark:bg-violet-950/30 text-violet-600 dark:text-violet-400',
           )}
         >
           {step.icon}
@@ -426,7 +426,7 @@ function StepCard({
             href={COLLEGE_BOARD_QB_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
+            className="inline-flex items-center gap-1.5 text-sm text-violet-600 dark:text-violet-400 hover:underline font-medium"
           >
             Open College Board Question Bank
             <ExternalLink className="h-3.5 w-3.5" />
@@ -671,12 +671,12 @@ export function TutorialClient() {
       </section>
 
       {/* ── Bottom CTA ── */}
-      <div className="rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="rounded-2xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/20 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <div className="flex-1">
-          <p className="font-semibold text-blue-800 dark:text-blue-200">
+          <p className="font-semibold text-violet-800 dark:text-violet-200">
             Ready to start studying?
           </p>
-          <p className="text-sm text-blue-600 dark:text-blue-400 mt-0.5">
+          <p className="text-sm text-violet-600 dark:text-violet-400 mt-0.5">
             Open your Calendar to see today's task and get your QB filters.
           </p>
         </div>

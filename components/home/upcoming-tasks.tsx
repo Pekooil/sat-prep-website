@@ -23,7 +23,7 @@ export function UpcomingTasks({ tasks }: UpcomingTasksProps) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-blue-500" />
+          <CalendarDays className="h-4 w-4 text-violet-500" />
           Upcoming Tasks
         </CardTitle>
         <Link href="/calendar">

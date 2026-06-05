@@ -141,7 +141,7 @@ export function DayTasksPanel({ date, tasks, onReload, onAddTask }: DayTasksPane
           {tasks.length === 0 ? (
             <div className="py-8 text-center">
               <p className="text-sm text-[var(--muted-foreground)]">No tasks for this day</p>
-              <button className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-2" onClick={onAddTask}>
+              <button className="text-xs text-violet-600 dark:text-violet-400 hover:underline mt-2" onClick={onAddTask}>
                 Add a task
               </button>
             </div>
@@ -197,7 +197,7 @@ export function DayTasksPanel({ date, tasks, onReload, onAddTask }: DayTasksPane
                       {!task.is_completed && isPlanTask && !isPracticeTest && (
                         <button
                           onClick={() => setSessionWorkflowTaskId(task.id)}
-                          className="p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[var(--muted-foreground)] hover:text-blue-500"
+                          className="p-1 rounded hover:bg-violet-50 dark:hover:bg-violet-900/20 text-[var(--muted-foreground)] hover:text-violet-500"
                           title="Start session"
                         >
                           <ClipboardList className="h-3.5 w-3.5" />
@@ -218,11 +218,11 @@ export function DayTasksPanel({ date, tasks, onReload, onAddTask }: DayTasksPane
                   )}
 
                   {filters && (
-                    <div className="pl-6 rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-2 space-y-1">
-                      <p className="text-[10px] font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">
+                    <div className="pl-6 rounded-md bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900 p-2 space-y-1">
+                      <p className="text-[10px] font-semibold text-violet-700 dark:text-violet-400 uppercase tracking-wide">
                         📋 College Board QB Filters
                       </p>
-                      <div className="text-xs text-blue-800 dark:text-blue-300 space-y-0.5">
+                      <div className="text-xs text-violet-800 dark:text-violet-300 space-y-0.5">
                         {filters.domain && <p>Domain: <span className="font-medium">{filters.domain}</span></p>}
                         {filters.skill && <p>Skill: <span className="font-medium">{filters.skill}</span></p>}
                         {filters.difficulty && <p>Difficulty: <span className="font-medium capitalize">{filters.difficulty}</span></p>}
@@ -231,7 +231,7 @@ export function DayTasksPanel({ date, tasks, onReload, onAddTask }: DayTasksPane
                         href={COLLEGE_BOARD_QB_URL}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                        className="inline-flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:underline font-medium"
                       >
                         Open College Board Question Bank
                         <ExternalLink className="h-2.5 w-2.5" />

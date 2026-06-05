@@ -95,7 +95,7 @@ export function TaskFormDialog({ open, onOpenChange, defaultDate, onSuccess }: T
                   onClick={() => { setSubject(s); setSelectedDomain('') }}
                   className={`flex-1 py-1.5 rounded-md text-xs font-medium border transition-colors ${
                     subject === s
-                      ? 'bg-blue-600 text-white border-blue-600'
+                      ? 'bg-violet-600 text-white border-violet-600'
                       : 'border-[var(--border)] hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >

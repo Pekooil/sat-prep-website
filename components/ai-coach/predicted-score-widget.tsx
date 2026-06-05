@@ -172,9 +172,9 @@ export function PredictedScoreWidget({
                   <Line
                     type="monotone"
                     dataKey="score"
-                    stroke="#3b82f6"
+                    stroke="#7c3aed"
                     strokeWidth={2}
-                    dot={{ r: 3, fill: '#3b82f6' }}
+                    dot={{ r: 3, fill: '#7c3aed' }}
                     activeDot={{ r: 5 }}
                   />
                 </LineChart>

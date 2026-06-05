@@ -20,7 +20,7 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
         {/* Connecting lines */}
         <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 dark:bg-slate-700 mx-10 z-0" />
         <div
-          className="absolute top-5 left-0 h-0.5 bg-blue-500 transition-all duration-500 ease-in-out mx-10 z-0"
+          className="absolute top-5 left-0 h-0.5 bg-violet-500 transition-all duration-500 ease-in-out mx-10 z-0"
           style={{ right: `${((4 - Math.min(currentStep, 4)) / 3) * 100}%` }}
         />
 
@@ -36,8 +36,8 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
               <div
                 className={cn(
                   'flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300',
-                  isCompleted && 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/25',
-                  isActive && 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/40 scale-110',
+                  isCompleted && 'bg-violet-600 border-violet-600 text-white shadow-lg shadow-violet-500/25',
+                  isActive && 'bg-violet-600 border-violet-600 text-white shadow-lg shadow-violet-500/40 scale-110',
                   isPending && 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'
                 )}
               >
@@ -51,7 +51,7 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
                 <span
                   className={cn(
                     'text-xs font-semibold leading-none',
-                    (isActive || isCompleted) ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'
+                    (isActive || isCompleted) ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'
                   )}
                 >
                   {step.label}
@@ -67,7 +67,7 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
 
       {/* Mobile: current step label */}
       <div className="sm:hidden mt-4 text-center">
-        <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+        <p className="text-sm font-semibold text-violet-600 dark:text-violet-400">
           Step {currentStep} of 4 — {STEPS[currentStep - 1]?.label}
         </p>
         <p className="text-xs text-slate-400 mt-0.5">{STEPS[currentStep - 1]?.description}</p>

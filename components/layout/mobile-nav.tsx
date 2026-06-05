@@ -28,11 +28,11 @@ export function MobileNav() {
               className={cn(
                 'flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-0',
                 isActive
-                  ? 'text-blue-600 dark:text-blue-400'
+                  ? 'text-violet-600 dark:text-violet-400'
                   : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
               )}
             >
-              <Icon className={cn('h-5 w-5', isActive && 'text-blue-600 dark:text-blue-400')} />
+              <Icon className={cn('h-5 w-5', isActive && 'text-violet-600 dark:text-violet-400')} />
               <span className="text-[10px] font-medium leading-none truncate">{label}</span>
             </Link>
           )

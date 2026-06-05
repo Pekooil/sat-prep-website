@@ -42,7 +42,7 @@ const DEFAULT_SCHEDULE: DaySchedule = {
 const DAY_TYPE_ORDER: DayType[] = ['study', 'review', 'rest']
 
 const DAY_TYPE_CONFIG: Record<DayType, { label: string; bg: string; text: string; border: string }> = {
-  study:  { label: 'Study',  bg: 'bg-blue-100 dark:bg-blue-900/40',   text: 'text-blue-700 dark:text-blue-300',   border: 'border-blue-300 dark:border-blue-700' },
+  study:  { label: 'Study',  bg: 'bg-violet-100 dark:bg-violet-900/40',   text: 'text-violet-700 dark:text-violet-300',   border: 'border-violet-300 dark:border-violet-700' },
   review: { label: 'Review', bg: 'bg-amber-100 dark:bg-amber-900/40', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-300 dark:border-amber-700' },
   rest:   { label: 'Rest',   bg: 'bg-slate-100 dark:bg-slate-800',    text: 'text-slate-500 dark:text-slate-400', border: 'border-slate-300 dark:border-slate-600' },
 }
@@ -145,10 +145,10 @@ export function AIPlannerTrigger({ profile }: AIPlannerTriggerProps) {
   }
 
   return (
-    <Card className="border-blue-200 dark:border-blue-800 bg-gradient-to-b from-blue-50/50 to-white dark:from-blue-950/20 dark:to-[var(--card)]">
+    <Card className="border-violet-200 dark:border-violet-800 bg-gradient-to-b from-violet-50/50 to-white dark:from-violet-950/20 dark:to-[var(--card)]">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <RefreshCw className="h-4 w-4 text-blue-500" />
+          <RefreshCw className="h-4 w-4 text-violet-500" />
           AI Adaptive Replanner
         </CardTitle>
         <p className="text-xs text-[var(--muted-foreground)]">
@@ -172,7 +172,7 @@ export function AIPlannerTrigger({ profile }: AIPlannerTriggerProps) {
           <>
             <Button
               variant="outline"
-              className="w-full justify-between text-sm border-blue-200 dark:border-blue-800"
+              className="w-full justify-between text-sm border-violet-200 dark:border-violet-800"
               onClick={() => setExpanded(!expanded)}
             >
               {expanded ? 'Hide options' : 'Configure & generate plan'}

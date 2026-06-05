@@ -11,7 +11,7 @@ export default async function SettingsPage() {
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Bell className="h-6 w-6 text-blue-500" />
+          <Bell className="h-6 w-6 text-violet-500" />
           Notification Settings
         </h1>
         <p className="text-sm text-[var(--muted-foreground)] mt-1">

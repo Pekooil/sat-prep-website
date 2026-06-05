@@ -282,7 +282,7 @@ export function OnboardingWizard() {
                 key={s}
                 className={cn(
                   'h-1.5 rounded-full transition-all duration-300',
-                  s === step ? 'w-6 bg-blue-600' : s < step ? 'w-1.5 bg-blue-300' : 'w-1.5 bg-slate-200 dark:bg-slate-700'
+                  s === step ? 'w-6 bg-violet-600' : s < step ? 'w-1.5 bg-violet-300' : 'w-1.5 bg-slate-200 dark:bg-slate-700'
                 )}
               />
             ))}
@@ -293,7 +293,7 @@ export function OnboardingWizard() {
             <Button
               onClick={handleComplete}
               disabled={saving || aiLoading}
-              className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 min-w-[140px]"
+              className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 shadow-lg shadow-violet-500/25 min-w-[140px]"
             >
               {saving ? (
                 <>
@@ -323,7 +323,7 @@ export function OnboardingWizard() {
           <p className="text-center mt-3 text-xs text-slate-400">
             No practice data yet?{' '}
             <button
-              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              className="text-violet-600 dark:text-violet-400 hover:underline font-medium"
               onClick={handleNext}
             >
               Skip this step

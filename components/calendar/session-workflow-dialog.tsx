@@ -495,9 +495,9 @@ export function SessionWorkflowDialog({
                     {correct}/{attempted}
                   </p>
                 </div>
-                <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 p-3">
+                <div className="rounded-lg bg-violet-50 dark:bg-violet-950/30 p-3">
                   <p className="text-xs text-[var(--muted-foreground)]">Accuracy</p>
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{accuracy}%</p>
+                  <p className="text-2xl font-bold text-violet-600 dark:text-violet-400">{accuracy}%</p>
                 </div>
                 <div className={cn(
                   'rounded-lg p-3',
@@ -774,7 +774,7 @@ export function SessionWorkflowDialog({
                                 <span className="text-amber-600 dark:text-amber-400"> · {change.difficultyChange}</span>
                               )}
                               {change.questionChange && (
-                                <span className="text-blue-600 dark:text-blue-400"> · {change.questionChange}</span>
+                                <span className="text-violet-600 dark:text-violet-400"> · {change.questionChange}</span>
                               )}
                             </p>
                           </div>

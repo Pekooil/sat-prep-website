@@ -82,7 +82,7 @@ export default function LoginPage() {
         </div>
         <p className="text-sm text-center text-[var(--muted-foreground)]">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-medium text-blue-600 dark:text-blue-400 hover:underline">
+          <Link href="/signup" className="font-medium text-violet-600 dark:text-violet-400 hover:underline">
             Create one free
           </Link>
         </p>

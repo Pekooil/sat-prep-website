@@ -248,7 +248,7 @@ export function ErrorLogClient() {
           <SlidersHorizontal className="h-4 w-4" />
           <span className="hidden sm:inline">Filters</span>
           {hasFilters && (
-            <span className="ml-0.5 h-4 w-4 rounded-full bg-blue-600 text-[9px] text-white flex items-center justify-center font-bold">
+            <span className="ml-0.5 h-4 w-4 rounded-full bg-violet-600 text-[9px] text-white flex items-center justify-center font-bold">
               {[subject, category, errorType, mastered].filter(v => v !== 'all').length}
             </span>
           )}
@@ -322,7 +322,7 @@ export function ErrorLogClient() {
 
               {hasFilters && (
                 <button
-                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-xs text-violet-600 dark:text-violet-400 hover:underline"
                   onClick={clearFilters}
                 >
                   Clear filters

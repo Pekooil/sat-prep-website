@@ -81,8 +81,8 @@ export function Step3Analysis({ analysis, step1CurrentScore, step1TargetScore }:
             value: `+${scoreGap}`,
             sub: 'points to gain',
             icon: Target,
-            color: 'text-blue-600 dark:text-blue-400',
-            bg: 'bg-blue-50 dark:bg-blue-900/20',
+            color: 'text-violet-600 dark:text-violet-400',
+            bg: 'bg-violet-50 dark:bg-violet-900/20',
           },
           {
             label: 'Study Days',
@@ -122,7 +122,7 @@ export function Step3Analysis({ analysis, step1CurrentScore, step1TargetScore }:
       {chartData.length > 0 && (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
           <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-blue-500" />
+            <span className="h-2 w-2 rounded-full bg-violet-500" />
             Accuracy by Topic
           </h3>
           <ResponsiveContainer width="100%" height={chartData.length * 42 + 20}>
@@ -229,9 +229,9 @@ export function Step3Analysis({ analysis, step1CurrentScore, step1TargetScore }:
       )}
 
       {noData && (
-        <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 p-6 text-center">
-          <p className="text-sm font-medium text-blue-800 dark:text-blue-200">No practice data entered</p>
-          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+        <div className="rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/20 p-6 text-center">
+          <p className="text-sm font-medium text-violet-800 dark:text-violet-200">No practice data entered</p>
+          <p className="text-xs text-violet-600 dark:text-violet-400 mt-1">
             That's okay! Your AI plan will focus on all topics evenly and adapt as you log practice sessions.
           </p>
         </div>

@@ -164,7 +164,7 @@ export function TaskDrawer({
                   </h3>
                   <div className={cn(
                     'rounded-xl border p-4 space-y-3',
-                    'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',
+                    'bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800',
                   )}>
                     {filters.domain && (
                       <FilterRow label="Domain" value={filters.domain} />
@@ -188,9 +188,9 @@ export function TaskDrawer({
                       </div>
                     )}
                     {questionCount && (
-                      <div className="flex items-center justify-between text-sm border-t border-blue-200 dark:border-blue-800 pt-2">
+                      <div className="flex items-center justify-between text-sm border-t border-violet-200 dark:border-violet-800 pt-2">
                         <span className="text-[var(--muted-foreground)]">Target questions</span>
-                        <span className="font-semibold text-blue-700 dark:text-blue-300">{questionCount}</span>
+                        <span className="font-semibold text-violet-700 dark:text-violet-300">{questionCount}</span>
                       </div>
                     )}
                   </div>
@@ -198,7 +198,7 @@ export function TaskDrawer({
                     href={COLLEGE_BOARD_QB_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2.5 inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                    className="mt-2.5 inline-flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:underline font-medium"
                   >
                     Open College Board Question Bank
                     <ExternalLink className="h-3 w-3" />
@@ -270,8 +270,8 @@ export function TaskDrawer({
                     <MetaStat
                       label="Mastery Goal"
                       value={`${task.mastery_target}%`}
-                      colorClass="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900"
-                      icon={<Target className="h-3 w-3 text-blue-500" />}
+                      colorClass="bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-900"
+                      icon={<Target className="h-3 w-3 text-violet-500" />}
                     />
                   </div>
                 </section>
@@ -346,7 +346,7 @@ function FilterRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-3 text-sm">
       <span className="text-[var(--muted-foreground)] flex-shrink-0">{label}</span>
-      <span className="font-medium text-blue-700 dark:text-blue-300 text-right">{value}</span>
+      <span className="font-medium text-violet-700 dark:text-violet-300 text-right">{value}</span>
     </div>
   )
 }

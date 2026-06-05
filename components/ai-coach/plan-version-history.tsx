@@ -33,7 +33,7 @@ const TRIGGER_LABELS: Record<string, string> = {
 }
 
 const TRIGGER_COLORS: Record<string, string> = {
-  question_session:    'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  question_session:    'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
   error_log:           'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
   practice_test_score: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
   manual:              'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',

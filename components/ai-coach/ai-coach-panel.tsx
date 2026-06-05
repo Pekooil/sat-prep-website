@@ -191,7 +191,7 @@ export function AiCoachPanel({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Bot className="h-6 w-6 text-blue-600" />
+            <Bot className="h-6 w-6 text-violet-600" />
             AI Coach
           </h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-0.5">
@@ -236,7 +236,7 @@ export function AiCoachPanel({
           label="Predicted Score"
           value={latestPred ? latestPred.predicted_score.toString() : '—'}
           sub={latestPred ? `${latestPred.confidence_low}–${latestPred.confidence_high}` : undefined}
-          color="text-blue-600"
+          color="text-violet-600"
         />
         <StatCard
           label="Interventions"
@@ -382,7 +382,7 @@ function MasteryHeatmap({ mastery }: { mastery: MasteryRow[] }) {
 
   function cellColor(score: number) {
     if (score >= 90) return 'bg-emerald-500'
-    if (score >= 70) return 'bg-blue-500'
+    if (score >= 70) return 'bg-violet-500'
     if (score >= 50) return 'bg-amber-500'
     return 'bg-rose-500'
   }
@@ -394,7 +394,7 @@ function MasteryHeatmap({ mastery }: { mastery: MasteryRow[] }) {
         <div className="flex items-center gap-3 text-[10px] text-[var(--muted-foreground)]">
           <span className="flex items-center gap-1"><span className="h-2 w-4 rounded bg-rose-500 inline-block" /> &lt;50</span>
           <span className="flex items-center gap-1"><span className="h-2 w-4 rounded bg-amber-500 inline-block" /> 50–69</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-4 rounded bg-blue-500 inline-block" /> 70–89</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-4 rounded bg-violet-500 inline-block" /> 70–89</span>
           <span className="flex items-center gap-1"><span className="h-2 w-4 rounded bg-emerald-500 inline-block" /> 90+</span>
         </div>
       </div>

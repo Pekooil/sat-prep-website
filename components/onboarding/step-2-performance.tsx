@@ -68,7 +68,7 @@ function CategoryRow({
       error
         ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10'
         : hasData
-          ? 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20'
+          ? 'border-violet-200 dark:border-violet-800 bg-violet-50/50 dark:bg-violet-950/20'
           : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50'
     )}>
       <div className="flex items-start justify-between gap-4">
@@ -175,7 +175,7 @@ export function Step2Performance({ data, onChange, errors }: Step2Props) {
     })
   }
 
-  const RW_COLORS = ['bg-violet-500', 'bg-purple-500', 'bg-indigo-500', 'bg-blue-500']
+  const RW_COLORS = ['bg-violet-500', 'bg-purple-500', 'bg-indigo-500', 'bg-fuchsia-400']
   const MATH_COLORS = ['bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-sky-500']
 
   return (

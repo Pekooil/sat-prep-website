@@ -83,10 +83,10 @@ export function LogSessionDialog({ open, onOpenChange, task, onSuccess }: LogSes
           <DialogTitle>Log Session Results</DialogTitle>
         </DialogHeader>
 
-        <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-3 text-sm text-blue-800 dark:text-blue-300">
+        <div className="rounded-md bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900 p-3 text-sm text-violet-800 dark:text-violet-300">
           <p className="font-medium">{task.title}</p>
           {filters?.domain && (
-            <p className="text-xs mt-0.5 text-blue-600 dark:text-blue-400">
+            <p className="text-xs mt-0.5 text-violet-600 dark:text-violet-400">
               {filters.domain}{filters.skill ? ` · ${filters.skill}` : ''}
             </p>
           )}

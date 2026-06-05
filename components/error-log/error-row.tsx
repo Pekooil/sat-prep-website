@@ -179,8 +179,8 @@ export function ErrorRow({ error, onReload }: ErrorRowProps) {
                 <div><span className="font-medium text-[var(--muted-foreground)]">Correct approach: </span>{error.correct_approach}</div>
               )}
               {error.corrected_explanation && (
-                <div className="rounded-md bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 p-2">
-                  <span className="font-medium text-blue-700 dark:text-blue-300">My explanation: </span>
+                <div className="rounded-md bg-violet-50 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-900 p-2">
+                  <span className="font-medium text-violet-700 dark:text-violet-300">My explanation: </span>
                   <span>{error.corrected_explanation}</span>
                 </div>
               )}

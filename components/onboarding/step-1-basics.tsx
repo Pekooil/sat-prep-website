@@ -36,13 +36,13 @@ function ScoreSlider({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <Label htmlFor={id} className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-blue-500" />
+          <Icon className="h-4 w-4 text-violet-500" />
           {label}
         </Label>
         <span className={cn(
           'text-2xl font-bold tabular-nums tracking-tight',
           value >= 1400 ? 'text-emerald-600 dark:text-emerald-400'
-          : value >= 1100 ? 'text-blue-600 dark:text-blue-400'
+          : value >= 1100 ? 'text-violet-600 dark:text-violet-400'
           : 'text-amber-600 dark:text-amber-400'
         )}>
           {value.toLocaleString()}
@@ -60,14 +60,14 @@ function ScoreSlider({
           onChange={e => onChange(Number(e.target.value))}
           className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-200 dark:bg-slate-700"
           style={{
-            background: `linear-gradient(to right, #2563eb ${pct}%, var(--border) ${pct}%)`
+            background: `linear-gradient(to right, #7c3aed ${pct}%, var(--border) ${pct}%)`
           }}
         />
         <div className="flex justify-between mt-1">
           {SCORE_MARKS.map(m => (
             <span key={m} className={cn(
               'text-[10px] tabular-nums',
-              Math.abs(value - m) < 20 ? 'text-blue-500 font-medium' : 'text-slate-400'
+              Math.abs(value - m) < 20 ? 'text-violet-500 font-medium' : 'text-slate-400'
             )}>
               {m}
             </span>
@@ -94,7 +94,7 @@ export function Step1Basics({ data, onChange, errors }: Step1Props) {
   return (
     <div className="space-y-8">
       <div className="text-center space-y-1">
-        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 mb-2">
+        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 dark:bg-violet-900/30 text-violet-600 mb-2">
           <Target className="h-7 w-7" />
         </div>
         <h2 className="text-xl font-bold">Set Your SAT Goals</h2>
@@ -105,19 +105,19 @@ export function Step1Basics({ data, onChange, errors }: Step1Props) {
 
       {/* Score gap highlight */}
       {gap > 0 && (
-        <div className="rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200 dark:border-blue-800 p-4">
+        <div className="rounded-xl bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/40 dark:to-purple-950/40 border border-violet-200 dark:border-violet-800 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Score Gap</p>
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+              <p className="text-sm font-medium text-violet-800 dark:text-violet-200">Score Gap</p>
+              <p className="text-xs text-violet-600 dark:text-violet-400 mt-0.5">
                 {gap <= 100 ? 'Very achievable with consistent practice!' :
                  gap <= 200 ? 'Challenging but definitely doable.' :
                  'Ambitious goal — strong commitment required.'}
               </p>
             </div>
             <div className="text-right">
-              <span className="text-3xl font-bold text-blue-700 dark:text-blue-300">+{gap}</span>
-              <p className="text-xs text-blue-500">points to gain</p>
+              <span className="text-3xl font-bold text-violet-700 dark:text-violet-300">+{gap}</span>
+              <p className="text-xs text-violet-500">points to gain</p>
             </div>
           </div>
         </div>
@@ -148,7 +148,7 @@ export function Step1Basics({ data, onChange, errors }: Step1Props) {
       {/* Test date */}
       <div className="space-y-2">
         <Label htmlFor="test-date" className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-blue-500" />
+          <Calendar className="h-4 w-4 text-violet-500" />
           SAT Test Date
         </Label>
         <Input
@@ -169,7 +169,7 @@ export function Step1Basics({ data, onChange, errors }: Step1Props) {
       {/* Daily study minutes */}
       <div className="space-y-3">
         <Label className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-blue-500" />
+          <Clock className="h-4 w-4 text-violet-500" />
           Daily Study Time
         </Label>
         <div className="grid grid-cols-5 gap-2">
@@ -181,8 +181,8 @@ export function Step1Basics({ data, onChange, errors }: Step1Props) {
               className={cn(
                 'py-2.5 px-1 rounded-xl text-xs font-semibold border-2 transition-all duration-150',
                 data.dailyStudyMinutes === p.value
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20'
-                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-600'
+                  ? 'bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-500/20'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-violet-300 dark:hover:border-violet-600'
               )}
             >
               {p.label}
