@@ -30,7 +30,7 @@ export default async function SettingsPage() {
           </p>
           <pre className="mt-2 text-xs font-mono bg-amber-100 dark:bg-amber-900/40 rounded-lg p-3 overflow-x-auto text-amber-900 dark:text-amber-200">
 {`RESEND_API_KEY=re_...          # from resend.com → API Keys
-RESEND_FROM_EMAIL=SAT Planner <noreply@yourdomain.com>
+RESEND_FROM_EMAIL=SaturnPath <noreply@yourdomain.com>
 NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
 SUPABASE_SERVICE_ROLE_KEY=...  # Supabase → Settings → API
 CRON_SECRET=any-random-string  # protects the cron endpoint`}

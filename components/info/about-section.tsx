@@ -36,9 +36,9 @@ export function AboutSection() {
   return (
     <section className="space-y-6">
       <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
-        <h2 className="text-xl font-bold">About SAT Study Planner AI</h2>
+        <h2 className="text-xl font-bold">About SaturnPath</h2>
         <p className="mt-2 text-blue-100 text-sm leading-relaxed">
-          SAT Study Planner AI is a smart, personalized preparation platform that helps students maximize their
+          SaturnPath is a smart, personalized preparation platform that helps students maximize their
           SAT score through data-driven planning, error tracking, and AI-powered guidance.
         </p>
         <div className="mt-4 rounded-xl bg-white/10 p-4 border border-white/20">

@@ -185,7 +185,7 @@ const STEPS: TutorialStep[] = [
       },
       {
         q: 'How should I review wrong answers?',
-        a: 'After seeing which answers were wrong, read the College Board\'s official explanation. Then open the Error Log in SAT Planner AI and write a short note about your mistake — but do not paste any question text. Describe what you misunderstood in your own words.',
+        a: 'After seeing which answers were wrong, read the College Board\'s official explanation. Then open the Error Log in SaturnPath and write a short note about your mistake — but do not paste any question text. Describe what you misunderstood in your own words.',
       },
       {
         q: 'What if I run out of time mid-session?',
@@ -196,13 +196,13 @@ const STEPS: TutorialStep[] = [
   },
   {
     id: 7,
-    title: 'Return to SAT Study Planner AI & Log Your Session',
+    title: 'Return to SaturnPath & Log Your Session',
     description:
       'Come back to the Calendar, open the task drawer, and click "Log Session." Enter the number of questions you attempted and how many you answered correctly. The adaptive engine will update your plan immediately.',
     detail:
       'Logging your session is the most important step — it is how the planner learns. Your accuracy data triggers a full replanning pass that re-ranks all eight domains, adjusts future difficulty, and updates your predicted score. The plan only adapts when you log.',
-    screenshotAlt: 'Log Session dialog in SAT Planner AI',
-    screenshotHint: 'SAT Planner AI — Log Session dialog\n— Questions attempted field\n— Questions correct field\n— Timer showing time used\n— A/B/C/D per-question entry\n— "Submit" button',
+    screenshotAlt: 'Log Session dialog in SaturnPath',
+    screenshotHint: 'SaturnPath — Log Session dialog\n— Questions attempted field\n— Questions correct field\n— Timer showing time used\n— A/B/C/D per-question entry\n— "Submit" button',
     helpItems: [
       {
         q: 'What happens when I submit a session log?',
@@ -238,7 +238,7 @@ const FAQS = [
     a: 'Yes. The QB is completely free for all students. You only need a College Board account, which is also free to create at collegeboard.org.',
   },
   {
-    q: 'Does SAT Planner AI access the QB on my behalf?',
+    q: 'Does SaturnPath access the QB on my behalf?',
     a: 'No. The planner only tells you which filters to apply. You visit the QB directly in your browser. We never scrape, proxy, or access College Board\'s systems.',
   },
   {
@@ -247,7 +247,7 @@ const FAQS = [
   },
   {
     q: 'Can I use Khan Academy instead of the QB?',
-    a: 'Khan Academy SAT Prep is a good supplementary resource, but the SAT Planner AI generates filters specifically aligned to the College Board QB categories. Log your sessions with the question counts from whichever source you use.',
+    a: 'Khan Academy SAT Prep is a good supplementary resource, but the SaturnPath generates filters specifically aligned to the College Board QB categories. Log your sessions with the question counts from whichever source you use.',
   },
   {
     q: 'What if I miss a scheduled session?',

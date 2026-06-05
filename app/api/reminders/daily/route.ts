@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   }
 
   const appUrl     = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-  const fromEmail  = process.env.RESEND_FROM_EMAIL   ?? 'SAT Planner <noreply@example.com>'
+  const fromEmail  = process.env.RESEND_FROM_EMAIL   ?? 'SaturnPath <noreply@example.com>'
   const resendKey  = process.env.RESEND_API_KEY
   const resend     = resendKey ? new Resend(resendKey) : null
 

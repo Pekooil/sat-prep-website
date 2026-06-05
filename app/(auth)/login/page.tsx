@@ -28,7 +28,7 @@ export default function LoginPage() {
     <Card className="shadow-xl border-0 bg-white dark:bg-slate-800">
       <CardHeader className="space-y-1 pb-4">
         <CardTitle className="text-xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your SAT Study Planner account</CardDescription>
+        <CardDescription>Sign in to your SaturnPath account</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

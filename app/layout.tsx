@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 import { ThemeProvider } from '@/components/layout/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
@@ -10,7 +11,7 @@ const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://sat-planner.vercel.app'
-const APP_NAME = 'SAT Study Planner AI'
+const APP_NAME = 'SaturnPath'
 const APP_DESCRIPTION =
   'Personalized, data-driven SAT preparation. Smart weekly study plans, progress analytics, error tracking, and AI-powered adaptive replanning — all in one place.'
 
@@ -86,15 +87,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <head>
-        {/* Inline theme script prevents FOUC in dark mode */}
-        <script
+      <body className="min-h-screen antialiased">
+        <Script
+          id="theme-script"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}`,
           }}
         />
-      </head>
-      <body className="min-h-screen antialiased">
         <ThemeProvider>
           {/* Skip-to-content link for keyboard/screen-reader users */}
           <a

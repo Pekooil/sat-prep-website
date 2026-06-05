@@ -203,7 +203,7 @@ export function OnboardingWizard() {
       toast({ title: 'Error saving data', description: result.error, variant: 'destructive' })
       return
     }
-    toast({ title: '🎉 Setup complete!', description: 'Welcome to SAT Study Planner AI. Your plan is ready.' })
+    toast({ title: '🎉 Setup complete!', description: 'Welcome to SaturnPath. Your plan is ready.' })
     router.push('/home')
     router.refresh()
   }

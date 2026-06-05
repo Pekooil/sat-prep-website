@@ -1,0 +1,30 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"\nimport json, os, sys\nsys.stdin.read()\nfiles = ['CLAUDE.md', 'PROJECT_CONTEXT.md', 'AI_HANDOFF.md', 'DATABASE_SCHEMA.md', 'PLANNER_ALGORITHM.md', 'COPYRIGHT_COMPLIANCE.md']\nparts = []\nfor f in files:\n    path = '/Users/darcywang/sat-prep-website/' + f\n    if os.path.exists(path):\n        with open(path) as fh:\n            content = fh.read()[:3000]\n        parts.append('=== ' + f + ' ===\\n' + content)\ncontext = 'PROJECT DOCUMENTATION LOADED AT SESSION START:\\n\\n' + '\\n\\n'.join(parts)\nprint(json.dumps({'hookSpecificOutput': {'hookEventName': 'SessionStart', 'additionalContext': context}}))\n\"",
+            "timeout": 10,
+            "statusMessage": "Loading project documentation..."
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "exit 2",
+            "asyncRewake": true,
+            "rewakeMessage": "CONTEXT COMPACTION TRIGGERED. Before this session is compacted, you MUST update all project documentation to preserve state for the next session:\n1. Update PROJECT_HANDOFF.md — complete summary of work done this session, current state of all features, blockers, and exact next steps\n2. Update PROJECT_CONTEXT.md — if any architecture, stack, or major decisions changed\n3. Update DATABASE_SCHEMA.md — if any schema, models, or data structures changed\n4. Update PLANNER_ALGORITHM.md — if the planner logic or algorithm changed\n5. Verify COPYRIGHT_COMPLIANCE.md is still accurate\n\nDo this NOW before responding to anything else. Once documentation is updated, confirm with 'Documentation updated for handoff.'",
+            "rewakeSummary": "Update project docs before compaction",
+            "statusMessage": "Preparing documentation handoff..."
+          }
+        ]
+      }
+    ]
+  }
+}

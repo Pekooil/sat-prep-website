@@ -3,7 +3,7 @@ import { AboutSection } from '@/components/info/about-section'
 
 export const metadata: Metadata = {
   title: 'Info & Contact',
-  description: 'Learn how SAT Study Planner AI works, read FAQs, and get in touch.',
+  description: 'Learn how SaturnPath works, read FAQs, and get in touch.',
 }
 import { FAQAccordion } from '@/components/info/faq-accordion'
 import { ContactForm } from '@/components/info/contact-form'
@@ -14,7 +14,7 @@ export default function InfoPage() {
       <div>
         <h1 className="text-2xl font-bold">Info & Contact</h1>
         <p className="text-[var(--muted-foreground)] text-sm mt-1">
-          Learn how SAT Study Planner AI works and get in touch.
+          Learn how SaturnPath works and get in touch.
         </p>
       </div>
 

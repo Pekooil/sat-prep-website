@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 const faqs = [
   {
     q: 'Does this platform include actual SAT questions?',
-    a: 'No. SAT Study Planner AI does not display, store, or distribute any SAT questions. All practice questions must be accessed directly from the College Board\'s official Question Bank at satsuite.collegeboard.org. We only recommend which filters to apply.',
+    a: 'No. SaturnPath does not display, store, or distribute any SAT questions. All practice questions must be accessed directly from the College Board\'s official Question Bank at satsuite.collegeboard.org. We only recommend which filters to apply.',
   },
   {
     q: 'How does the AI study plan work?',

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, LogOut, User, Settings } from 'lucide-react'
+import { LogOut, Settings } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import { NotificationsDropdown } from './notifications-dropdown'
 import {
@@ -27,10 +27,8 @@ export function Navbar({ user }: NavbarProps) {
       <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <Link href="/home" className="flex items-center gap-2 font-bold text-lg">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-            <BookOpen className="h-4 w-4" />
-          </div>
-          <span className="hidden sm:block text-[var(--foreground)]">SAT Planner AI</span>
+          <img src="/logo.svg" alt="SaturnPath logo" className="h-8 w-8" />
+          <span className="hidden sm:block text-[var(--foreground)]">SaturnPath</span>
         </Link>
 
         {/* Desktop nav */}

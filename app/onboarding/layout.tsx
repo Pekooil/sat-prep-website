@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Get Started — SAT Study Planner AI',
+  title: 'Get Started — SaturnPath',
   description: 'Set up your personalized SAT study plan in minutes.',
 }
 
@@ -18,13 +18,8 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
       {/* Logo header */}
       <div className="fixed top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-            </svg>
-          </div>
-          <span className="font-bold text-sm text-[var(--foreground)]">SAT Study Planner AI</span>
+          <img src="/logo.svg" alt="SaturnPath logo" className="h-8 w-8" />
+          <span className="font-bold text-sm text-[var(--foreground)]">SaturnPath</span>
         </div>
         <span className="text-xs text-slate-400">Setup Wizard</span>
       </div>
