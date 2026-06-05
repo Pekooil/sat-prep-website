@@ -72,6 +72,29 @@ export function estimateScoreGain(ranked: RankedDomain[], topN = 4): number {
   return ranked.slice(0, topN).reduce((sum, rd) => sum + rd.potentialPoints, 0)
 }
 
+// ─── Per-Domain Mastery Target ───────────────────────────────────────────────
+
+/**
+ * Compute the per-domain mastery target based on the student's current accuracy.
+ *
+ * Sets a progressive, achievable goal rather than a flat 90 % for every domain.
+ * Weaker domains get a near-term step-up target; stronger domains are pushed
+ * toward peak performance.
+ *
+ *   < 45 %  accuracy → 60 %  (Entry Goal — first meaningful milestone)
+ *   45–59 % accuracy → 70 %  (Step-Up Goal — from struggling to developing)
+ *   60–74 % accuracy → 80 %  (Stretch Goal — solid progress toward proficiency)
+ *   75–84 % accuracy → 88 %  (Near-Mastery — one push from the top tier)
+ *   85 %+   accuracy → 92 %  (Peak Target — maintain and refine)
+ */
+export function masteryTargetForDomain(currentAccuracy: number): number {
+  if (currentAccuracy < 45) return 60
+  if (currentAccuracy < 60) return 70
+  if (currentAccuracy < 75) return 80
+  if (currentAccuracy < 85) return 88
+  return 92
+}
+
 // ─── Daily Question Target ────────────────────────────────────────────────────
 
 /**

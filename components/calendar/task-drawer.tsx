@@ -19,6 +19,34 @@ function parseQuestionCount(title: string): number | null {
   return m ? parseInt(m[1], 10) : null
 }
 
+/** Maps a per-domain mastery target to a short contextual tier label. */
+function masteryTierLabel(target: number | null | undefined): string {
+  if (!target) return 'Mastery Goal'
+  if (target <= 65) return 'Entry Goal'
+  if (target <= 75) return 'Step-Up Goal'
+  if (target <= 82) return 'Stretch Goal'
+  if (target <= 90) return 'Near-Mastery'
+  return 'Peak Target'
+}
+
+/** Color class for the mastery target badge based on how demanding the goal is. */
+function masteryTierColor(target: number | null | undefined): string {
+  if (!target) return 'bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-900'
+  if (target <= 65) return 'bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-900'
+  if (target <= 75) return 'bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900'
+  if (target <= 82) return 'bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900'
+  if (target <= 90) return 'bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-900'
+  return 'bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900'
+}
+
+function masteryTierIconColor(target: number | null | undefined): string {
+  if (!target) return 'text-violet-500'
+  if (target <= 65) return 'text-sky-500'
+  if (target <= 75) return 'text-blue-500'
+  if (target <= 82) return 'text-indigo-500'
+  return 'text-violet-500'
+}
+
 // ─── Copy ─────────────────────────────────────────────────────────────────────
 
 const QB_STEPS = [
@@ -254,7 +282,7 @@ export function TaskDrawer({
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)] mb-2">
                     Adaptive Planner
                   </h3>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-2 mb-3">
                     <MetaStat
                       label="Priority"
                       value={String(task.priority_score)}
@@ -268,12 +296,51 @@ export function TaskDrawer({
                       icon={<BarChart2 className="h-3 w-3 text-emerald-500" />}
                     />
                     <MetaStat
-                      label="Mastery Goal"
-                      value={`${task.mastery_target}%`}
-                      colorClass="bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-900"
-                      icon={<Target className="h-3 w-3 text-violet-500" />}
+                      label={masteryTierLabel(task.mastery_target)}
+                      value={`${task.mastery_target ?? 90}%`}
+                      colorClass={masteryTierColor(task.mastery_target)}
+                      icon={<Target className={cn('h-3 w-3', masteryTierIconColor(task.mastery_target))} />}
                     />
                   </div>
+                  {/* Mastery target context bar */}
+                  {task.mastery_target != null && task.mastery_target > 0 && (
+                    <div className={cn(
+                      'rounded-lg px-3 py-2.5 text-xs',
+                      masteryTierColor(task.mastery_target),
+                    )}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="font-medium text-[var(--foreground)]">
+                          {masteryTierLabel(task.mastery_target)}
+                        </span>
+                        <span className={cn('font-bold', masteryTierIconColor(task.mastery_target))}>
+                          {task.mastery_target}% target
+                        </span>
+                      </div>
+                      <div className="w-full bg-[var(--border)] rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className={cn(
+                            'h-full rounded-full transition-all',
+                            task.mastery_target <= 65 ? 'bg-sky-400' :
+                            task.mastery_target <= 75 ? 'bg-blue-500' :
+                            task.mastery_target <= 82 ? 'bg-indigo-500' :
+                            task.mastery_target <= 90 ? 'bg-violet-500' : 'bg-purple-600',
+                          )}
+                          style={{ width: `${task.mastery_target}%` }}
+                        />
+                      </div>
+                      <p className="mt-1.5 text-[var(--muted-foreground)] leading-relaxed">
+                        {task.mastery_target <= 65
+                          ? 'A first achievable milestone — reach this accuracy before moving on.'
+                          : task.mastery_target <= 75
+                          ? 'A step-up goal — shows real progress from where you started.'
+                          : task.mastery_target <= 82
+                          ? 'A stretch goal — you\'re developing; push toward consistent accuracy.'
+                          : task.mastery_target <= 90
+                          ? 'Near-mastery — one strong push to reach the top tier.'
+                          : 'Peak target — maintain elite accuracy and refine edge cases.'}
+                      </p>
+                    </div>
+                  )}
                 </section>
               )}
 

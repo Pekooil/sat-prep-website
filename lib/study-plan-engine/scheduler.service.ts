@@ -33,7 +33,7 @@ import {
   PRACTICE_TEST_MINUTES,
 } from './difficulty.service'
 import { primarySkill } from './domain-catalog'
-import { dailyQuestionTarget } from './scoring.service'
+import { dailyQuestionTarget, masteryTargetForDomain } from './scoring.service'
 import type {
   DaySchedule,
   DayType,
@@ -158,11 +158,13 @@ function buildStudyBlock(
   const difficulty = difficultyForSession(phase, rd.currentAccuracy)
   const skillFocus = skillFocusForSession(rd.entry, phase, rd.currentAccuracy, domainStudyCount)
 
+  const domainTarget = masteryTargetForDomain(rd.currentAccuracy)
+
   const descriptions: Record<Phase, string> = {
     foundation: `Practice ${questionCount} Easy ${rd.entry.label} questions on College Board QB. Understand the concept behind every error — log each in your Error Log with the correct approach.`,
     skill:      `Complete ${questionCount} ${difficulty} ${rd.entry.label} questions. Pace yourself at ~1:30/question. Identify recurring error patterns and update your Error Log.`,
-    advanced:   `${questionCount} ${difficulty} ${rd.entry.label} questions under timed conditions. Target ${rd.targetAccuracy}% accuracy. Review every error immediately after the set.`,
-    strategy:   `Timed ${rd.entry.label} set — ${questionCount} Hard questions. Simulate test conditions. Goal: ${rd.targetAccuracy}% accuracy. Log and mark mastered errors afterwards.`,
+    advanced:   `${questionCount} ${difficulty} ${rd.entry.label} questions under timed conditions. Target ${domainTarget}% accuracy on this domain. Review every error immediately after the set.`,
+    strategy:   `Timed ${rd.entry.label} set — ${questionCount} Hard questions. Simulate test conditions. Goal: ${domainTarget}% accuracy on this domain. Log and mark mastered errors afterwards.`,
   }
 
   const replanningWeight = maxPriorityScore > 0
@@ -184,7 +186,7 @@ function buildStudyBlock(
     },
     description: descriptions[phase],
     priorityScore:        Math.max(1, Math.round((rd.priorityScore / maxPriorityScore) * 100)),
-    masteryTarget:        90,
+    masteryTarget:        domainTarget,
     estimatedScoreImpact: rd.potentialPoints,
     replanningWeight,
   }
@@ -203,6 +205,7 @@ function buildReviewBlocks(
     const replanningWeight = maxPriorityScore > 0
       ? Math.round((rd.priorityScore / maxPriorityScore) * 100) / 100
       : 0
+    const domainTarget = masteryTargetForDomain(rd.currentAccuracy)
     return {
       subject: rd.entry.subject,
       domainKey: rd.entry.key,
@@ -211,9 +214,9 @@ function buildReviewBlocks(
       questionCount: REVIEW_QUESTIONS_PER_DOMAIN,
       difficulty,
       cbFilters: { domain: rd.entry.cbDomain, skill, difficulty },
-      description: `Review ${REVIEW_QUESTIONS_PER_DOMAIN} ${difficulty} ${rd.entry.label} questions. Focus on error types from this week's sessions. Update mastery status in Error Log.`,
+      description: `Review ${REVIEW_QUESTIONS_PER_DOMAIN} ${difficulty} ${rd.entry.label} questions. Focus on error types from this week's sessions. Target: ${domainTarget}% accuracy. Update mastery status in Error Log.`,
       priorityScore:        Math.max(1, Math.round((rd.priorityScore / maxPriorityScore) * 100)),
-      masteryTarget:        90,
+      masteryTarget:        domainTarget,
       estimatedScoreImpact: rd.potentialPoints,
       replanningWeight,
     }

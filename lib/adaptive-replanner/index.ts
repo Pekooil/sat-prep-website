@@ -25,7 +25,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
-import { rankDomains, dailyQuestionTarget } from '@/lib/study-plan-engine/scoring.service'
+import { rankDomains, dailyQuestionTarget, masteryTargetForDomain } from '@/lib/study-plan-engine/scoring.service'
 import { phaseForWeek, difficultyForSession } from '@/lib/study-plan-engine/difficulty.service'
 import { DOMAIN_CATALOG } from '@/lib/study-plan-engine/domain-catalog'
 import type { TopicPerformance, Phase, RankedDomain } from '@/lib/study-plan-engine/types'
@@ -106,15 +106,16 @@ function buildDescription(
   difficulty: string,
   questionCount: number,
   isReview: boolean,
+  domainTarget: number,
 ): string {
   if (isReview) {
-    return `Review ${questionCount} ${difficulty} ${domainLabel} questions. Focus on error types from recent sessions. Update mastery status in Error Log.`
+    return `Review ${questionCount} ${difficulty} ${domainLabel} questions. Focus on error types from recent sessions. Target: ${domainTarget}% accuracy. Update mastery status in Error Log.`
   }
   const descriptions: Record<Phase, string> = {
     foundation: `Practice ${questionCount} Easy ${domainLabel} questions on College Board QB. Understand the concept behind every error — log each in your Error Log with the correct approach.`,
     skill:      `Complete ${questionCount} ${difficulty} ${domainLabel} questions. Pace yourself at ~1:30/question. Identify recurring error patterns and update your Error Log.`,
-    advanced:   `${questionCount} ${difficulty} ${domainLabel} questions under timed conditions. Target 90% accuracy. Review every error immediately after the set.`,
-    strategy:   `Timed ${domainLabel} set — ${questionCount} Hard questions. Simulate test conditions. Goal: 90% accuracy. Log and mark mastered errors afterwards.`,
+    advanced:   `${questionCount} ${difficulty} ${domainLabel} questions under timed conditions. Target ${domainTarget}% accuracy on this domain. Review every error immediately after the set.`,
+    strategy:   `Timed ${domainLabel} set — ${questionCount} Hard questions. Simulate test conditions. Goal: ${domainTarget}% accuracy on this domain. Log and mark mastered errors afterwards.`,
   }
   return descriptions[phase]
 }
@@ -298,6 +299,7 @@ export async function runAdaptiveReplanner(
     const isReview       = (task.title as string).startsWith('Review —')
     const normalizedPS   = Math.max(1, Math.round((rd.priorityScore / maxPriority) * 100))
     const replanWeight   = Math.round((rd.priorityScore / maxPriority) * 100) / 100
+    const domainTarget   = masteryTargetForDomain(rd.currentAccuracy)
 
     const oldFilters     = task.college_board_filters as Record<string, string> | null
     const oldDifficulty  = oldFilters?.difficulty ?? null
@@ -326,12 +328,12 @@ export async function runAdaptiveReplanner(
     updates.push({
       id:                     task.id,
       priority_score:         normalizedPS,
-      mastery_target:         90,
+      mastery_target:         domainTarget,
       estimated_score_impact: rd.potentialPoints,
       replanning_weight:      replanWeight,
       last_replanned_at:      now,
       title:       buildTitle(task.title, rd.entry.label, newDifficulty, newQCount),
-      description: buildDescription(phase, rd.entry.label, newDifficulty, newQCount, isReview),
+      description: buildDescription(phase, rd.entry.label, newDifficulty, newQCount, isReview, domainTarget),
       college_board_filters: { ...(oldFilters ?? {}), difficulty: newDifficulty },
     })
   }
