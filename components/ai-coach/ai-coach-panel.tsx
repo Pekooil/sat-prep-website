@@ -105,7 +105,7 @@ function StatCard({ label, value, sub, color }: {
     <Card>
       <CardContent className="p-4">
         <p className="text-[11px] font-medium text-[var(--muted-foreground)] uppercase tracking-wide">{label}</p>
-        <p className={cn('text-2xl font-bold mt-1', color)}>{value}</p>
+        <p className={cn('text-2xl font-bold mt-1 font-mono tabular-nums', color)}>{value}</p>
         {sub && <p className="text-xs text-[var(--muted-foreground)] mt-0.5">{sub}</p>}
       </CardContent>
     </Card>

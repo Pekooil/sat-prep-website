@@ -1,0 +1,13 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SaturnPath mark">
+  <defs>
+    <clipPath id="ringBack"><rect x="0" y="98" width="200" height="102"></rect></clipPath>
+    <clipPath id="ringFront"><rect x="0" y="0" width="200" height="98"></rect></clipPath>
+    <linearGradient id="planetGrad" x1="40" y1="44" x2="150" y2="150" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a855f7"></stop>
+      <stop offset="1" stop-color="#7c3aed"></stop>
+    </linearGradient>
+  </defs>
+  <ellipse cx="100" cy="98" rx="92" ry="24" fill="none" stroke="#c4b5fd" stroke-width="14" clip-path="url(#ringBack)"></ellipse>
+  <circle cx="100" cy="98" r="56" fill="url(#planetGrad)"></circle>
+  <ellipse cx="100" cy="98" rx="92" ry="24" fill="none" stroke="#8b5cf6" stroke-width="14" clip-path="url(#ringFront)"></ellipse>
+</svg>

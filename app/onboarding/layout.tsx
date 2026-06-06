@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SaturnPathLogo } from '@/components/layout/saturn-path-logo'
 
 export const metadata: Metadata = {
   title: 'Get Started — SaturnPath',
@@ -17,10 +18,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
 
       {/* Logo header */}
       <div className="fixed top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-2">
-          <img src="/logo.svg" alt="SaturnPath logo" className="h-8 w-8" />
-          <span className="font-bold text-sm text-[var(--foreground)]">SaturnPath</span>
-        </div>
+        <SaturnPathLogo size="sm" />
         <span className="text-xs text-slate-400">Setup Wizard</span>
       </div>
 

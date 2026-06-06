@@ -1,0 +1,16 @@
+<svg width="440" height="120" viewBox="0 0 440 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SaturnPath">
+  <defs>
+    <clipPath id="rb"><rect x="0" y="58" width="120" height="62"></rect></clipPath>
+    <clipPath id="rf"><rect x="0" y="0" width="120" height="58"></rect></clipPath>
+    <linearGradient id="pg" x1="24" y1="26" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a855f7"></stop>
+      <stop offset="1" stop-color="#7c3aed"></stop>
+    </linearGradient>
+  </defs>
+  <g transform="translate(0,2)">
+    <ellipse cx="60" cy="58" rx="55" ry="14.5" fill="none" stroke="#c4b5fd" stroke-width="8.5" clip-path="url(#rb)"></ellipse>
+    <circle cx="60" cy="58" r="34" fill="url(#pg)"></circle>
+    <ellipse cx="60" cy="58" rx="55" ry="14.5" fill="none" stroke="#8b5cf6" stroke-width="8.5" clip-path="url(#rf)"></ellipse>
+  </g>
+  <text x="132" y="74" font-family="Geist, &#39;Geist Sans&#39;, system-ui, sans-serif" font-size="46" font-weight="700" letter-spacing="-1.5" fill="#0f172a">Saturn<tspan fill="#7c3aed">Path</tspan></text>
+</svg>

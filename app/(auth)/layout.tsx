@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
+import { SaturnPathLogo } from '@/components/layout/saturn-path-logo'
 
 const FEATURES = [
   'Adaptive study plans built around your weak spots',
@@ -72,9 +73,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center text-center max-w-sm">
           {/* Logo + wordmark */}
-          <div className="flex items-center gap-3 mb-10">
-            <img src="/logo.svg" alt="SaturnPath logo" className="h-9 w-9" />
-            <span className="text-2xl font-bold tracking-tight text-white">SaturnPath</span>
+          <div className="mb-10">
+            <SaturnPathLogo variant="dark" size="lg" asLink={false} pathColor="#ede9fe" />
           </div>
 
           {/* Saturn illustration */}
@@ -106,10 +106,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="flex-1 lg:w-1/2 flex flex-col items-center justify-center min-h-screen bg-white dark:bg-slate-950 p-6 sm:p-10">
 
         {/* Mobile-only compact header */}
-        <Link href="/" className="lg:hidden flex items-center gap-2 mb-8 self-start">
-          <img src="/logo.svg" alt="SaturnPath logo" className="h-8 w-8" />
-          <span className="text-lg font-bold text-[var(--foreground)]">SaturnPath</span>
-        </Link>
+        <div className="lg:hidden mb-8 self-start">
+          <SaturnPathLogo size="sm" />
+        </div>
 
         <div className="w-full max-w-sm">
           {children}

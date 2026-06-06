@@ -1,0 +1,11 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SaturnPath mark">
+  <defs>
+    <clipPath id="ringBackW"><rect x="0" y="98" width="200" height="102"></rect></clipPath>
+    <clipPath id="ringFrontW"><rect x="0" y="0" width="200" height="98"></rect></clipPath>
+  </defs>
+  <g fill="#ffffff" stroke="#ffffff">
+    <ellipse cx="100" cy="98" rx="92" ry="24" fill="none" stroke-width="14" clip-path="url(#ringBackW)" opacity="0.55"></ellipse>
+    <circle cx="100" cy="98" r="56" stroke="none"></circle>
+    <ellipse cx="100" cy="98" rx="92" ry="24" fill="none" stroke-width="14" clip-path="url(#ringFrontW)"></ellipse>
+  </g>
+</svg>

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { LogOut, Settings } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import { NotificationsDropdown } from './notifications-dropdown'
+import { SaturnPathLogo } from './saturn-path-logo'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -26,10 +27,7 @@ export function Navbar({ user }: NavbarProps) {
     <header className="sticky top-0 z-40 w-full border-b border-[var(--border)] bg-[var(--card)]/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
         {/* Logo */}
-        <Link href="/home" className="flex items-center gap-2 font-bold text-lg">
-          <img src="/logo.svg" alt="SaturnPath logo" className="h-8 w-8" />
-          <span className="hidden sm:block text-[var(--foreground)]">SaturnPath</span>
-        </Link>
+        <SaturnPathLogo size="sm" />
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
@@ -40,8 +38,8 @@ export function Navbar({ user }: NavbarProps) {
               className={cn(
                 'rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 pathname === link.href || pathname.startsWith(link.href + '/')
-                  ? 'bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
-                  : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
+                  ? 'bg-violet-50 text-black dark:bg-violet-900/30 dark:text-white'
+                  : 'text-black dark:text-white hover:bg-[var(--muted)]'
               )}
             >
               {link.label}
@@ -57,7 +55,7 @@ export function Navbar({ user }: NavbarProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-white text-sm font-semibold">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full text-white text-sm font-semibold" style={{ background: 'var(--gradient-avatar)' }}>
                   {user?.full_name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? 'S'}
                 </div>
               </Button>

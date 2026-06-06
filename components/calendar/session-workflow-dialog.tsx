@@ -351,11 +351,11 @@ export function SessionWorkflowDialog({
               <div className="grid grid-cols-2 gap-3 text-center">
                 <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3">
                   <p className="text-xs text-[var(--muted-foreground)]">Questions</p>
-                  <p className="text-2xl font-bold mt-0.5">{questionCount}</p>
+                  <p className="text-2xl font-bold mt-0.5 font-mono tabular-nums">{questionCount}</p>
                 </div>
                 <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3">
                   <p className="text-xs text-[var(--muted-foreground)]">Time Budget</p>
-                  <p className="text-2xl font-bold mt-0.5">{formatClock(allocSecs)}</p>
+                  <p className="text-2xl font-bold mt-0.5 font-mono tabular-nums">{formatClock(allocSecs)}</p>
                   <p className="text-[10px] text-[var(--muted-foreground)]">
                     {SECS_PER_Q[task.subject] ?? 71}s per question
                   </p>
@@ -491,13 +491,13 @@ export function SessionWorkflowDialog({
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/30 p-3">
                   <p className="text-xs text-[var(--muted-foreground)]">Score</p>
-                  <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                  <p className="text-2xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
                     {correct}/{attempted}
                   </p>
                 </div>
                 <div className="rounded-lg bg-violet-50 dark:bg-violet-950/30 p-3">
                   <p className="text-xs text-[var(--muted-foreground)]">Accuracy</p>
-                  <p className="text-2xl font-bold text-violet-600 dark:text-violet-400">{accuracy}%</p>
+                  <p className="text-2xl font-bold font-mono tabular-nums text-violet-600 dark:text-violet-400">{accuracy}%</p>
                 </div>
                 <div className={cn(
                   'rounded-lg p-3',

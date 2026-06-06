@@ -74,7 +74,7 @@ export function PredictedScoreWidget({
               Predicted Score
             </p>
             <div className="flex items-end gap-2">
-              <p className="text-4xl font-bold">{latest.predicted_score}</p>
+              <p className="text-4xl font-bold font-mono tabular-nums">{latest.predicted_score}</p>
               {TrendIcon && delta !== null && (
                 <div className={cn('flex items-center gap-0.5 mb-1', trendColor)}>
                   <TrendIcon className="h-4 w-4" />
@@ -96,7 +96,7 @@ export function PredictedScoreWidget({
             <p className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
               Confidence Interval
             </p>
-            <p className="text-2xl font-bold">{latest.confidence_low}–{latest.confidence_high}</p>
+            <p className="text-2xl font-bold font-mono tabular-nums">{latest.confidence_low}–{latest.confidence_high}</p>
             <p className="text-xs text-[var(--muted-foreground)] mt-1">
               Based on {latest.session_count ?? 0} sessions
             </p>
@@ -114,7 +114,7 @@ export function PredictedScoreWidget({
             </p>
             {gap !== null ? (
               <>
-                <p className={cn('text-2xl font-bold', gap <= 0 ? 'text-emerald-600' : '')}>
+                <p className={cn('text-2xl font-bold font-mono tabular-nums', gap <= 0 ? 'text-emerald-600' : '')}>
                   {gap <= 0 ? 'On Track!' : `${gap} pts`}
                 </p>
                 <p className="text-xs text-[var(--muted-foreground)] mt-1">

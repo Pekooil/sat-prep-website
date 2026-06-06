@@ -103,7 +103,7 @@ export function ConsistencyChart({ sessions, dateRange }: ConsistencyChartProps)
             </p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+            <p className="text-2xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
               {consistencyScore}%
             </p>
             <p className="text-[10px] text-[var(--muted-foreground)]">

@@ -138,7 +138,7 @@ export function TopicMasteryCards({ mastery }: TopicMasteryCardsProps) {
               {/* Mastery score */}
               <div>
                 <div className="flex items-end justify-between mb-1">
-                  <span className="text-2xl font-bold leading-none">{d.score}</span>
+                  <span className="text-2xl font-bold leading-none font-mono tabular-nums">{d.score}</span>
                   <span className="text-[11px] text-[var(--muted-foreground)]">/100</span>
                 </div>
                 <Progress
