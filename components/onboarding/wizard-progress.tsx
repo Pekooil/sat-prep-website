@@ -1,18 +1,23 @@
-import { Check, Target, BarChart2, Sparkles, BookOpen } from 'lucide-react'
+import { Check, Target, BarChart2, Sparkles, BookOpen, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const STEPS = [
-  { label: 'Goals', icon: Target, description: 'Your SAT targets' },
-  { label: 'Performance', icon: BarChart2, description: 'Practice data' },
-  { label: 'Analysis', icon: BookOpen, description: 'Your weak spots' },
-  { label: 'Your Plan', icon: Sparkles, description: 'AI recommendations' },
+  { label: 'Goals',       icon: Target,    description: 'Your SAT targets'    },
+  { label: 'Performance', icon: BarChart2,  description: 'Practice data'       },
+  { label: 'Analysis',    icon: BookOpen,   description: 'Your weak spots'     },
+  { label: 'Your Plan',   icon: Sparkles,   description: 'Recommendations'     },
+  { label: 'Account',     icon: UserPlus,   description: 'Save your plan'      },
 ]
 
 interface WizardProgressProps {
-  currentStep: number // 1-4
+  currentStep: number // 1-5
+  hideAccountStep?: boolean // for already-authenticated users
 }
 
-export function WizardProgress({ currentStep }: WizardProgressProps) {
+export function WizardProgress({ currentStep, hideAccountStep = false }: WizardProgressProps) {
+  const visibleSteps = hideAccountStep ? STEPS.slice(0, 4) : STEPS
+  const totalSteps = visibleSteps.length
+
   return (
     <div className="w-full">
       {/* Step row */}
@@ -21,10 +26,10 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
         <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 dark:bg-slate-700 mx-10 z-0" />
         <div
           className="absolute top-5 left-0 h-0.5 bg-violet-500 transition-all duration-500 ease-in-out mx-10 z-0"
-          style={{ right: `${((4 - Math.min(currentStep, 4)) / 3) * 100}%` }}
+          style={{ right: `${((totalSteps - Math.min(currentStep, totalSteps)) / (totalSteps - 1)) * 100}%` }}
         />
 
-        {STEPS.map((step, i) => {
+        {visibleSteps.map((step, i) => {
           const stepNum = i + 1
           const isCompleted = stepNum < currentStep
           const isActive = stepNum === currentStep
@@ -68,9 +73,9 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
       {/* Mobile: current step label */}
       <div className="sm:hidden mt-4 text-center">
         <p className="text-sm font-semibold text-violet-600 dark:text-violet-400">
-          Step {currentStep} of 4 — {STEPS[currentStep - 1]?.label}
+          Step {currentStep} of {totalSteps} — {visibleSteps[currentStep - 1]?.label}
         </p>
-        <p className="text-xs text-slate-400 mt-0.5">{STEPS[currentStep - 1]?.description}</p>
+        <p className="text-xs text-slate-400 mt-0.5">{visibleSteps[currentStep - 1]?.description}</p>
       </div>
     </div>
   )

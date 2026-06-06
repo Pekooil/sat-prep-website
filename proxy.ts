@@ -14,7 +14,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 // Routes that require a valid session
 const PROTECTED_PREFIXES = [
   '/home', '/calendar', '/data', '/error-log',
-  '/settings', '/info', '/tutorial', '/onboarding',
+  '/settings', '/info', '/tutorial',
 ]
 
 // Routes only accessible when NOT logged in

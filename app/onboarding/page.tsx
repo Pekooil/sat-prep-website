@@ -6,18 +6,19 @@ export default async function OnboardingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/login')
+  // If already logged in and already onboarded, send to dashboard
+  if (user) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('has_completed_onboarding')
+      .eq('id', user.id)
+      .single()
 
-  // If already onboarded, send to dashboard
-  const { data: profile } = await supabase
-    .from('users')
-    .select('has_completed_onboarding')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.has_completed_onboarding) {
-    redirect('/home')
+    if (profile?.has_completed_onboarding) {
+      redirect('/home')
+    }
   }
 
-  return <OnboardingWizard />
+  // Allow unauthenticated users — account creation is step 5 of the wizard
+  return <OnboardingWizard isAuthenticated={!!user} />
 }

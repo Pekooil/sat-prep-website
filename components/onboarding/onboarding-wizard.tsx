@@ -2,14 +2,15 @@
 
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Loader2, CheckCircle2, Rocket } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, CheckCircle2, Rocket, UserPlus, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { WizardProgress } from './wizard-progress'
 import { Step1Basics } from './step-1-basics'
 import { Step2Performance } from './step-2-performance'
 import { Step3Analysis } from './step-3-analysis'
 import { Step4Recommendations } from './step-4-recommendations'
-import { getOnboardingRecommendations, saveOnboarding } from '@/actions/onboarding'
+import { getOnboardingRecommendations, saveOnboarding, signUpAndSaveOnboarding } from '@/actions/onboarding'
+// ─── Step 5 types + component (inlined to avoid separate-file hot-reload issues) ─
 import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 import type {
@@ -20,6 +21,96 @@ import type {
   AIOnboardingRec,
   CategoryPerf,
 } from '@/types'
+
+export interface Step5AccountData {
+  fullName: string
+  email: string
+  password: string
+  confirmPassword: string
+}
+
+interface Step5AccountProps {
+  data: Step5AccountData
+  onChange: (d: Step5AccountData) => void
+  errors: Partial<Record<keyof Step5AccountData, string>>
+}
+
+function Step5Account({ data, onChange, errors }: Step5AccountProps) {
+  function set(field: keyof Step5AccountData, value: string) {
+    onChange({ ...data, [field]: value })
+  }
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <UserPlus className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">Create your account</h2>
+        </div>
+        <p className="text-sm text-[var(--muted-foreground)]">
+          Your plan is ready — create a free account to save it and start studying.
+        </p>
+      </div>
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <label htmlFor="s5-fullname" className="text-sm font-medium text-[var(--foreground)]">Full Name</label>
+          <input
+            id="s5-fullname"
+            type="text"
+            placeholder="Alex Johnson"
+            autoComplete="name"
+            value={data.fullName}
+            onChange={e => set('fullName', e.target.value)}
+            className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm ring-offset-background placeholder:text-[var(--muted-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+          />
+          {errors.fullName && <p className="text-xs text-red-600 dark:text-red-400">{errors.fullName}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="s5-email" className="text-sm font-medium text-[var(--foreground)]">Email</label>
+          <input
+            id="s5-email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            value={data.email}
+            onChange={e => set('email', e.target.value)}
+            className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm ring-offset-background placeholder:text-[var(--muted-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+          />
+          {errors.email && <p className="text-xs text-red-600 dark:text-red-400">{errors.email}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="s5-password" className="text-sm font-medium text-[var(--foreground)]">Password</label>
+          <input
+            id="s5-password"
+            type="password"
+            placeholder="At least 8 characters"
+            autoComplete="new-password"
+            value={data.password}
+            onChange={e => set('password', e.target.value)}
+            className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm ring-offset-background placeholder:text-[var(--muted-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+          />
+          {errors.password && <p className="text-xs text-red-600 dark:text-red-400">{errors.password}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="s5-confirm" className="text-sm font-medium text-[var(--foreground)]">Confirm Password</label>
+          <input
+            id="s5-confirm"
+            type="password"
+            placeholder="Repeat password"
+            autoComplete="new-password"
+            value={data.confirmPassword}
+            onChange={e => set('confirmPassword', e.target.value)}
+            className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm ring-offset-background placeholder:text-[var(--muted-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+          />
+          {errors.confirmPassword && <p className="text-xs text-red-600 dark:text-red-400">{errors.confirmPassword}</p>}
+        </div>
+      </div>
+      <div className="flex items-start gap-2.5 rounded-xl bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800 p-3.5 text-xs text-violet-700 dark:text-violet-300">
+        <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-violet-500" />
+        <span>Your study data, plan, and progress are saved securely to your account — free forever.</span>
+      </div>
+    </div>
+  )
+}
 
 // ─── Defaults ────────────────────────────────────────────────────────────
 
@@ -131,21 +222,42 @@ function validateStep2(data: OnboardingStep2Data) {
 
 // ─── Main Wizard Component ────────────────────────────────────────────────
 
-export function OnboardingWizard() {
+const defaultStep5: Step5AccountData = { fullName: '', email: '', password: '', confirmPassword: '' }
+
+function validateStep5(data: Step5AccountData) {
+  const errors: Partial<Record<keyof Step5AccountData, string>> = {}
+  if (!data.fullName.trim()) errors.fullName = 'Full name is required'
+  if (!data.email.trim()) errors.email = 'Email is required'
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.email = 'Enter a valid email address'
+  if (data.password.length < 8) errors.password = 'Password must be at least 8 characters'
+  if (data.password !== data.confirmPassword) errors.confirmPassword = 'Passwords do not match'
+  return errors
+}
+
+interface OnboardingWizardProps {
+  isAuthenticated?: boolean
+}
+
+export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardProps) {
   const router = useRouter()
   const { toast } = useToast()
+
+  const totalSteps = isAuthenticated ? 4 : 5
 
   const [step, setStep] = React.useState(1)
   const [step1Data, setStep1Data] = React.useState<OnboardingStep1Data>(defaultStep1)
   const [step2Data, setStep2Data] = React.useState<OnboardingStep2Data>(defaultStep2)
+  const [step5Data, setStep5Data] = React.useState<Step5AccountData>(defaultStep5)
   const [step1Errors, setStep1Errors] = React.useState<Partial<Record<keyof OnboardingStep1Data, string>>>({})
   const [step2Errors, setStep2Errors] = React.useState<Record<string, string>>({})
+  const [step5Errors, setStep5Errors] = React.useState<Partial<Record<keyof Step5AccountData, string>>>({})
   const [analysis, setAnalysis] = React.useState<OnboardingAnalysis | null>(null)
   const [aiRecs, setAiRecs] = React.useState<AIOnboardingRec | null>(null)
   const [aiLoading, setAiLoading] = React.useState(false)
   const [aiError, setAiError] = React.useState<string | null>(null)
   const [saving, setSaving] = React.useState(false)
   const [direction, setDirection] = React.useState<'forward' | 'back'>('forward')
+  const [needsConfirmation, setNeedsConfirmation] = React.useState(false)
 
   async function handleNext() {
     if (step === 1) {
@@ -176,6 +288,10 @@ export function OnboardingWizard() {
       } else {
         setAiRecs(result.data ?? null)
       }
+    } else if (step === 4 && !isAuthenticated) {
+      // Move to account creation step
+      setDirection('forward')
+      setStep(5)
     }
   }
 
@@ -195,27 +311,76 @@ export function OnboardingWizard() {
   }
 
   async function handleComplete() {
-    setSaving(true)
     const computed = analysis ?? computeAnalysis(step1Data, step2Data)
-    const result = await saveOnboarding(step1Data, step2Data, computed, aiRecs)
-    setSaving(false)
-    if (result.error) {
-      toast({ title: 'Error saving data', description: result.error, variant: 'destructive' })
-      return
+
+    if (isAuthenticated) {
+      // Already signed in — just save
+      setSaving(true)
+      const result = await saveOnboarding(step1Data, step2Data, computed, aiRecs)
+      setSaving(false)
+      if (result.error) {
+        toast({ title: 'Error saving data', description: result.error, variant: 'destructive' })
+        return
+      }
+    } else {
+      // Validate account fields first
+      const errs = validateStep5(step5Data)
+      if (Object.keys(errs).length > 0) { setStep5Errors(errs); return }
+      setStep5Errors({})
+
+      setSaving(true)
+      const result = await signUpAndSaveOnboarding(
+        { email: step5Data.email, password: step5Data.password, fullName: step5Data.fullName },
+        step1Data, step2Data, computed, aiRecs,
+      )
+      setSaving(false)
+
+      if (result.needsConfirmation) {
+        setNeedsConfirmation(true)
+        return
+      }
+      if (result.error) {
+        toast({ title: 'Error creating account', description: result.error, variant: 'destructive' })
+        return
+      }
     }
+
     toast({ title: '🎉 Setup complete!', description: 'Welcome to SaturnPath. Your plan is ready.' })
     router.push('/home')
     router.refresh()
   }
 
-  const isLastStep = step === 4
+  const isLastStep = isAuthenticated ? step === 4 : step === 5
   const canGoBack = step > 1
+
+  // Email confirmation state — shown instead of wizard after successful signup
+  if (needsConfirmation) {
+    return (
+      <div className="flex flex-col min-h-full items-center justify-center px-6 py-12 text-center space-y-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 mx-auto">
+          <svg className="h-7 w-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-semibold text-[var(--foreground)]">Check your email</h2>
+        <p className="text-sm text-[var(--muted-foreground)] max-w-xs">
+          We sent a confirmation link to <strong>{step5Data.email}</strong>. Click it to activate your account, then sign in.
+        </p>
+        <a
+          href="/login"
+          className="mt-2 text-sm font-medium text-violet-600 dark:text-violet-400 hover:underline"
+        >
+          Back to sign in
+        </a>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-full">
       {/* Progress */}
       <div className="px-6 pt-6 pb-4 border-b border-[var(--border)]">
-        <WizardProgress currentStep={step} />
+        <WizardProgress currentStep={step} hideAccountStep={isAuthenticated} />
       </div>
 
       {/* Content with animated transition */}
@@ -258,6 +423,13 @@ export function OnboardingWizard() {
               onRetry={handleRetryAI}
             />
           )}
+          {step === 5 && !isAuthenticated && (
+            <Step5Account
+              data={step5Data}
+              onChange={setStep5Data}
+              errors={step5Errors}
+            />
+          )}
         </div>
       </div>
 
@@ -277,7 +449,7 @@ export function OnboardingWizard() {
 
           {/* Step indicator (mobile) */}
           <div className="flex gap-1.5 sm:hidden">
-            {[1, 2, 3, 4].map(s => (
+            {Array.from({ length: totalSteps }, (_, i) => i + 1).map(s => (
               <div
                 key={s}
                 className={cn(
@@ -303,7 +475,7 @@ export function OnboardingWizard() {
               ) : (
                 <>
                   <Rocket className="h-4 w-4" />
-                  Start My Journey
+                  {isAuthenticated ? 'Start My Journey' : 'Create Account & Start'}
                 </>
               )}
             </Button>
@@ -312,7 +484,7 @@ export function OnboardingWizard() {
               onClick={handleNext}
               className="gap-1 min-w-[100px]"
             >
-              {step === 3 ? 'Get My Plan' : 'Next'}
+              {step === 3 ? 'Get My Plan' : step === 4 && !isAuthenticated ? 'Create Account' : 'Next'}
               <ChevronRight className="h-4 w-4" />
             </Button>
           )}
