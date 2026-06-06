@@ -58,7 +58,7 @@ export function ScoreCard({ label, value, suffix = '', color, description, href 
             <div className="mt-1.5 flex items-baseline gap-1">
               {/* Numeric value — Geist Mono, tabular-nums per DS */}
               <span className={cn('text-3xl font-bold leading-none font-mono tabular-nums', colors.text)}>
-                {value !== null ? value.toLocaleString() : '—'}
+                {value !== null ? value : '—'}
               </span>
               {value !== null && suffix && (
                 <span className="text-sm text-[var(--muted-foreground)]">{suffix}</span>

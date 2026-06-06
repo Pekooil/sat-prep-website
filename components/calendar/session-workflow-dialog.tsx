@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Loader2, Timer, CheckCircle2, XCircle, AlertTriangle, TrendingUp } from 'lucide-react'
+import { Loader2, Timer, CheckCircle2, XCircle, AlertTriangle, TrendingUp, ExternalLink } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
@@ -17,6 +17,7 @@ import { toggleTaskComplete } from '@/actions/calendar'
 import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 import { DOMAIN_CATALOG } from '@/lib/study-plan-engine/domain-catalog'
+import { COLLEGE_BOARD_QB_URL } from '@/lib/constants'
 import type { CalendarTask } from '@/types'
 import type { CollegeBoardFilter } from '@/types'
 import type { DomainChange } from '@/lib/adaptive-replanner/types'
@@ -366,6 +367,17 @@ export function SessionWorkflowDialog({
                 Enter your answers as you complete each question on the College Board Question Bank.
                 After submitting, enter the correct answers to see your results.
               </p>
+
+              {/* QB link */}
+              <a
+                href={COLLEGE_BOARD_QB_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/30 px-4 py-2.5 text-sm font-medium text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-950/50 transition-colors"
+              >
+                <ExternalLink className="h-4 w-4 shrink-0" />
+                Open College Board Question Bank
+              </a>
             </div>
             <DialogFooter className="px-6 pb-6">
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

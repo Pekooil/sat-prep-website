@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { RefreshCw, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
+import { RefreshCw, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -107,10 +107,9 @@ function DaySchedulePicker({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function AIPlannerTrigger({ profile }: AIPlannerTriggerProps) {
-  const [expanded,  setExpanded]  = React.useState(false)
-  const [loading,   setLoading]   = React.useState(false)
-  const [success,   setSuccess]   = React.useState(false)
-  const [schedule,  setSchedule]  = React.useState<DaySchedule>(DEFAULT_SCHEDULE)
+  const [loading,  setLoading]  = React.useState(false)
+  const [success,  setSuccess]  = React.useState(false)
+  const [schedule, setSchedule] = React.useState<DaySchedule>(DEFAULT_SCHEDULE)
   const { toast } = useToast()
 
   const defaultCurrent = profile?.current_score ?? 1100
@@ -136,7 +135,6 @@ export function AIPlannerTrigger({ profile }: AIPlannerTriggerProps) {
       toast({ title: 'Error', description: result.error, variant: 'destructive' })
     } else {
       setSuccess(true)
-      setExpanded(false)
       toast({
         title: 'Plan generated!',
         description: 'Your personalized plan has been added to the calendar.',
@@ -145,8 +143,8 @@ export function AIPlannerTrigger({ profile }: AIPlannerTriggerProps) {
   }
 
   return (
-    <Card className="border-violet-200 dark:border-violet-800 bg-gradient-to-b from-violet-50/50 to-white dark:from-violet-950/20 dark:to-[var(--card)]">
-      <CardHeader className="pb-3">
+    <Card className="h-full flex flex-col border-violet-200 dark:border-violet-800 bg-gradient-to-b from-violet-50/50 to-white dark:from-violet-950/20 dark:to-[var(--card)]">
+      <CardHeader className="pb-3 shrink-0">
         <CardTitle className="text-base flex items-center gap-2">
           <RefreshCw className="h-4 w-4 text-violet-500" />
           AI Adaptive Replanner
@@ -156,93 +154,83 @@ export function AIPlannerTrigger({ profile }: AIPlannerTriggerProps) {
         </p>
       </CardHeader>
 
-      <CardContent className="pt-0 space-y-4">
-        {success && !expanded ? (
-          <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-4 text-center">
+      <CardContent className="pt-0 flex-1 flex flex-col justify-center">
+        {success ? (
+          <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-6 text-center">
             <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">✅ Plan created!</p>
             <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">Check your Calendar tab.</p>
             <button
               className="text-xs text-emerald-700 dark:text-emerald-400 underline mt-2"
-              onClick={() => { setSuccess(false); setExpanded(true) }}
+              onClick={() => setSuccess(false)}
             >
               Generate a new plan
             </button>
           </div>
         ) : (
-          <>
-            <Button
-              variant="outline"
-              className="w-full justify-between text-sm border-violet-200 dark:border-violet-800"
-              onClick={() => setExpanded(!expanded)}
-            >
-              {expanded ? 'Hide options' : 'Configure & generate plan'}
-              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          <form onSubmit={handleGenerate} className="space-y-5">
+            {/* Scores */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs" htmlFor="current_score">Current Score</Label>
+                <Input
+                  id="current_score" name="current_score"
+                  type="number" min={400} max={1600} step={10}
+                  defaultValue={defaultCurrent}
+                  className="h-9 text-sm" required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs" htmlFor="target_score">Target Score</Label>
+                <Input
+                  id="target_score" name="target_score"
+                  type="number" min={400} max={1600} step={10}
+                  defaultValue={defaultTarget}
+                  className="h-9 text-sm" required
+                />
+              </div>
+            </div>
+
+            {/* Test date + minutes per day */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs" htmlFor="test_date">Test Date</Label>
+                <Input
+                  id="test_date" name="test_date"
+                  type="date" defaultValue={defaultDate}
+                  className="h-9 text-sm" required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs" htmlFor="minutes_per_day">Min/Day</Label>
+                <Input
+                  id="minutes_per_day" name="minutes_per_day"
+                  type="number" min={15} max={300} step={15}
+                  defaultValue={defaultMinutes}
+                  className="h-9 text-sm" required
+                />
+              </div>
+            </div>
+
+            {/* Day schedule */}
+            <DaySchedulePicker schedule={schedule} onChange={setSchedule} />
+
+            {/* Divider */}
+            <div className="border-t border-violet-100 dark:border-violet-900" />
+
+            {/* Generate button */}
+            <Button type="submit" className="w-full h-10" disabled={loading}>
+              {loading ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating plan…</>
+              ) : (
+                <><RefreshCw className="mr-2 h-4 w-4" />Generate Plan</>
+              )}
             </Button>
 
-            {expanded && (
-              <form onSubmit={handleGenerate} className="space-y-4">
-
-                {/* Scores */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs" htmlFor="current_score">Current Score</Label>
-                    <Input
-                      id="current_score" name="current_score"
-                      type="number" min={400} max={1600} step={10}
-                      defaultValue={defaultCurrent}
-                      className="h-8 text-sm" required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs" htmlFor="target_score">Target Score</Label>
-                    <Input
-                      id="target_score" name="target_score"
-                      type="number" min={400} max={1600} step={10}
-                      defaultValue={defaultTarget}
-                      className="h-8 text-sm" required
-                    />
-                  </div>
-                </div>
-
-                {/* Test date + hours per day */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs" htmlFor="test_date">Test Date</Label>
-                    <Input
-                      id="test_date" name="test_date"
-                      type="date" defaultValue={defaultDate}
-                      className="h-8 text-sm" required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs" htmlFor="minutes_per_day">Min/Day</Label>
-                    <Input
-                      id="minutes_per_day" name="minutes_per_day"
-                      type="number" min={15} max={300} step={15}
-                      defaultValue={defaultMinutes}
-                      className="h-8 text-sm" required
-                    />
-                  </div>
-                </div>
-
-                {/* Day schedule */}
-                <DaySchedulePicker schedule={schedule} onChange={setSchedule} />
-
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating plan…</>
-                  ) : (
-                    <><RefreshCw className="mr-2 h-4 w-4" />Generate Plan</>
-                  )}
-                </Button>
-
-                <p className="text-[10px] text-[var(--muted-foreground)] text-center leading-relaxed">
-                  Domain priorities are set automatically based on your question session history.
-                  No questions are stored or displayed.
-                </p>
-              </form>
-            )}
-          </>
+            <p className="text-[10px] text-[var(--muted-foreground)] text-center leading-relaxed">
+              Domain priorities are set automatically based on your question session history.
+              No questions are stored or displayed.
+            </p>
+          </form>
         )}
       </CardContent>
     </Card>

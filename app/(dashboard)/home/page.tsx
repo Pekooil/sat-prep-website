@@ -8,7 +8,6 @@ export const metadata: Metadata = {
 import { WelcomeBanner } from '@/components/home/welcome-banner'
 import { ScoreCard } from '@/components/home/score-card'
 import { UpcomingTasks } from '@/components/home/upcoming-tasks'
-import { QuickStats } from '@/components/home/quick-stats'
 import { AIPlannerTrigger } from '@/components/home/ai-planner-trigger'
 import { todayISO } from '@/lib/utils'
 
@@ -64,9 +63,6 @@ export default async function HomePage() {
   const todayTaskCount = todayTasksResult.count ?? 0
   const predictedScore: number | null = predictionResult.data?.predicted_score ?? null
 
-  const totalAttempted = sessions.reduce((s, q) => s + (q.questions_attempted ?? 0), 0)
-  const totalCorrect = sessions.reduce((s, q) => s + (q.questions_correct ?? 0), 0)
-  const totalMinutes = sessions.reduce((s, q) => s + (q.time_spent_minutes ?? 0), 0)
   const unmasteredErrors = errors.filter(e => !e.mastered).length
 
   // Compute study streak: consecutive days with at least one session, working back from today
@@ -137,16 +133,10 @@ export default async function HomePage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2">
           <UpcomingTasks tasks={upcomingTasks} />
-          <QuickStats
-            totalMinutes={totalMinutes}
-            totalAttempted={totalAttempted}
-            totalCorrect={totalCorrect}
-            unmasteredErrors={unmasteredErrors}
-          />
         </div>
-        <div>
+        <div className="flex flex-col">
           <AIPlannerTrigger profile={profile} />
         </div>
       </div>
