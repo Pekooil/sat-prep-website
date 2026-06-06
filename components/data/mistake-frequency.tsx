@@ -22,9 +22,9 @@ interface MistakeFrequencyProps {
 const TYPE_META: Record<string, { label: string; color: string }> = {
   concept:  { label: 'Concept Gap',      color: '#ef4444' },
   careless: { label: 'Careless Error',   color: '#f59e0b' },
-  time:     { label: 'Timing Issue',     color: '#8b5cf6' },
-  strategy: { label: 'Strategy Error',   color: '#3b82f6' },
-  other:    { label: 'Other',            color: '#64748b' },
+  time:     { label: 'Timing Issue',     color: '#3b82f6' },
+  strategy: { label: 'Strategy Error',   color: '#f97316' },
+  other:    { label: 'Other',            color: '#22c55e' },
 }
 
 const TIP_STYLE = {

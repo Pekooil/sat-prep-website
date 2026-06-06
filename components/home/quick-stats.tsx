@@ -23,14 +23,14 @@ export function QuickStats({ totalMinutes, totalAttempted, totalCorrect, unmaste
       bg: 'bg-blue-50 dark:bg-blue-900/20',
     },
     {
-      icon: Target,
+      icon: BookOpen,
       label: 'Questions Practiced',
       value: totalAttempted.toLocaleString(),
       color: 'text-indigo-500',
       bg: 'bg-indigo-50 dark:bg-indigo-900/20',
     },
     {
-      icon: BookOpen,
+      icon: Target,
       label: 'Overall Accuracy',
       value: totalAttempted > 0 ? `${accuracy}%` : 'N/A',
       color: 'text-emerald-500',

@@ -103,7 +103,7 @@ export const NAV_LINKS = [
   { href: '/calendar', label: 'Calendar' },
   { href: '/error-log', label: 'Error Log' },
   { href: '/data', label: 'Data' },
-  { href: '/tutorial', label: 'QB Tutorial' },
+  { href: '/tutorial', label: 'Tutorial' },
   { href: '/info', label: 'Info & Contact' },
 ] as const
 

@@ -5,7 +5,7 @@ import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import {
   CheckCircle2, Circle, ChevronDown, ExternalLink,
   HelpCircle, ArrowRight, Image, BookOpen, BarChart2,
-  Download, PenLine, RotateCcw, ChevronRight,
+  Download, PenLine, RotateCcw, ChevronRight, AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
@@ -35,7 +35,7 @@ const STEPS: TutorialStep[] = [
     id: 1,
     title: 'Go to the College Board Question Bank',
     description:
-      'Open the official College Board Digital SAT Question Bank in your browser. You must be signed in to your College Board account to access questions.',
+      'Open the official College Board Digital SAT Question Bank in your browser. You do not need to be signed in to access questions — navigate to the Educator question bank to access the full set of Digital SAT practice questions.',
     detail:
       'The Question Bank is a free, official resource provided by the College Board. It contains hundreds of real Digital SAT questions organized by section, domain, skill, and difficulty — exactly the categories your study plan uses.',
     screenshotAlt: 'College Board Question Bank homepage',
@@ -105,7 +105,7 @@ const STEPS: TutorialStep[] = [
       },
       {
         q: 'Why does the planner pick specific skills for me?',
-        a: 'The adaptive engine ranks every domain by your accuracy gap versus the 90% mastery target, weighted by the score impact of that domain. The skill with the largest gap gets scheduled first.',
+        a: 'The adaptive engine ranks every domain by your accuracy gap versus the mastery target, weighted by the score impact of that domain. The skill with the largest gap gets scheduled first.',
       },
     ],
     icon: <BarChart2 className="h-5 w-5" />,
@@ -117,7 +117,7 @@ const STEPS: TutorialStep[] = [
     description:
       'Apply the difficulty filter shown in your task drawer: Easy, Medium, or Hard. Your plan assigns difficulty based on which phase of preparation you are in — do not skip to harder questions before you are ready.',
     detail:
-      'The study plan engine moves you through four phases: Foundation (easy), Skill (medium), Advanced (hard), and Strategy (mixed). Sticking to the recommended difficulty builds mastery progressively and keeps your accuracy on track toward the 90% target.',
+      'The study plan engine moves you through four phases: Foundation (easy), Skill (medium), Advanced (hard), and Strategy (mixed). Sticking to the recommended difficulty builds mastery progressively and keeps your accuracy on track toward the mastery target.',
     screenshotAlt: 'Difficulty filter with Easy, Medium, and Hard options',
     screenshotHint: 'Difficulty filter\n— "Easy" chip (green)\n— "Medium" chip (yellow)\n— "Hard" chip (red)\n— Selected difficulty highlighted',
     helpItems: [
@@ -138,11 +138,37 @@ const STEPS: TutorialStep[] = [
   },
   {
     id: 5,
-    title: 'Export or Begin the Question Set',
+    title: 'Check "Exclude Active Questions"',
     description:
-      'Once your filters are applied and the question count matches your session target, either download the questions as a PDF or begin answering them directly in the QB. Your session target is shown in the task title (e.g., "· 15q").',
+      'Before exporting, make sure the "Exclude Active Questions" checkbox is checked. This must be selected every single time you export questions — never skip it.',
     detail:
-      'The QB allows you to practice questions on-screen or export them as a PDF for offline review. Either method works — just make sure you note how many questions you attempted and how many you got correct so you can log your session accurately.',
+      'Active questions are questions that may appear on upcoming official College Board practice tests. If you practice them now, you will have already seen those questions when you later take a full-length practice test — artificially inflating your score and giving you a false read on your progress. Always check this box to keep your practice test results accurate and trustworthy.',
+    screenshotAlt: 'Exclude Active Questions checkbox on the QB export panel',
+    screenshotHint: 'QB export / filter panel\n— "Exclude Active Questions" checkbox\n— Must be checked (✓) before every export\n— Prevents spoiler questions from appearing in your download',
+    helpItems: [
+      {
+        q: 'What are "Active Questions"?',
+        a: 'Active questions are real items that the College Board currently uses or plans to use on upcoming official Digital SAT administrations and full-length practice tests. Seeing them in advance gives you an unfair preview that inflates your practice scores.',
+      },
+      {
+        q: 'What happens if I forget to check this box?',
+        a: 'You risk practicing questions that will later appear on a full-length practice test. When you take that test, your score will be artificially higher than your true ability because you already know the answers — making it harder to gauge your real progress.',
+      },
+      {
+        q: 'Do I need to check this box every time?',
+        a: 'Yes, every single time you export. The checkbox may not persist between sessions. Make it a habit: before you click Export, verify the box is checked. It takes one second and protects the integrity of every future practice test you take.',
+      },
+    ],
+    icon: <AlertTriangle className="h-5 w-5" />,
+    badge: '⚠️ Critical',
+  },
+  {
+    id: 6,
+    title: 'Export the Question PDF',
+    description:
+      'Once your filters are applied and the question count matches your session target, download the questions as a PDF. Your session target is shown in the task title (e.g., "· 15q").',
+    detail:
+      'Export the PDF with "No correct answers or explanations" and "With correct answers and explanations" to ensure you have both the questions and the correct answers.',
     screenshotAlt: 'Export PDF button on the QB results page',
     screenshotHint: 'Question Bank results page\n— "Export as PDF" button (top right)\n— Question count badge showing filtered total\n— "Start Practice" button for on-screen mode',
     helpItems: [
@@ -166,12 +192,12 @@ const STEPS: TutorialStep[] = [
     icon: <Download className="h-5 w-5" />,
   },
   {
-    id: 6,
+    id: 7,
     title: 'Complete the Assigned Questions',
     description:
-      'Work through all the questions at your recommended pace — about 71 seconds per question for Reading & Writing and 95 seconds for Math. Review the answer explanations for every question you get wrong.',
+      'Click on the task in your Calendar then click "Start Session" to start practicing. Use the questions from the downloaded PDF and answer in the practice session. Use the timer to pace yourself.',
     detail:
-      'Practicing at exam pace builds the time management skills you need on test day. After finishing, review the College Board\'s explanations for every incorrect answer. Write down your reasoning error in the Error Log (do not paste question text).',
+      'Practicing at exam pace builds the time management skills you need on test day.',
     screenshotAlt: 'Student working through QB questions with a timer',
     screenshotHint: 'Study session\n— QB question on screen (or PDF printout)\n— Answer sheet or scratch paper\n— Timer running (71s or 95s per question)\n— Answer key for review after submission',
     helpItems: [
@@ -195,10 +221,10 @@ const STEPS: TutorialStep[] = [
     icon: <PenLine className="h-5 w-5" />,
   },
   {
-    id: 7,
-    title: 'Return to SaturnPath & Log Your Session',
+    id: 8,
+    title: 'Complete the Practice Session',
     description:
-      'Come back to the Calendar, open the task drawer, and click "Log Session." Enter the number of questions you attempted and how many you answered correctly. The adaptive engine will update your plan immediately.',
+      'After you\'ve answered all questions, submit the session and review the College Board\'s explanations for every incorrect answer. Write down the correct answers in the practice session to get your result. The adaptive engine will update your plan immediately.',
     detail:
       'Logging your session is the most important step — it is how the planner learns. Your accuracy data triggers a full replanning pass that re-ranks all eight domains, adjusts future difficulty, and updates your predicted score. The plan only adapts when you log.',
     screenshotAlt: 'Log Session dialog in SaturnPath',
@@ -210,11 +236,7 @@ const STEPS: TutorialStep[] = [
       },
       {
         q: 'Do I log every question individually?',
-        a: 'The Session Workflow dialog lets you enter your answer (A/B/C/D) and the correct answer for each question individually, or you can enter totals only. Entering per-question detail enables better error tracking.',
-      },
-      {
-        q: 'What if I forgot to count my correct answers?',
-        a: 'Go back and check your answer key or the QB review screen. Accurate counts matter — entering a rough estimate skews the replanner. Take a moment to tally before logging.',
+        a: 'The Session Workflow dialog lets you enter your answer (A/B/C/D) and the correct answer for each question individually.',
       },
       {
         q: 'Can I also log errors from this session?',
@@ -512,7 +534,7 @@ export function TutorialClient() {
           College Board Question Bank Tutorial
         </h1>
         <p className="text-[var(--muted-foreground)] text-sm mt-1.5 leading-relaxed">
-          Follow these seven steps every time you have a practice session on your calendar.
+          Follow these eight steps every time you have a practice session on your calendar.
           Check off each step as you complete it — your progress is saved automatically.
         </p>
       </div>

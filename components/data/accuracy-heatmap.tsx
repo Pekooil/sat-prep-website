@@ -14,9 +14,11 @@ interface AccuracyHeatmapProps {
 function DomainGrid({
   domains,
   acc,
+  skillAcc,
 }: {
   domains: typeof DOMAIN_CATALOG
   acc: (label: string) => number | null
+  skillAcc: (label: string) => number | null
 }) {
   return (
     <div className="space-y-3">
@@ -39,20 +41,23 @@ function DomainGrid({
               )}
             </div>
             <div className="flex flex-wrap gap-1 pl-7">
-              {domain.skills.map(skill => (
-                <span
-                  key={skill.label}
-                  title={`${skill.label} · ${skill.difficulty}`}
-                  className={cn(
-                    'inline-block rounded px-2 py-0.5 text-[10px] font-medium truncate max-w-[180px]',
-                    domAcc !== null
-                      ? `${cellBg(domAcc)} text-white`
-                      : 'bg-slate-100 dark:bg-slate-800 text-[var(--muted-foreground)]',
-                  )}
-                >
-                  {skill.label}
-                </span>
-              ))}
+              {domain.skills.map(skill => {
+                const sAcc = skillAcc(skill.label)
+                return (
+                  <span
+                    key={skill.label}
+                    title={sAcc !== null ? `${skill.label} · ${sAcc}%` : `${skill.label} · No data`}
+                    className={cn(
+                      'inline-block rounded px-2 py-0.5 text-[10px] font-medium truncate max-w-[180px]',
+                      sAcc !== null
+                        ? `${cellBg(sAcc)} text-white`
+                        : 'bg-slate-100 dark:bg-slate-800 text-[var(--muted-foreground)]',
+                    )}
+                  >
+                    {skill.label}
+                  </span>
+                )
+              })}
             </div>
           </div>
         )
@@ -71,15 +76,22 @@ function cellBg(acc: number | null): string {
 }
 
 export function AccuracyHeatmap({ sessions }: AccuracyHeatmapProps) {
-  // Aggregate per category (domain label)
+  // Aggregate per category (domain label) and per subcategory (skill label)
   type Acc = { a: number; c: number }
   const byDomain: Record<string, Acc> = {}
+  const bySkill:  Record<string, Acc> = {}
 
   for (const s of sessions) {
     if (!s.category) continue
     byDomain[s.category] ??= { a: 0, c: 0 }
     byDomain[s.category].a += s.questions_attempted ?? 0
     byDomain[s.category].c += s.questions_correct   ?? 0
+
+    if (s.subcategory) {
+      bySkill[s.subcategory] ??= { a: 0, c: 0 }
+      bySkill[s.subcategory].a += s.questions_attempted ?? 0
+      bySkill[s.subcategory].c += s.questions_correct   ?? 0
+    }
   }
 
   const mathDomains = DOMAIN_CATALOG.filter(d => d.subject === 'math')
@@ -87,6 +99,11 @@ export function AccuracyHeatmap({ sessions }: AccuracyHeatmapProps) {
 
   const acc = (label: string): number | null => {
     const d = byDomain[label]
+    return d && d.a > 0 ? Math.round((d.c / d.a) * 100) : null
+  }
+
+  const skillAcc = (label: string): number | null => {
+    const d = bySkill[label]
     return d && d.a > 0 ? Math.round((d.c / d.a) * 100) : null
   }
 
@@ -121,11 +138,11 @@ export function AccuracyHeatmap({ sessions }: AccuracyHeatmapProps) {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
             <p className="text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-3">Math</p>
-            <DomainGrid domains={mathDomains} acc={acc} />
+            <DomainGrid domains={mathDomains} acc={acc} skillAcc={skillAcc} />
           </div>
           <div>
             <p className="text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-3">Reading &amp; Writing</p>
-            <DomainGrid domains={rwDomains} acc={acc} />
+            <DomainGrid domains={rwDomains} acc={acc} skillAcc={skillAcc} />
           </div>
         </div>
 

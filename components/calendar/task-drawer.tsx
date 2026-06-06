@@ -5,6 +5,7 @@ import {
   X, ExternalLink, Clock, BookOpen, Target, ClipboardList,
   CheckCircle2, Zap, BarChart2, ChevronRight, AlertCircle, TrendingUp,
 } from 'lucide-react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn, subjectLabel } from '@/lib/utils'
@@ -58,7 +59,7 @@ const QB_STEPS = [
   'In the Skill filter, select the skill shown above.',
   'In the Difficulty filter, select the difficulty shown above.',
   'Set the number of questions to the target count, then begin.',
-  'When finished, return here and click "Log Session" to record your results and update your plan.',
+  'When finished, return here and click "Start Session" to record your results and update your plan.',
 ]
 
 const PRACTICE_TEST_STEPS = [
@@ -416,16 +417,26 @@ export function TaskDrawer({
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)] mb-2">
                     {isPracticeTest ? 'How to Complete This Test' : 'How to Obtain Your Questions'}
                   </h3>
-                  <ol className="space-y-2.5">
-                    {(isPracticeTest ? PRACTICE_TEST_STEPS : QB_STEPS).map((step, i) => (
-                      <li key={i} className="flex gap-3 text-sm text-[var(--muted-foreground)]">
-                        <span className="flex-shrink-0 h-5 w-5 rounded-full bg-[var(--muted)] text-[var(--foreground)] text-[10px] font-semibold flex items-center justify-center mt-0.5">
-                          {i + 1}
-                        </span>
-                        <span className="leading-relaxed">{step}</span>
-                      </li>
-                    ))}
-                  </ol>
+                  {isPracticeTest ? (
+                    <ol className="space-y-2.5">
+                      {PRACTICE_TEST_STEPS.map((step, i) => (
+                        <li key={i} className="flex gap-3 text-sm text-[var(--muted-foreground)]">
+                          <span className="flex-shrink-0 h-5 w-5 rounded-full bg-[var(--muted)] text-[var(--foreground)] text-[10px] font-semibold flex items-center justify-center mt-0.5">
+                            {i + 1}
+                          </span>
+                          <span className="leading-relaxed">{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <Link
+                      href="/tutorial"
+                      className="inline-flex items-center gap-1.5 text-sm text-violet-600 dark:text-violet-400 hover:underline font-medium"
+                    >
+                      View the Tutorial for step-by-step instructions
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Link>
+                  )}
                 </section>
               )}
 
@@ -551,7 +562,7 @@ export function TaskDrawer({
                       onClick={() => { onStartSession(task); onOpenChange(false) }}
                     >
                       <ClipboardList className="h-4 w-4" />
-                      Log Session
+                      Start Session
                     </Button>
                   )}
                   {isPlanTask && isPracticeTest && (

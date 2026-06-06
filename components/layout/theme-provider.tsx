@@ -17,7 +17,7 @@ const ThemeContext = React.createContext<ThemeContextValue>({
 })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = React.useState<Theme>('system')
+  const [theme, setThemeState] = React.useState<Theme>('light')
   const [resolvedTheme, setResolvedTheme] = React.useState<'light' | 'dark'>('light')
 
   React.useEffect(() => {
