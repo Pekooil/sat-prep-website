@@ -4,8 +4,8 @@ import * as React from 'react'
 import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import {
   CheckCircle2, Circle, ChevronDown, ExternalLink,
-  HelpCircle, ArrowRight, Image, BookOpen, BarChart2,
-  Download, PenLine, RotateCcw, ChevronRight, AlertTriangle,
+  HelpCircle, ArrowRight, BookOpen, BarChart2,
+  Download, PenLine, RotateCcw, ChevronRight, AlertTriangle, Send,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
@@ -23,6 +23,9 @@ interface TutorialStep {
   detail: string
   screenshotAlt: string
   screenshotHint: string
+  zoomOrigin: string
+  zoom?: boolean
+  hasScreenshot?: boolean
   helpItems: { q: string; a: string }[]
   icon: React.ReactNode
   badge?: string
@@ -40,6 +43,8 @@ const STEPS: TutorialStep[] = [
       'The Question Bank is a free, official resource provided by the College Board. It contains hundreds of real Digital SAT questions organized by section, domain, skill, and difficulty — exactly the categories your study plan uses.',
     screenshotAlt: 'College Board Question Bank homepage',
     screenshotHint: 'College Board QB homepage\n— Section filter on the left\n— Domain / Skill / Difficulty menus at the top\n— Question cards in the main area',
+    zoomOrigin: '33% 68%',
+    zoom: false,
     helpItems: [
       {
         q: 'Do I need a College Board account?',
@@ -65,6 +70,7 @@ const STEPS: TutorialStep[] = [
       'The Digital SAT has two scored sections: Reading & Writing and Math. Every task in your study plan is assigned to one section. Always match the section in the QB to the subject shown in your calendar task.',
     screenshotAlt: 'Section selector showing Reading & Writing and Math options',
     screenshotHint: 'Section selector\n— "Reading & Writing" tab (left)\n— "Math" tab (right)\n— Active tab highlighted in blue',
+    zoomOrigin: '33% 88%',
     helpItems: [
       {
         q: 'Where do I find which section to select?',
@@ -90,6 +96,7 @@ const STEPS: TutorialStep[] = [
       'Filters narrow the question pool to the specific topic your plan targets. Your task drawer shows the exact Domain and Skill labels to enter. These labels match the College Board\'s own filter names in the QB, so the text should match exactly.',
     screenshotAlt: 'Domain and Skill filter menus on the QB site',
     screenshotHint: 'Filter panel\n— Domain dropdown expanded (e.g., "Craft and Structure")\n— Skill dropdown below (e.g., "Words in context")\n— Applied filters shown as chips above the question list',
+    zoomOrigin: '19% 75%',
     helpItems: [
       {
         q: 'Where are the domain and skill filters in my study plan?',
@@ -120,6 +127,7 @@ const STEPS: TutorialStep[] = [
       'The study plan engine moves you through four phases: Foundation (easy), Skill (medium), Advanced (hard), and Strategy (mixed). Sticking to the recommended difficulty builds mastery progressively and keeps your accuracy on track toward the mastery target.',
     screenshotAlt: 'Difficulty filter with Easy, Medium, and Hard options',
     screenshotHint: 'Difficulty filter\n— "Easy" chip (green)\n— "Medium" chip (yellow)\n— "Hard" chip (red)\n— Selected difficulty highlighted',
+    zoomOrigin: '18% 50%',
     helpItems: [
       {
         q: 'What if the recommended difficulty feels too easy?',
@@ -145,6 +153,7 @@ const STEPS: TutorialStep[] = [
       'Active questions are questions that may appear on upcoming official College Board practice tests. If you practice them now, you will have already seen those questions when you later take a full-length practice test — artificially inflating your score and giving you a false read on your progress. Always check this box to keep your practice test results accurate and trustworthy.',
     screenshotAlt: 'Exclude Active Questions checkbox on the QB export panel',
     screenshotHint: 'QB export / filter panel\n— "Exclude Active Questions" checkbox\n— Must be checked (✓) before every export\n— Prevents spoiler questions from appearing in your download',
+    zoomOrigin: '44% 11%',
     helpItems: [
       {
         q: 'What are "Active Questions"?',
@@ -171,6 +180,7 @@ const STEPS: TutorialStep[] = [
       'Export the PDF with "No correct answers or explanations" and "With correct answers and explanations" to ensure you have both the questions and the correct answers.',
     screenshotAlt: 'Export PDF button on the QB results page',
     screenshotHint: 'Question Bank results page\n— "Export as PDF" button (top right)\n— Question count badge showing filtered total\n— "Start Practice" button for on-screen mode',
+    zoomOrigin: '90% 17%',
     helpItems: [
       {
         q: 'How many questions should I do?',
@@ -200,6 +210,8 @@ const STEPS: TutorialStep[] = [
       'Practicing at exam pace builds the time management skills you need on test day.',
     screenshotAlt: 'Student working through QB questions with a timer',
     screenshotHint: 'Study session\n— QB question on screen (or PDF printout)\n— Answer sheet or scratch paper\n— Timer running (71s or 95s per question)\n— Answer key for review after submission',
+    zoomOrigin: '17% 38%',
+    zoom: false,
     helpItems: [
       {
         q: 'What is the recommended time per question?',
@@ -229,6 +241,8 @@ const STEPS: TutorialStep[] = [
       'Logging your session is the most important step — it is how the planner learns. Your accuracy data triggers a full replanning pass that re-ranks all eight domains, adjusts future difficulty, and updates your predicted score. The plan only adapts when you log.',
     screenshotAlt: 'Log Session dialog in SaturnPath',
     screenshotHint: 'SaturnPath — Log Session dialog\n— Questions attempted field\n— Questions correct field\n— Timer showing time used\n— A/B/C/D per-question entry\n— "Submit" button',
+    zoomOrigin: '50% 50%',
+    zoom: false,
     helpItems: [
       {
         q: 'What happens when I submit a session log?',
@@ -245,6 +259,38 @@ const STEPS: TutorialStep[] = [
       {
         q: 'What if I skip logging a session?',
         a: 'The planner will not adapt. Your future tasks will stay at the same difficulty and priority as before. Always log your sessions, even if you only completed a few questions.',
+      },
+    ],
+    icon: <Send className="h-5 w-5" />,
+  },
+  {
+    id: 9,
+    title: 'Log Mistakes in the Error Log',
+    description:
+      'After each session, open the Error Log page in SaturnPath and add an entry for every question you got wrong. Describe what you misunderstood in your own words — do not paste any question text.',
+    detail:
+      'The Error Log is how the adaptive engine spots recurring mistake patterns. Each entry you add triggers a small replanning pass that re-weights the affected domain so future sessions revisit it sooner. The more consistently you log mistakes, the more accurately the planner can target your real weak spots.',
+    screenshotAlt: 'Error Log page in SaturnPath',
+    screenshotHint: 'Coming soon',
+    zoomOrigin: '50% 50%',
+    zoom: false,
+    hasScreenshot: false,
+    helpItems: [
+      {
+        q: 'What should I write in an error log entry?',
+        a: 'Describe the type of mistake — for example "confused passive vs. active voice" or "forgot to check both cases in absolute value". Include your confidence rating and the mistake type (Concept Gap, Careless Error, etc.). Do not copy question text or answer choices.',
+      },
+      {
+        q: 'Do I need to log every wrong answer?',
+        a: 'Yes, ideally. Each logged mistake gives the planner more signal about which skills need reinforcement. If you are short on time, prioritize logging mistakes on questions where you were confident but still wrong — those are the most informative for the replanner.',
+      },
+      {
+        q: 'How is the Error Log different from logging a session?',
+        a: 'The Session Log captures your overall accuracy for a topic. The Error Log captures the specific nature of each mistake. Both trigger replanning passes, but the Error Log gives the planner finer-grained information about which sub-skills to revisit.',
+      },
+      {
+        q: 'Will the Error Log affect my study plan?',
+        a: 'Yes. Each error log entry triggers a small adaptive replanning pass. If you consistently log mistakes in the same domain, the planner will increase the priority and frequency of sessions for that domain in your upcoming schedule.',
       },
     ],
     icon: <RotateCcw className="h-5 w-5" />,
@@ -303,22 +349,37 @@ function ScreenshotPlaceholder({ alt, hint }: { alt: string; hint: string }) {
       )}
     >
       <div className="flex items-center justify-center h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500">
-        <Image className="h-5 w-5" />
+        <BookOpen className="h-5 w-5" />
       </div>
       <div className="text-center px-4">
         <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-          Screenshot Placeholder
+          Screenshot Coming Soon
         </p>
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 whitespace-pre-line leading-relaxed">
           {hint}
         </p>
       </div>
-      <div className="absolute inset-x-0 top-0 h-6 bg-slate-200/60 dark:bg-slate-700/60 flex items-center gap-1.5 px-3">
-        <span className="h-2.5 w-2.5 rounded-full bg-red-400/60" />
-        <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/60" />
-        <span className="h-2.5 w-2.5 rounded-full bg-green-400/60" />
-        <span className="ml-2 text-[10px] text-slate-400 dark:text-slate-500 truncate">{alt}</span>
-      </div>
+    </div>
+  )
+}
+
+function AnimatedScreenshot({ step, alt, zoomOrigin, zoom = true }: { step: number; alt: string; zoomOrigin: string; zoom?: boolean }) {
+  return (
+    <div
+      role="img"
+      aria-label={alt}
+      className="relative w-full rounded-xl overflow-hidden aspect-[16/7] border border-[var(--border)]"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`/tutorial/step${step}.png`}
+        alt={alt}
+        className="w-full h-full object-cover object-top"
+        style={zoom ? {
+          animation: 'tutorial-zoom 3.5s ease-in-out infinite alternate',
+          transformOrigin: zoomOrigin,
+        } : undefined}
+      />
     </div>
   )
 }
@@ -422,7 +483,10 @@ function StepCard({
 
       {/* Screenshot */}
       <div className="px-5">
-        <ScreenshotPlaceholder alt={step.screenshotAlt} hint={step.screenshotHint} />
+        {step.hasScreenshot === false
+          ? <ScreenshotPlaceholder alt={step.screenshotAlt} hint={step.screenshotHint} />
+          : <AnimatedScreenshot step={step.id} alt={step.screenshotAlt} zoomOrigin={step.zoomOrigin} zoom={step.zoom} />
+        }
       </div>
 
       {/* Description */}

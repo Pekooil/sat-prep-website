@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@keyframes tutorial-zoom {
+  from { transform: scale(1); }
+  to   { transform: scale(1.6); }
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Override Tailwind violet/purple to match SaturnPath DS palette */
