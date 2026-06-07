@@ -29,17 +29,17 @@ export function Navbar({ user }: NavbarProps) {
         {/* Logo */}
         <SaturnPathLogo size="sm" />
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        {/* Desktop nav — pill */}
+        <nav className="hidden md:flex items-center gap-0.5 rounded-full bg-gray-100 dark:bg-[#3a3a3a] px-3 py-1.5 shadow-xl">
           {NAV_LINKS.map(link => (
             <Link
               key={link.href}
               href={link.href}
               className={cn(
-                'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'rounded-xl px-3 py-2 text-sm font-medium transition-colors text-gray-700 dark:text-white',
                 pathname === link.href || pathname.startsWith(link.href + '/')
-                  ? 'bg-violet-50 text-black dark:bg-violet-900/30 dark:text-white'
-                  : 'text-black dark:text-white hover:bg-[var(--muted)]'
+                  ? 'bg-[#ede9fe] dark:bg-[#252525] text-gray-900 dark:text-white shadow-sm'
+                  : 'hover:bg-gray-200 dark:hover:bg-white/10'
               )}
             >
               {link.label}
