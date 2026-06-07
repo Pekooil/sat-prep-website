@@ -1,5 +1,6 @@
 'use client'
 
+import { Target } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -35,7 +36,9 @@ export function AccuracyChart({ sessions }: AccuracyChartProps) {
     return (
       <Card>
         <CardContent className="py-16 text-center">
-          <p className="text-4xl mb-3">🎯</p>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-50 dark:bg-violet-900/20 mx-auto mb-3">
+            <Target className="h-5 w-5 text-violet-500" />
+          </div>
           <p className="font-medium">No practice sessions yet</p>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">Log question sessions to see your accuracy by topic.</p>
         </CardContent>

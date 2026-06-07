@@ -37,7 +37,7 @@ export function ErrorRow({ error, onReload }: ErrorRowProps) {
   async function handleToggleMastered() {
     const result = await markErrorMastered(error.id, !error.mastered)
     if (result.error) toast({ title: 'Error', description: result.error, variant: 'destructive' })
-    else { toast({ title: error.mastered ? 'Marked for review' : '✅ Marked as mastered!' }); onReload() }
+    else { toast({ title: error.mastered ? 'Marked for review' : 'Marked as mastered!' }); onReload() }
   }
 
   async function handleArchive() {
@@ -137,7 +137,12 @@ export function ErrorRow({ error, onReload }: ErrorRowProps) {
                   </span>
                 )}
 
-                {error.mastered && <Badge variant="success" className="text-[10px]">Mastered ✓</Badge>}
+                {error.mastered && (
+                  <Badge variant="success" className="text-[10px] gap-0.5 inline-flex items-center">
+                    <CheckCircle2 className="h-2.5 w-2.5 shrink-0" />
+                    Mastered
+                  </Badge>
+                )}
                 {isArchived && <Badge variant="outline" className="text-[10px] opacity-60">Archived</Badge>}
                 <span className="text-[10px] text-[var(--muted-foreground)]">{formatDate(error.created_at)}</span>
               </div>
@@ -192,7 +197,9 @@ export function ErrorRow({ error, onReload }: ErrorRowProps) {
               )}
               <div className="flex items-center gap-2 pt-1">
                 <Button size="sm" variant={error.mastered ? 'outline' : 'default'} className="h-7 text-xs gap-1" onClick={handleToggleMastered}>
-                  {error.mastered ? 'Unmark mastered' : '✓ Mark mastered'}
+                  {error.mastered ? 'Unmark mastered' : (
+                    <><CheckCircle2 className="h-3 w-3 shrink-0" />Mark mastered</>
+                  )}
                 </Button>
                 {error.review_count > 0 && (
                   <span className="text-[var(--muted-foreground)]">Reviewed {error.review_count}×</span>

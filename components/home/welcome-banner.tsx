@@ -1,4 +1,4 @@
-import { CalendarDays, Flame } from 'lucide-react'
+import { CalendarDays, Flame, Target, PartyPopper } from 'lucide-react'
 import type { User } from '@/types'
 import { daysUntilTest, formatDate } from '@/lib/utils'
 
@@ -22,7 +22,10 @@ function ScoreProgressBar({ currentScore, targetScore }: { currentScore: number;
         {ptsAway > 0 ? (
           <span className="text-xs text-violet-300 font-medium font-mono tabular-nums">{ptsAway} pts away</span>
         ) : (
-          <span className="text-xs text-emerald-300 font-semibold">Goal reached! 🎉</span>
+          <span className="text-xs text-emerald-300 font-semibold flex items-center gap-1">
+            <PartyPopper className="h-3.5 w-3.5 shrink-0" />
+            Goal reached!
+          </span>
         )}
       </div>
 
@@ -74,12 +77,17 @@ export function WelcomeBanner({ profile, streak = 0, currentScore, targetScore }
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl p-6 text-white"
+      className="relative overflow-hidden rounded-2xl p-6 sm:p-7 text-white"
       style={{
         background: 'var(--gradient-brand)',
-        boxShadow: 'var(--shadow-lg)',
+        boxShadow: 'var(--shadow-violet)',
       }}
     >
+      {/* Decorative background rings */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full border border-white/10" />
+        <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full border border-white/8" />
+      </div>
       {/* Saturn ring watermark — official brand SVG, ~10% opacity per DS */}
       <div className="absolute right-0 top-0 opacity-10 pointer-events-none" aria-hidden="true">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -93,11 +101,11 @@ export function WelcomeBanner({ profile, streak = 0, currentScore, targetScore }
       <div className="relative">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-violet-200 text-sm font-medium">{greeting},</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{firstName}! 👋</h1>
+            <p className="text-violet-200/90 text-sm font-medium tracking-wide">{greeting},</p>
+            <h1 className="mt-0.5 text-2xl font-bold tracking-tight sm:text-3xl leading-tight">{firstName}!</h1>
           </div>
           {/* Streak pill — white/15 + backdrop-blur per DS */}
-          <div className="shrink-0 flex items-center gap-1.5 rounded-xl bg-white/15 px-3 py-2 backdrop-blur-sm">
+          <div className="shrink-0 flex items-center gap-1.5 rounded-xl bg-white/15 px-3 py-2 backdrop-blur-sm border border-white/10">
             <Flame className="h-4 w-4 text-orange-300" />
             {streak > 0 ? (
               <div className="text-right">
@@ -124,7 +132,10 @@ export function WelcomeBanner({ profile, streak = 0, currentScore, targetScore }
                   {profile?.test_date && ` · ${formatDate(profile.test_date)}`}
                 </>
               ) : days === 0 ? (
-                <span className="font-bold text-yellow-300">🎯 Your SAT is today! Good luck!</span>
+                <span className="font-bold text-yellow-300 flex items-center gap-1">
+                  <Target className="h-4 w-4 shrink-0" />
+                  Your SAT is today! Good luck!
+                </span>
               ) : (
                 <span className="text-violet-200">Your SAT has passed — log your official score!</span>
               )}

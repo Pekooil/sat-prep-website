@@ -1,5 +1,6 @@
 'use client'
 
+import { Flame } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import {
@@ -106,9 +107,18 @@ export function ConsistencyChart({ sessions, dateRange }: ConsistencyChartProps)
             <p className="text-2xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
               {consistencyScore}%
             </p>
-            <p className="text-[10px] text-[var(--muted-foreground)]">
-              {streak > 0 ? `🔥 ${streak}-day streak` : activeDays > 0 ? `${activeDays} study days` : 'No activity yet'}
-            </p>
+            <div className="flex items-center justify-end gap-0.5 text-[10px] text-[var(--muted-foreground)]">
+              {streak > 0 ? (
+                <>
+                  <Flame className="h-3 w-3 text-orange-500 shrink-0" />
+                  <span>{streak}-day streak</span>
+                </>
+              ) : activeDays > 0 ? (
+                <span>{activeDays} study days</span>
+              ) : (
+                <span>No activity yet</span>
+              )}
+            </div>
           </div>
         </div>
       </CardHeader>

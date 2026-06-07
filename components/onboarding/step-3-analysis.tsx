@@ -1,6 +1,6 @@
 'use client'
 
-import { BookOpen, TrendingDown, TrendingUp, Calendar, Target, Zap } from 'lucide-react'
+import { BookOpen, TrendingDown, TrendingUp, Calendar, Target, Zap, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, ReferenceLine, Tooltip } from 'recharts'
 import { cn } from '@/lib/utils'
 import type { OnboardingAnalysis, DomainStat } from '@/types'
@@ -14,12 +14,18 @@ interface Step3Props {
 function LevelBadge({ level }: { level: DomainStat['level'] }) {
   return (
     <span className={cn(
-      'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+      'inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
       level === 'weak' && 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
       level === 'moderate' && 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
       level === 'strong' && 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
     )}>
-      {level === 'weak' ? '⚠ Needs Work' : level === 'moderate' ? '↗ Moderate' : '✓ Strong'}
+      {level === 'weak' ? (
+        <><AlertTriangle className="h-2.5 w-2.5 shrink-0" />Needs Work</>
+      ) : level === 'moderate' ? (
+        <><TrendingUp className="h-2.5 w-2.5 shrink-0" />Moderate</>
+      ) : (
+        <><CheckCircle2 className="h-2.5 w-2.5 shrink-0" />Strong</>
+      )}
     </span>
   )
 }

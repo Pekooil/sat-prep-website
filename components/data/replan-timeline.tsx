@@ -31,7 +31,9 @@ export function ReplanTimeline({ replans }: ReplanTimelineProps) {
           <CardTitle className="text-base">Replan History</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col items-center justify-center py-14">
-          <p className="text-3xl mb-3">🔄</p>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mb-3">
+            <RefreshCw className="h-5 w-5 text-[var(--muted-foreground)]" />
+          </div>
           <p className="font-medium text-sm">No replanning yet</p>
           <p className="text-xs text-[var(--muted-foreground)] mt-1 text-center">
             The adaptive planner runs automatically after each session.

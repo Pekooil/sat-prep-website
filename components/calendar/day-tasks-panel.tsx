@@ -219,8 +219,9 @@ export function DayTasksPanel({ date, tasks, onReload, onAddTask }: DayTasksPane
 
                   {filters && (
                     <div className="pl-6 rounded-md bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900 p-2 space-y-1">
-                      <p className="text-[10px] font-semibold text-violet-700 dark:text-violet-400 uppercase tracking-wide">
-                        📋 College Board QB Filters
+                      <p className="text-[10px] font-semibold text-violet-700 dark:text-violet-400 uppercase tracking-wide flex items-center gap-1">
+                        <ClipboardList className="h-3 w-3 shrink-0" />
+                        College Board QB Filters
                       </p>
                       <div className="text-xs text-violet-800 dark:text-violet-300 space-y-0.5">
                         {filters.domain && <p>Domain: <span className="font-medium">{filters.domain}</span></p>}

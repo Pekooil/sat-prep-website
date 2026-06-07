@@ -18,7 +18,7 @@ export function MobileNav() {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--border)] bg-[var(--card)]/95 backdrop-blur-md">
-      <div className="flex items-center justify-around h-16 px-2">
+      <div className="flex items-center justify-around h-16 px-1">
         {mobileLinks.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(href + '/')
           return (
@@ -26,14 +26,27 @@ export function MobileNav() {
               key={href}
               href={href}
               className={cn(
-                'flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-0',
-                isActive
-                  ? 'text-violet-600 dark:text-violet-400'
-                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                'flex flex-col items-center gap-0.5 min-w-0 flex-1',
+                'transition-all duration-150',
               )}
             >
-              <Icon className={cn('h-5 w-5', isActive && 'text-violet-600 dark:text-violet-400')} />
-              <span className="text-[10px] font-medium leading-none truncate">{label}</span>
+              <span className={cn(
+                'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-150',
+                isActive
+                  ? 'bg-violet-100 dark:bg-violet-900/40'
+                  : 'hover:bg-slate-100 dark:hover:bg-slate-800/60',
+              )}>
+                <Icon className={cn(
+                  'h-5 w-5 transition-colors duration-150',
+                  isActive ? 'text-violet-600 dark:text-violet-400' : 'text-[var(--muted-foreground)]',
+                )} />
+                <span className={cn(
+                  'text-[10px] font-medium leading-none truncate transition-colors duration-150',
+                  isActive ? 'text-violet-600 dark:text-violet-400' : 'text-[var(--muted-foreground)]',
+                )}>
+                  {label}
+                </span>
+              </span>
             </Link>
           )
         })}

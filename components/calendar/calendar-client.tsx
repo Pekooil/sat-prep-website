@@ -229,26 +229,43 @@ function MonthView({
           const ds = dateStr(day)
           const dayTasks = tasksByDate[ds] ?? []
           const todayCell = ds === todayStr
+          const isPastCell = ds < todayStr
           const isOver = dragOverDate === ds
+          const hasTasks = dayTasks.length > 0
 
           return (
             <div
               key={ds}
               className={cn(
-                'bg-[var(--card)] min-h-[100px] sm:min-h-[110px] p-1.5 flex flex-col transition-colors',
-                isOver && 'bg-violet-50 dark:bg-violet-900/20',
+                'min-h-[100px] sm:min-h-[110px] p-1.5 flex flex-col transition-colors duration-150',
+                todayCell
+                  ? 'bg-violet-50/60 dark:bg-violet-900/10'
+                  : isPastCell
+                  ? 'bg-slate-50/70 dark:bg-slate-900/40'
+                  : 'bg-[var(--card)]',
+                isOver && 'bg-violet-100/80 dark:bg-violet-900/30 ring-1 ring-inset ring-violet-300 dark:ring-violet-700',
               )}
               onDragOver={(e) => onDragOver(e, ds)}
               onDragLeave={onDragLeave}
               onDrop={(e) => onDrop(e, ds)}
             >
               {/* Day number */}
-              <span className={cn(
-                'self-start flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium mb-1',
-                todayCell ? 'bg-violet-600 text-white' : 'text-[var(--foreground)]',
-              )}>
-                {day}
-              </span>
+              <div className="flex items-center justify-between mb-1">
+                <span className={cn(
+                  'flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium transition-colors',
+                  todayCell
+                    ? 'bg-violet-600 text-white font-bold shadow-sm'
+                    : isPastCell
+                    ? 'text-slate-400 dark:text-slate-600'
+                    : 'text-[var(--foreground)]',
+                )}>
+                  {day}
+                </span>
+                {/* Dot indicator when there are tasks (future days) */}
+                {hasTasks && !isPastCell && !todayCell && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-400 dark:bg-violet-500 opacity-70" />
+                )}
+              </div>
 
               {/* Task chips */}
               <div className="flex-1 space-y-0.5 overflow-hidden">
@@ -256,9 +273,12 @@ function MonthView({
                   <TaskChip key={t.id} task={t} onOpen={onOpenTask} onDragStart={onDragStart} />
                 ))}
                 {dayTasks.length > 3 && (
-                  <p className="text-[9px] text-[var(--muted-foreground)] pl-1">
+                  <button
+                    className="text-[9px] text-violet-600 dark:text-violet-400 font-medium pl-1 hover:underline w-full text-left cursor-pointer"
+                    onClick={() => onOpenTask(dayTasks[3])}
+                  >
                     +{dayTasks.length - 3} more
-                  </p>
+                  </button>
                 )}
               </div>
             </div>
@@ -316,13 +336,17 @@ function WeekView({
             const ds = isoDate(day)
             const dayTasks = tasksByDate[ds] ?? []
             const todayCell = ds === todayStr
+            const isPastCell = ds < todayStr
             const isOver = dragOverDate === ds
 
             return (
               <div
                 key={ds}
                 className={cn(
-                  'flex flex-col rounded-xl border border-[var(--border)] transition-colors overflow-hidden',
+                  'flex flex-col rounded-xl border transition-colors overflow-hidden',
+                  todayCell
+                    ? 'border-violet-300 dark:border-violet-700'
+                    : 'border-[var(--border)]',
                   isOver && 'ring-2 ring-violet-400 border-violet-400 bg-violet-50 dark:bg-violet-900/20',
                 )}
                 onDragOver={(e) => onDragOver(e, ds)}
@@ -331,28 +355,43 @@ function WeekView({
               >
                 {/* Column header */}
                 <div className={cn(
-                  'px-2 py-1.5 text-center border-b border-[var(--border)]',
-                  todayCell ? 'bg-violet-600' : 'bg-[var(--muted)]',
+                  'px-2 py-2 text-center border-b border-[var(--border)]',
+                  todayCell
+                    ? 'bg-violet-600'
+                    : isPastCell
+                    ? 'bg-slate-50/80 dark:bg-slate-900/40'
+                    : 'bg-[var(--muted)]',
                 )}>
                   <p className={cn(
-                    'text-[10px] font-medium',
-                    todayCell ? 'text-white' : 'text-[var(--muted-foreground)]',
+                    'text-[10px] font-semibold uppercase tracking-wide',
+                    todayCell
+                      ? 'text-violet-200'
+                      : isPastCell
+                      ? 'text-slate-400 dark:text-slate-600'
+                      : 'text-[var(--muted-foreground)]',
                   )}>
                     {format(day, 'EEE')}
                   </p>
                   <p className={cn(
-                    'text-sm font-bold',
-                    todayCell ? 'text-white' : 'text-[var(--foreground)]',
+                    'text-sm font-bold leading-none mt-0.5',
+                    todayCell
+                      ? 'text-white'
+                      : isPastCell
+                      ? 'text-slate-400 dark:text-slate-600'
+                      : 'text-[var(--foreground)]',
                   )}>
                     {format(day, 'd')}
                   </p>
                 </div>
 
                 {/* Tasks */}
-                <div className="flex-1 p-1 space-y-1 min-h-[120px]">
+                <div className={cn(
+                  'flex-1 p-1 space-y-1 min-h-[120px]',
+                  isPastCell && 'opacity-60',
+                )}>
                   {dayTasks.length === 0 && (
                     <div className="h-full flex items-center justify-center">
-                      <span className="text-[9px] text-[var(--muted-foreground)]">—</span>
+                      <span className="text-[9px] text-[var(--muted-foreground)] opacity-50">—</span>
                     </div>
                   )}
                   {dayTasks.map(t => (

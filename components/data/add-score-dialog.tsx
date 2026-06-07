@@ -47,7 +47,7 @@ export function AddScoreDialog({ open, onOpenChange, onSuccess }: AddScoreDialog
     if (result.error) {
       toast({ title: 'Error', description: result.error, variant: 'destructive' })
     } else {
-      toast({ title: 'Score logged! 📈', description: 'Your progress has been recorded.' })
+      toast({ title: 'Score logged!', description: 'Your progress has been recorded.' })
       onOpenChange(false)
       // Reload will happen via revalidatePath
     }

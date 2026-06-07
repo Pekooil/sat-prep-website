@@ -345,7 +345,7 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
       }
     }
 
-    toast({ title: '🎉 Setup complete!', description: 'Welcome to SaturnPath. Your plan is ready.' })
+    toast({ title: 'Setup complete!', description: 'Welcome to SaturnPath. Your plan is ready.' })
     router.push('/home')
     router.refresh()
   }

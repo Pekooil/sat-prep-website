@@ -6,7 +6,7 @@ This document is updated at the end of every session. It records the current fea
 
 ## Last Updated
 
-2026-06-03 (session 5)
+2026-06-06 (session 6)
 
 ---
 
@@ -154,6 +154,58 @@ WHERE table_name = 'error_logs'
   AND column_name IN ('corrected_explanation','confidence_rating','archived',
                       'custom_mistake_type','question_id','student_answer','correct_answer');
 ```
+
+---
+
+## UI/UX Overhaul (Session 6)
+
+Complete visual and UX polish pass — no logic, data, or TypeScript types changed.
+
+### Design System (`app/globals.css`)
+- Added `@keyframes sp-shimmer` and `sp-fade-in-up` for skeleton/entrance animations
+- Added `.sp-shimmer` utility class
+- Refined dark mode palette: `--background: #0c1524`, `--card: #172033`, `--border: #2a3a52`, `--muted: #1a2840`
+- Added `--shadow-violet` CSS custom property (violet glow drop shadow)
+- Custom `input[type="range"]` thumb styling with violet color and shadow
+
+### Layout & Navigation
+- **`components/layout/navbar.tsx`** — pill nav with `bg-slate-100/80` frosted glass, ring border; active link gets white bg card + violet text
+- **`components/layout/mobile-nav.tsx`** — active item gets `bg-violet-100 dark:bg-violet-900/40` pill
+- **`components/layout/notifications-dropdown.tsx`** — emoji type icons replaced with Lucide (`Clock`, `Trophy`, `Radio`, `Bot`); styled empty state
+
+### Home Page Components
+- **`components/home/score-card.tsx`** — colored top accent stripe, Lucide icons, hover lift effect
+- **`components/home/welcome-banner.tsx`** — decorative rings, Lucide `Flame`/`CalendarDays`/`PartyPopper`/`Target` icons replacing all emoji
+- **`components/home/ai-planner-trigger.tsx`** — `CheckCircle2` icon for success state (was ✅ emoji)
+
+### Calendar
+- **`components/calendar/calendar-client.tsx`** — month view: past cells muted bg, today cell violet tint, future task dot indicators; week view: today column border-violet, past column opacity muted
+- **`components/calendar/day-tasks-panel.tsx`** — `ClipboardList` icon replacing 📋 emoji in QB Filters label
+
+### Error Log
+- **`components/error-log/error-log-client.tsx`** — `Archive`/`ScrollText` icons for empty states
+- **`components/error-log/error-row.tsx`** — `CheckCircle2` in Mastered badge and button; clean toast strings
+
+### Data Charts (all in `components/data/`)
+- All chart tooltips: unified `TIP_STYLE` with `boxShadow`
+- All empty states: Lucide icon in styled container (replacing emoji)
+- Files updated: `accuracy-trends`, `score-trend`, `replan-timeline`, `score-timeline`, `study-time-chart`, `topic-mastery-heatmap`, `topic-mastery-trends`, `accuracy-heatmap`, `workload-redistribution`, `mistake-frequency`, `consistency-chart`
+
+### Settings
+- **`components/settings/notification-prefs.tsx`** — `ClipboardList`/`CalendarDays`/`AlertTriangle`/`FileText` icons replacing all emoji
+
+### Onboarding
+- **`components/onboarding/step-3-analysis.tsx`** — `AlertTriangle`/`TrendingUp`/`CheckCircle2` icons in `LevelBadge` replacing unicode symbols
+- **`components/onboarding/step-4-recommendations.tsx`** — `CheckCircle2` icon in study tips list; `ClipboardList` in QB Filters label; clean toast
+- **`components/onboarding/onboarding-wizard.tsx`** — clean toast title (no 🎉)
+
+### Info & Tutorial
+- **`components/info/contact-form.tsx`** — `CheckCircle2` success state
+- **`components/tutorial/tutorial-client.tsx`** — `'Critical'` badge (was `'⚠️ Critical'`)
+
+### Other Cleanups
+- **`components/data/add-score-dialog.tsx`** — clean toast title
+- **`components/calendar/log-session-dialog.tsx`** — clean toast title
 
 ---
 

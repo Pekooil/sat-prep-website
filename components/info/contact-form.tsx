@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Send, Loader2 } from 'lucide-react'
+import { Send, Loader2, CheckCircle2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,12 +48,14 @@ export function ContactForm() {
         </CardHeader>
         <CardContent>
           {sent ? (
-            <div className="py-8 text-center space-y-2">
-              <p className="text-2xl">✅</p>
-              <p className="font-medium">Message sent!</p>
+            <div className="py-8 text-center space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 mx-auto">
+                <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <p className="font-semibold">Message sent!</p>
               <p className="text-sm text-[var(--muted-foreground)]">Thanks for reaching out. We&apos;ll get back to you shortly.</p>
               <button
-                className="text-xs text-violet-600 dark:text-violet-400 hover:underline mt-2"
+                className="text-xs text-violet-600 dark:text-violet-400 hover:underline mt-2 cursor-pointer"
                 onClick={() => setSent(false)}
               >
                 Send another message

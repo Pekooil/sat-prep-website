@@ -1,5 +1,6 @@
 'use client'
 
+import { BarChart2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -39,8 +40,10 @@ const DOMAIN_STROKE: Record<string, string> = {
 const TIP_STYLE = {
   backgroundColor: 'var(--card)',
   border: '1px solid var(--border)',
-  borderRadius: '8px',
+  borderRadius: '10px',
   fontSize: '12px',
+  boxShadow: '0 4px 12px -2px rgba(15,23,42,0.12), 0 2px 6px -2px rgba(15,23,42,0.08)',
+  padding: '8px 12px',
 }
 
 export function TopicMasteryTrends({ sessions }: TopicMasteryTrendsProps) {
@@ -77,7 +80,9 @@ export function TopicMasteryTrends({ sessions }: TopicMasteryTrendsProps) {
           <CardTitle className="text-base">Topic Mastery Trends</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col items-center justify-center py-14">
-          <p className="text-3xl mb-3">📊</p>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mb-3">
+            <BarChart2 className="h-5 w-5 text-[var(--muted-foreground)]" />
+          </div>
           <p className="font-medium text-sm">No data yet</p>
           <p className="text-xs text-[var(--muted-foreground)] mt-1 text-center">
             Log sessions across multiple topics to see trends.

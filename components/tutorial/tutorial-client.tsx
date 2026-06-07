@@ -169,7 +169,7 @@ const STEPS: TutorialStep[] = [
       },
     ],
     icon: <AlertTriangle className="h-5 w-5" />,
-    badge: '⚠️ Critical',
+    badge: 'Critical',
   },
   {
     id: 6,

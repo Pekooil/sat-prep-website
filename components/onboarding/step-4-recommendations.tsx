@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Sparkles, ExternalLink, CheckCircle2, AlertCircle, Loader2, Clock, BookOpen, TrendingUp } from 'lucide-react'
+import { Sparkles, ExternalLink, CheckCircle2, AlertCircle, Loader2, Clock, BookOpen, TrendingUp, ClipboardList } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { COLLEGE_BOARD_QB_URL } from '@/lib/constants'
 import type { AIOnboardingRec, OnboardingAnalysis } from '@/types'
@@ -170,8 +170,9 @@ export function Step4Recommendations({
               {/* College Board QB filter recommendation */}
               {topic.cbFilters && (
                 <div className="ml-9 rounded-lg bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900 p-3 space-y-1">
-                  <p className="text-[10px] font-bold text-violet-700 dark:text-violet-400 uppercase tracking-wide">
-                    📋 College Board QB Filters
+                  <p className="text-[10px] font-bold text-violet-700 dark:text-violet-400 uppercase tracking-wide flex items-center gap-1">
+                    <ClipboardList className="h-3 w-3 shrink-0" />
+                    College Board QB Filters
                   </p>
                   <div className="text-xs text-violet-800 dark:text-violet-300 space-y-0.5">
                     <p>Domain: <span className="font-semibold">{topic.cbFilters.domain}</span></p>
@@ -206,7 +207,7 @@ export function Step4Recommendations({
           <ul className="space-y-2">
             {aiRecs.studyTips.map((tip, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-emerald-800 dark:text-emerald-200">
-                <span className="text-emerald-500 font-bold mt-0.5 shrink-0">✓</span>
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
                 {tip}
               </li>
             ))}

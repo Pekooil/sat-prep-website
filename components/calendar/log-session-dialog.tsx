@@ -67,7 +67,7 @@ export function LogSessionDialog({ open, onOpenChange, task, onSuccess }: LogSes
     await toggleTaskComplete(task.id, true)
 
     toast({
-      title: 'Session logged! 📊',
+      title: 'Session logged!',
       description: 'Your results have been recorded and your study plan has been updated.',
     })
     setLoading(false)

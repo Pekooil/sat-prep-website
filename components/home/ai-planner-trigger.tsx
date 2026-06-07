@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { RefreshCw, Loader2 } from 'lucide-react'
+import { RefreshCw, Loader2, CheckCircle2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -156,11 +156,14 @@ export function AIPlannerTrigger({ profile }: AIPlannerTriggerProps) {
 
       <CardContent className="pt-0 flex-1 flex flex-col justify-center">
         {success ? (
-          <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-6 text-center">
-            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">✅ Plan created!</p>
-            <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">Check your Calendar tab.</p>
+          <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-6 text-center space-y-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 mx-auto">
+              <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Plan created!</p>
+            <p className="text-xs text-emerald-600 dark:text-emerald-500">Check your Calendar tab to see your schedule.</p>
             <button
-              className="text-xs text-emerald-700 dark:text-emerald-400 underline mt-2"
+              className="text-xs text-emerald-700 dark:text-emerald-400 underline mt-1 cursor-pointer"
               onClick={() => setSuccess(false)}
             >
               Generate a new plan

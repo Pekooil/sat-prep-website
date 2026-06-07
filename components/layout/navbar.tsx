@@ -30,21 +30,24 @@ export function Navbar({ user }: NavbarProps) {
         <SaturnPathLogo size="sm" />
 
         {/* Desktop nav — pill */}
-        <nav className="hidden md:flex items-center gap-0.5 rounded-full bg-gray-100 dark:bg-[#3a3a3a] px-3 py-1.5 shadow-xl">
-          {NAV_LINKS.map(link => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                'rounded-xl px-3 py-2 text-sm font-medium transition-colors text-gray-700 dark:text-white',
-                pathname === link.href || pathname.startsWith(link.href + '/')
-                  ? 'bg-[#ede9fe] dark:bg-[#252525] text-gray-900 dark:text-white shadow-sm'
-                  : 'hover:bg-gray-200 dark:hover:bg-white/10'
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <nav className="hidden md:flex items-center gap-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 px-2 py-1.5 shadow-sm ring-1 ring-slate-200/60 dark:ring-slate-700/60 backdrop-blur-sm">
+          {NAV_LINKS.map(link => {
+            const isActive = pathname === link.href || pathname.startsWith(link.href + '/')
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  'rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150',
+                  isActive
+                    ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-300 shadow-sm ring-1 ring-slate-200/80 dark:ring-slate-600/80'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/60'
+                )}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
         </nav>
 
         {/* Right actions */}

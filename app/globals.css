@@ -5,6 +5,21 @@
   to   { transform: scale(1.6); }
 }
 
+@keyframes sp-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes sp-fade-in-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sp-slide-in-bottom {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Override Tailwind violet/purple to match SaturnPath DS palette */
@@ -181,22 +196,31 @@
 }
 
 .dark {
-  --background: #0f172a;
+  --background: #0c1524;
   --foreground: #f1f5f9;
-  --surface-card: #1e293b;
-  --card:          #1e293b;
+  --surface-card: #172033;
+  --card:          #172033;
   --card-foreground: #f1f5f9;
-  --border:        #334155;
-  --input-border:  #334155;
+  --border:        #2a3a52;
+  --input-border:  #2a3a52;
   --primary:       var(--violet-500);
   --primary-hover: var(--violet-600);
-  --muted:         #1e293b;
-  --muted-foreground: #94a3b8;
+  --muted:         #1a2840;
+  --muted-foreground: #8facc8;
   --destructive:   #f87171;
   --ring:          var(--violet-500);
   --text-heading:  #f1f5f9;
-  --text-body:     #cbd5e1;
-  --text-muted:    #94a3b8;
+  --text-body:     #c4d4e8;
+  --text-muted:    #8facc8;
+
+  /* Dark mode richer gradients */
+  --gradient-brand:  linear-gradient(90deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%);
+  --gradient-card:   linear-gradient(180deg, rgba(23,32,51,0.5) 0%, #172033 100%);
+
+  /* Dark mode shadow — warmer tint */
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.25), 0 2px 4px -2px rgba(0,0,0,0.18);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.28), 0 4px 6px -4px rgba(0,0,0,0.18);
+  --shadow-violet: 0 10px 24px -6px rgba(109,40,217,0.45);
 }
 
 /* ============================================================
@@ -250,9 +274,87 @@ header nav a { color: black; }
   box-shadow: var(--shadow-lg);
 }
 
+/* Gradient text */
+.sp-gradient-text {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shimmer skeleton */
+.sp-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    color-mix(in srgb, var(--muted) 60%, var(--background) 40%) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: sp-shimmer 1.6s ease-in-out infinite;
+}
+
+/* Fade-in-up list entry */
+.sp-enter {
+  animation: sp-fade-in-up 200ms var(--ease-out) both;
+}
+
+/* Chart tooltip base */
+.sp-chart-tooltip {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-md) !important;
+  font-size: 12px !important;
+  padding: 8px 12px !important;
+}
+
+/* Focus ring — visible and consistent */
+.sp-focus-ring {
+  outline: none;
+  ring-color: var(--ring);
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+/* Inset card — subtle inner shadow for depth */
+.sp-card-inset {
+  box-shadow: inset 0 1px 3px 0 rgba(15,23,42,0.06);
+}
+.dark .sp-card-inset {
+  box-shadow: inset 0 1px 3px 0 rgba(0,0,0,0.25);
+}
+
 /* Button active press — applied globally via data attribute or class */
 button:active:not(:disabled) {
   transform: translateY(0.5px) scale(0.99);
+}
+
+/* Range input — unified violet thumb across browsers */
+input[type="range"] {
+  accent-color: var(--primary);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--primary);
+  box-shadow: 0 1px 4px rgba(124,58,237,0.4);
+  cursor: pointer;
+  transition: transform 150ms var(--ease-standard), box-shadow 150ms var(--ease-standard);
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(124,58,237,0.5);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--primary);
+  border: none;
+  box-shadow: 0 1px 4px rgba(124,58,237,0.4);
+  cursor: pointer;
 }
 
 @media print {

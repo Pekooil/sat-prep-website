@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Plus, Search, SlidersHorizontal, X } from 'lucide-react'
+import { Plus, Search, SlidersHorizontal, X, Archive, ScrollText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -411,7 +411,9 @@ function ErrorList({
         <CardContent className="py-14 text-center">
           {isArchiveView ? (
             <>
-              <p className="text-2xl mb-2">📦</p>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mx-auto mb-3">
+                <Archive className="h-5 w-5 text-[var(--muted-foreground)]" />
+              </div>
               <p className="font-medium">No archived errors</p>
               <p className="text-sm text-[var(--muted-foreground)] mt-1">
                 Archive errors you&apos;ve permanently mastered to keep the active list focused.
@@ -419,7 +421,9 @@ function ErrorList({
             </>
           ) : (
             <>
-              <p className="text-2xl mb-2">📝</p>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mx-auto mb-3">
+                <ScrollText className="h-5 w-5 text-[var(--muted-foreground)]" />
+              </div>
               <p className="font-medium">No errors match your filters</p>
               <p className="text-sm text-[var(--muted-foreground)] mt-1">
                 Try adjusting your search or filters, or log a new error.

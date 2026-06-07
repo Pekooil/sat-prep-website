@@ -1,5 +1,6 @@
 'use client'
 
+import { TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine,
@@ -24,7 +25,9 @@ export function ScoreTimeline({ scores }: ScoreTimelineProps) {
     return (
       <Card>
         <CardContent className="py-16 text-center">
-          <p className="text-4xl mb-3">📈</p>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-900/20 mx-auto mb-3">
+            <TrendingUp className="h-5 w-5 text-indigo-500" />
+          </div>
           <p className="font-medium">No score history yet</p>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">Log your first practice or official score to start tracking progress.</p>
         </CardContent>
@@ -47,8 +50,10 @@ export function ScoreTimeline({ scores }: ScoreTimelineProps) {
               contentStyle={{
                 backgroundColor: 'var(--card)',
                 border: '1px solid var(--border)',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 fontSize: '12px',
+                boxShadow: '0 4px 12px -2px rgba(15,23,42,0.12)',
+                padding: '8px 12px',
               }}
               formatter={(val, name) => [val, name]}
               labelFormatter={(label) => `Date: ${label}`}

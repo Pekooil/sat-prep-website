@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Save, Loader2, Bell, Mail, BellOff, TestTube2, CheckCircle2, Clock } from 'lucide-react'
+import { Save, Loader2, Bell, Mail, BellOff, TestTube2, CheckCircle2, Clock, ClipboardList, CalendarDays, AlertTriangle, FileText } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -157,7 +157,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <span className="text-base">📋</span>
+            <ClipboardList className="h-4 w-4 text-violet-500" />
             What to Remind
           </CardTitle>
           <p className="text-xs text-[var(--muted-foreground)]">
@@ -166,7 +166,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
         </CardHeader>
         <CardContent className="space-y-3">
           <PrefRow
-            icon="📅"
+            icon={<CalendarDays className="h-4 w-4 text-violet-600" />}
             label="Today's Assignments"
             description="Remind me about study tasks due today"
             checked={prefs.daily_assignment_reminder}
@@ -174,7 +174,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
             disabled={!anyEnabled}
           />
           <PrefRow
-            icon="⚠️"
+            icon={<AlertTriangle className="h-4 w-4 text-amber-500" />}
             label="Overdue Assignments"
             description="Alert me when I have incomplete tasks from previous days"
             checked={prefs.overdue_reminder}
@@ -182,7 +182,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
             disabled={!anyEnabled}
           />
           <PrefRow
-            icon="📝"
+            icon={<FileText className="h-4 w-4 text-indigo-600" />}
             label="Upcoming Practice Tests"
             description="Notify me about practice tests scheduled in the next 7 days"
             checked={prefs.practice_test_reminder}
