@@ -274,7 +274,7 @@ const STEPS: TutorialStep[] = [
     screenshotHint: 'Coming soon',
     zoomOrigin: '50% 50%',
     zoom: false,
-    hasScreenshot: false,
+    hasScreenshot: true,
     helpItems: [
       {
         q: 'What should I write in an error log entry?',

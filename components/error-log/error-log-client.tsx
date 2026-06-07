@@ -17,6 +17,7 @@ import { ErrorRow } from './error-row'
 import { MistakeTypeBadge } from './mistake-type-badge'
 import type { MistakeTypeKey } from './mistake-type-badge'
 import { MATH_DOMAINS, RW_DOMAINS, ERROR_TYPES } from '@/lib/constants'
+import { getCategoryColor } from '@/components/calendar/task-colors'
 import type { ErrorLog } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -28,6 +29,14 @@ const ALL_DOMAINS = [
   ...MATH_DOMAINS.map(d => ({ ...d, subject: 'math' as const })),
   ...RW_DOMAINS.map(d => ({ ...d, subject: 'reading_writing' as const })),
 ]
+
+const MISTAKE_BAR_COLOR: Record<MistakeTypeKey, string> = {
+  concept:  'bg-red-500',
+  careless: 'bg-amber-500',
+  time:     'bg-blue-500',
+  strategy: 'bg-orange-500',
+  other:    'bg-green-500',
+}
 
 // ─── Most Frequent Mistakes Summary ──────────────────────────────────────────
 
@@ -70,16 +79,13 @@ function FrequencySummary({ errors }: { errors: ErrorLog[] }) {
             <div key={t.value} className="space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <MistakeTypeBadge type={t.value} size="sm" />
-                <span className="text-xs text-[var(--muted-foreground)] shrink-0 font-mono">
-                  {t.unmastered > 0 && (
-                    <span className="text-red-500 mr-1">{t.unmastered} active</span>
-                  )}
-                  {t.total} total
+                <span className="text-xs text-[var(--muted-foreground)] shrink-0">
+                  {t.total - t.unmastered}/{t.total} reviewed
                 </span>
               </div>
               <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-slate-400 dark:bg-slate-500 transition-all"
+                  className={cn('h-full rounded-full transition-all', MISTAKE_BAR_COLOR[t.value])}
                   style={{ width: `${(t.total / maxCount) * 100}%` }}
                 />
               </div>
@@ -95,15 +101,21 @@ function FrequencySummary({ errors }: { errors: ErrorLog[] }) {
                 Weakest areas
               </p>
               <div className="flex flex-wrap gap-1">
-                {topCategories.map(([cat, count]) => (
-                  <span
-                    key={cat}
-                    className="inline-flex items-center gap-1 text-[10px] rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5"
-                  >
-                    {cat}
-                    <span className="font-bold text-red-500">{count}</span>
-                  </span>
-                ))}
+                {topCategories.map(([cat, count]) => {
+                  const cc = getCategoryColor(cat)
+                  return (
+                    <span
+                      key={cat}
+                      className={cn(
+                        'inline-flex items-center gap-1 text-[10px] rounded border px-1.5 py-0.5',
+                        cc.bg, cc.border, cc.text,
+                      )}
+                    >
+                      {cat}
+                      <span className="font-bold">{count}</span>
+                    </span>
+                  )
+                })}
               </div>
             </div>
           )}
