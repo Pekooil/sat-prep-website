@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Calendar, AlertCircle, BarChart2, Settings } from 'lucide-react'
+import { Home, Calendar, AlertCircle, BarChart2, Package, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const mobileLinks = [
@@ -10,6 +10,7 @@ const mobileLinks = [
   { href: '/calendar',  label: 'Calendar', icon: Calendar },
   { href: '/error-log', label: 'Errors',   icon: AlertCircle },
   { href: '/data',      label: 'Data',     icon: BarChart2 },
+  { href: '/inventory', label: 'QB Stock', icon: Package },
   { href: '/settings',  label: 'Settings', icon: Settings },
 ]
 

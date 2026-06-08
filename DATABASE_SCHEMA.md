@@ -19,6 +19,7 @@ All tables have Row Level Security enabled. Every policy uses `auth.uid()` so qu
 | `score_history` | Composite + section scores over time for charts |
 | `notifications` | In-app alerts (reminders, achievements, system messages) |
 | `replan_audit_logs` | Immutable record of every adaptive replanning run |
+| `question_inventory` | Global catalog of CB QB available question counts per category (admin-managed, no user_id) |
 
 ---
 
@@ -265,6 +266,36 @@ Immutable record of every Adaptive Replanner run. One row per trigger event.
 **RLS:** `Users can view own replan logs` — `auth.uid() = user_id` for ALL operations.
 
 **Note:** Rows in this table are never updated or deleted by application code — they are append-only.
+
+---
+
+## question_inventory
+
+Global admin-managed catalog of College Board Question Bank available question counts. No user_id — shared across all users. Stores ONLY counts; never stores question text, choices, or explanations.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `uuid` | PK, auto |
+| `section` | `text` | `'Reading and Writing' \| 'Math'` |
+| `domain` | `text` | Domain label (e.g. "Algebra") |
+| `skill` | `text` | Skill label (e.g. "Linear equations in one variable") |
+| `difficulty` | `text` | `'easy' \| 'medium' \| 'hard'` |
+| `available_count` | `integer` | Admin-set count of available QB questions; ≥ 0 |
+| `created_at` | `timestamptz` | auto |
+| `updated_at` | `timestamptz` | auto |
+
+**Unique constraint:** `(section, domain, skill, difficulty)` — upsert-safe.
+
+**RLS:** Authenticated users can SELECT, INSERT, UPDATE, DELETE (no admin role system).
+
+**Indexes:** `idx_question_inventory_section_domain` on `(section, domain, difficulty)`.
+
+**Computed fields (not stored — derived at query time):**
+- `assigned` = sum of question counts from user's `calendar_tasks` matching domain+skill+difficulty
+- `completed` = sum of `questions_attempted` from user's `question_sessions` matching domain+skill
+- `remaining` = `available_count − assigned`
+
+**Planner integration:** `PlanStoreService.save()` loads inventory before inserting tasks and calls `applyInventoryCap()` to reduce question counts when cumulative allocations would exceed `available_count`.
 
 ---
 

@@ -15,6 +15,7 @@ export type TopicMastery = Database['public']['Tables']['topic_mastery']['Row']
 export type PlanVersion = Database['public']['Tables']['plan_versions']['Row']
 export type ScorePrediction = Database['public']['Tables']['score_predictions']['Row']
 export type AdaptiveRecommendation = Database['public']['Tables']['adaptive_recommendations']['Row']
+export type QuestionInventory = Database['public']['Tables']['question_inventory']['Row']
 export type NotificationPreferences = Database['public']['Tables']['notification_preferences']['Row']
 
 export type Subject = 'math' | 'reading_writing' | 'both'

@@ -103,8 +103,8 @@ export const NAV_LINKS = [
   { href: '/calendar', label: 'Calendar' },
   { href: '/error-log', label: 'Error Log' },
   { href: '/data', label: 'Data' },
+  { href: '/inventory', label: 'Inventory' },
   { href: '/tutorial', label: 'Tutorial' },
-  { href: '/info', label: 'Info & Contact' },
 ] as const
 
 export const SAT_SCORE_MIN = 400

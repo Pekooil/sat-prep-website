@@ -390,3 +390,65 @@ DO $$ BEGIN
       ON score_predictions FOR ALL USING (auth.uid() = user_id);
   END IF;
 END $$;
+
+-- ─── Question Inventory — Block 6 Migration ────────────────────────────────────
+-- Global catalog of College Board Question Bank available question counts.
+-- Admin-managed; no user_id (shared across all users).
+
+CREATE TABLE IF NOT EXISTS question_inventory (
+  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  section         TEXT        NOT NULL CHECK (section IN ('Reading and Writing', 'Math')),
+  domain          TEXT        NOT NULL,
+  skill           TEXT        NOT NULL,
+  difficulty      TEXT        NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
+  available_count INTEGER     NOT NULL DEFAULT 0 CHECK (available_count >= 0),
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT question_inventory_unique UNIQUE (section, domain, skill, difficulty)
+);
+ALTER TABLE question_inventory ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can read question inventory"
+  ON question_inventory FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated users can insert question inventory"
+  ON question_inventory FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated users can update question inventory"
+  ON question_inventory FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated users can delete question inventory"
+  ON question_inventory FOR DELETE USING (auth.role() = 'authenticated');
+
+CREATE INDEX IF NOT EXISTS idx_question_inventory_section_domain
+  ON question_inventory(section, domain, difficulty);
+
+-- Development seed data (placeholder counts — replace with actual CB QB counts)
+INSERT INTO question_inventory (section, domain, skill, difficulty, available_count) VALUES
+  ('Math', 'Algebra', 'Linear equations in one variable',  'easy',   80),
+  ('Math', 'Algebra', 'Linear equations in two variables', 'easy',   70),
+  ('Math', 'Algebra', 'Linear functions',                  'medium', 65),
+  ('Math', 'Algebra', 'Systems of linear equations',       'medium', 60),
+  ('Math', 'Algebra', 'Linear inequalities',               'hard',   55),
+  ('Math', 'Advanced Math', 'Equivalent expressions',              'easy',   65),
+  ('Math', 'Advanced Math', 'Nonlinear equations in one variable', 'medium', 62),
+  ('Math', 'Advanced Math', 'Systems of equations',                'medium', 58),
+  ('Math', 'Advanced Math', 'Nonlinear functions',                 'hard',   50),
+  ('Math', 'Problem-Solving and Data Analysis', 'Ratios, rates, and proportional relationships', 'easy',   70),
+  ('Math', 'Problem-Solving and Data Analysis', 'Percentages',                                    'easy',   65),
+  ('Math', 'Problem-Solving and Data Analysis', 'Two-variable data: models and scatterplots',     'medium', 55),
+  ('Math', 'Problem-Solving and Data Analysis', 'Probability and conditional probability',        'medium', 52),
+  ('Math', 'Problem-Solving and Data Analysis', 'Evaluating statistical claims',                  'hard',   48),
+  ('Math', 'Geometry and Trigonometry', 'Area and volume',                  'easy',   58),
+  ('Math', 'Geometry and Trigonometry', 'Lines, angles, and triangles',     'easy',   55),
+  ('Math', 'Geometry and Trigonometry', 'Right triangles and trigonometry', 'medium', 52),
+  ('Math', 'Geometry and Trigonometry', 'Circles',                          'hard',   45),
+  ('Reading and Writing', 'Information and Ideas', 'Central ideas and details',          'easy',   85),
+  ('Reading and Writing', 'Information and Ideas', 'Command of evidence (textual)',       'medium', 72),
+  ('Reading and Writing', 'Information and Ideas', 'Command of evidence (quantitative)', 'medium', 68),
+  ('Reading and Writing', 'Information and Ideas', 'Inferences',                         'hard',   60),
+  ('Reading and Writing', 'Craft and Structure', 'Words in context',           'easy',   90),
+  ('Reading and Writing', 'Craft and Structure', 'Text structure and purpose', 'medium', 75),
+  ('Reading and Writing', 'Craft and Structure', 'Cross-text connections',     'hard',   55),
+  ('Reading and Writing', 'Expression of Ideas', 'Transitions',          'easy',   75),
+  ('Reading and Writing', 'Expression of Ideas', 'Rhetorical synthesis', 'medium', 65),
+  ('Reading and Writing', 'Standard English Conventions', 'Boundaries',                'easy',   80),
+  ('Reading and Writing', 'Standard English Conventions', 'Form, structure, and sense', 'medium', 72)
+ON CONFLICT (section, domain, skill, difficulty) DO NOTHING;

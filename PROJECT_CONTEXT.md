@@ -41,9 +41,12 @@ The project lives at **`/Users/darcywang/sat-prep-website`**, not at `~/Desktop/
 | `/error-log` | Mistake tracking with mastery status |
 | `/data` | Score timeline, accuracy charts, session analytics |
 | `/tutorial` | 7-step College Board Question Bank onboarding tutorial; per-step progress tracker (localStorage); collapsible help accordions; FAQ section |
-| `/info` | About, FAQ, contact form |
+| `/settings` | Notification preferences (email + in-app reminders, timezone, reminder types) |
+| `/inventory` | Question Inventory — tracks CB QB available question counts per category; prevents planner over-assignment; admin CRUD + bulk CSV/JSON import |
 
 All dashboard routes are protected by middleware that checks the Supabase session.
+
+> **Removed:** `/info` (About, FAQ, contact form) was deleted in Session 10.
 
 ---
 
@@ -59,14 +62,21 @@ All dashboard routes are protected by middleware that checks the Supabase sessio
 - **Calendar** — three views (month/week/agenda) with view switcher; task cards color-coded by domain category; clicking any task opens a right-side drawer showing QB filters, step-by-step QB instructions, and expected completion time; drag-and-drop rescheduling updates Supabase immediately; replanner metadata displayed in drawer; practice test completion opens score dialog; session workflow accessible from drawer footer
 - **Error Log** — create errors, mark mastered, review count tracking; triggers replanning on creation
 - **Data / Analytics** — score timeline, accuracy charts, category stats, session summary cards; practice/official/full_length test score submission triggers replanning
-- **QB Tutorial** (`/tutorial`) — 7-step interactive onboarding walkthrough for the College Board Question Bank workflow; screenshot placeholders for each step; per-step collapsible help Q&A accordions; progress tracker with localStorage persistence and progress bar; FAQ section; bottom CTA linking to QB and Calendar; accessible from main nav as "QB Tutorial"
-- **Info page** — about section, FAQ accordion, contact form
+- **QB Tutorial** (`/tutorial`) — 7-step interactive onboarding walkthrough for the College Board Question Bank workflow; per-step collapsible help Q&A accordions; progress tracker with localStorage persistence and progress bar; FAQ section
+- **Settings** (`/settings`) — notification preferences: email + in-app reminder channels, reminder types (daily, overdue, practice test), timezone, test-send button
+- **UI/UX overhaul** — cohesive violet/slate design tokens, Lucide SVG icons throughout (all emoji removed), refined dark mode palette, calendar visual states (past/today/future/task dots), chart tooltip polish
 
 ### 🔜 Not Yet Built
 
-- **"Replan Now" button** — no UI to force a manual replanning pass
-- **Notifications UI** — table is populated but no real-time badge/alert
-- **Cleanup:** `log-session-dialog.tsx` is superseded by `SessionWorkflowDialog` and can be deleted
+- **"Replan Now" button** — `triggerManualReplan()` action exists; no UI entry point yet
+- **Notifications real-time badge** — `notifications` table is populated but unread count is not surfaced in the navbar bell in real time
+- **QB Tutorial screenshots** — `ScreenshotPlaceholder` components in `tutorial-client.tsx` await real `<Image>` tags pointing to `public/tutorial/step-{1–7}.png`
+
+### 🗑 Dead Code (safe to delete)
+
+- `components/calendar/day-tasks-panel.tsx` + `log-session-dialog.tsx` — legacy, never rendered
+- `components/data/topic-rankings.tsx`, `stats-cards.tsx`, `score-timeline.tsx`, `accuracy-chart.tsx`, `category-stats.tsx` — legacy, not imported
+- `components/ai-coach/ai-coach-panel.tsx` — route deleted in Session 8, component unused
 
 > **Note:** QB workflow instructions appear in two places: (1) the task drawer on the Calendar page (concise 7-step quick guide per session), and (2) the dedicated `/tutorial` page (full interactive tutorial with help accordions, progress tracking, and FAQ).
 

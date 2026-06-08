@@ -7,6 +7,8 @@
 //  2. Batch-insert calendar_tasks — one row per StudyBlock / ReviewBlock /
 //     PracticeTestBlock.  Rest days produce no tasks.
 //  3. Use a single batched insert for performance (vs. N individual inserts).
+//  4. Before inserting, load question_inventory limits and cap question counts
+//     so the plan never assigns more questions than are available in the QB.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -194,17 +196,27 @@ export class PlanStoreService {
 
     const planId = plan.id as string
 
-    // ── 3. Build task rows from all non-rest days ────────────────────────────
+    // ── 3a. Load inventory limits (non-blocking — plan proceeds even if empty) ─
+    const inventoryLimits = await this.loadInventoryLimits()
+    // Track cumulative question allocations within this plan: key → count used
+    const inventoryUsed = new Map<string, number>()
+
+    // ── 3b. Build task rows from all non-rest days ──────────────────────────
     const tasks: TaskInsertRow[] = []
+    const nearlyExhausted: string[] = []
 
     for (const day of schedule) {
       if (day.dayType === 'rest' || day.blocks.length === 0) continue
 
       for (const block of day.blocks) {
         if (this.isStudyBlock(block, day.dayType)) {
-          tasks.push(studyBlockToTask(day, block as StudyBlock, input.userId, planId))
+          const studyBlock = block as StudyBlock
+          const cappedBlock = this.applyInventoryCap(studyBlock, inventoryLimits, inventoryUsed, nearlyExhausted)
+          tasks.push(studyBlockToTask(day, cappedBlock, input.userId, planId))
         } else if (day.dayType === 'review') {
-          tasks.push(reviewBlockToTask(day, block as ReviewBlock, input.userId, planId))
+          const reviewBlock = block as ReviewBlock
+          const cappedBlock = this.applyInventoryCapReview(reviewBlock, inventoryLimits, inventoryUsed)
+          tasks.push(reviewBlockToTask(day, cappedBlock, input.userId, planId))
         } else if (day.dayType === 'practice_test') {
           tasks.push(practiceTestToTask(day, block as PracticeTestBlock, input.userId, planId))
         }
@@ -238,8 +250,80 @@ export class PlanStoreService {
 
   // ─── Private Helpers ──────────────────────────────────────────────────────
 
-  private isStudyBlock(block: unknown, dayType: string): boolean {
+  private isStudyBlock(_block: unknown, dayType: string): boolean {
     return dayType === 'study'
+  }
+
+  /** Load question_inventory as a map: `${domain}|||${skill}|||${difficulty}` → available_count */
+  private async loadInventoryLimits(): Promise<Map<string, number>> {
+    const map = new Map<string, number>()
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (this.supabase as any)
+        .from('question_inventory')
+        .select('domain, skill, difficulty, available_count')
+      if (data) {
+        for (const row of data) {
+          const key = `${row.domain}|||${row.skill}|||${row.difficulty}`
+          map.set(key, row.available_count as number)
+        }
+      }
+    } catch { /* inventory table may not exist yet — proceed without limits */ }
+    return map
+  }
+
+  /**
+   * Cap a StudyBlock's questionCount against remaining inventory.
+   * Mutates inventoryUsed in place. Appends to nearlyExhausted if < 20% remaining.
+   */
+  private applyInventoryCap(
+    block: StudyBlock,
+    limits: Map<string, number>,
+    used: Map<string, number>,
+    nearlyExhausted: string[],
+  ): StudyBlock {
+    const key = `${block.cbFilters.domain}|||${block.cbFilters.skill}|||${block.cbFilters.difficulty}`
+    const available = limits.get(key)
+    if (available === undefined) return block   // no limit set — pass through unchanged
+
+    const soFar    = used.get(key) ?? 0
+    const remaining = Math.max(0, available - soFar)
+
+    if (remaining <= 0) {
+      // Exhausted — assign minimum viable set (1 question) so the task still exists
+      used.set(key, soFar + 1)
+      return { ...block, questionCount: 1 }
+    }
+
+    const capped = Math.min(block.questionCount, remaining)
+    used.set(key, soFar + capped)
+
+    // Flag nearly exhausted (< 20% of available remaining after this allocation)
+    const afterPct = (remaining - capped) / available
+    if (afterPct < 0.2 && !nearlyExhausted.includes(key)) {
+      nearlyExhausted.push(key)
+    }
+
+    return capped === block.questionCount ? block : { ...block, questionCount: capped }
+  }
+
+  /** Lighter version for review blocks — caps but doesn't flag nearly-exhausted */
+  private applyInventoryCapReview(
+    block: ReviewBlock,
+    limits: Map<string, number>,
+    used: Map<string, number>,
+  ): ReviewBlock {
+    const key = `${block.cbFilters.domain}|||${block.cbFilters.skill}|||${block.cbFilters.difficulty}`
+    const available = limits.get(key)
+    if (available === undefined) return block
+
+    const soFar    = used.get(key) ?? 0
+    const remaining = Math.max(0, available - soFar)
+    if (remaining <= 0) { used.set(key, soFar + 1); return { ...block, questionCount: 1 } }
+
+    const capped = Math.min(block.questionCount, remaining)
+    used.set(key, soFar + capped)
+    return capped === block.questionCount ? block : { ...block, questionCount: capped }
   }
 
   private buildPlanTitle(

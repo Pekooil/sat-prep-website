@@ -1,12 +1,106 @@
 # Project Handoff
 
-This document is updated at the end of every session. It records the current feature status, known issues, and recommended next steps for whoever picks up this project next. Read `PROJECT_CONTEXT.md` first for the full-picture overview.
+This document is updated at the end of every session. It records current feature status, known issues, and recommended next steps. Read `AI_HANDOFF.md` for the deep technical reference and `PROJECT_CONTEXT.md` for the full-picture overview.
 
 ---
 
 ## Last Updated
 
-2026-06-06 (session 6)
+2026-06-07 (Session 11)
+
+---
+
+## What Was Done This Session
+
+### Session 11 — Question Inventory Page
+
+**New feature:** Full Question Inventory page at `/inventory`.
+
+#### Database
+- New table `question_inventory` (global, no user_id) — section, domain, skill, difficulty, available_count
+- RLS: authenticated users can read/insert/update/delete
+- 29 seed rows covering all 8 SAT domains × all skills × difficulties
+- Migration SQL added to `supabase/schema.sql` (Block 6)
+- TypeScript types added to `types/database.ts` and `types/index.ts`
+
+#### Server Actions (`actions/question-inventory.ts`)
+- `getInventoryWithStats()` — inventory + per-user assigned/completed/remaining computed from calendar_tasks + question_sessions
+- `createInventoryItem()`, `updateInventoryItem()`, `deleteInventoryItem()`
+- `bulkImportInventory()` — upsert via JSON or CSV, validates section/difficulty/count
+- `getInventoryLimits()` — helper for the planner engine
+
+#### Navigation
+- Added `Inventory` to desktop nav (`lib/constants.ts` NAV_LINKS)
+- Added `QB Stock` link with Package icon to mobile nav
+
+#### Page & Components (`app/(dashboard)/inventory/`, `components/inventory/`)
+- `page.tsx` — server component, noStore(), fetches via getInventoryWithStats
+- `inventory-client.tsx` — tab orchestrator (Overview / Inventory / Admin)
+- `summary-cards.tsx` — 4 stat cards: Available, Assigned, Completed, Remaining
+- `progress-visualization.tsx` — SVG circular progress + section stacked progress bars
+- `inventory-table.tsx` — sortable, filterable, searchable, paginated table with color-coded Remaining badges
+- `inventory-charts.tsx` — Recharts: by-section bar, by-difficulty bar, most-depleted-skills horizontal bar
+- `inventory-admin.tsx` — CRUD editor + bulk JSON/CSV import (file upload + paste)
+- `empty-state.tsx` — empty state with Import + Create buttons
+
+#### Planner Integration (`lib/study-plan-engine/plan-store.service.ts`)
+- `loadInventoryLimits()` — loads inventory map at plan-generation time
+- `applyInventoryCap()` — caps StudyBlock question counts against remaining inventory; tracks cumulative per domain+skill+difficulty
+- `applyInventoryCapReview()` — same for ReviewBlocks
+- Gracefully no-ops if inventory table is empty or unavailable
+
+---
+
+## What Was Done Last Session
+
+### Session 10 — UI/UX Overhaul + Info Page Deletion
+
+#### UI/UX Overhaul (visual-only — no logic/type changes)
+
+**Design system (`app/globals.css`)**
+- Refined dark mode palette: `--background: #0c1524`, `--card: #172033`, `--border: #2a3a52`, `--muted: #1a2840`, `--muted-foreground: #8facc8`
+- Added `--shadow-violet` CSS var (violet glow drop shadow)
+- Added `sp-shimmer` utility class + `sp-fade-in-up` keyframe animation
+- Custom `input[type="range"]` thumb styling (violet, shadowed)
+
+**Icon policy — all emoji replaced with Lucide SVG icons**
+Every UI emoji was replaced. No emoji remain in rendered component JSX. Toast strings also cleaned up.
+
+| Component | Icons added |
+|---|---|
+| `notifications-dropdown.tsx` | Clock, Trophy, Radio, Bot |
+| `welcome-banner.tsx` | Flame, CalendarDays, Target, PartyPopper |
+| `score-card.tsx` | TrendingUp, Target, Sparkles, CalendarCheck, AlertCircle |
+| `ai-planner-trigger.tsx` | CheckCircle2 (success state) |
+| `consistency-chart.tsx` | Flame (streak display) |
+| `notification-prefs.tsx` | ClipboardList, CalendarDays, AlertTriangle, FileText |
+| `step-3-analysis.tsx` | AlertTriangle, TrendingUp, CheckCircle2 (LevelBadge) |
+| `step-4-recommendations.tsx` | ClipboardList (QB Filters), CheckCircle2 (study tips) |
+| `day-tasks-panel.tsx` | ClipboardList (QB Filters label) |
+| `error-row.tsx` | CheckCircle2 in Mastered badge and "Mark mastered" button |
+| All data chart empty states | Lucide icons in styled containers |
+| `tutorial-client.tsx` | `'Critical'` badge text (was `'⚠️ Critical'`) |
+
+**Calendar (`calendar-client.tsx`)**
+- Month view: past cells → `bg-slate-50/70 dark:bg-slate-900/40`, muted day numbers; today cell → `bg-violet-50/60 dark:bg-violet-900/10`; future cells with tasks → small violet dot indicator
+- Week view: today column → `border-violet-300 dark:border-violet-700`; past column headers muted at `opacity-60`
+
+**Navbar (`navbar.tsx`)**
+- Pill nav with `bg-slate-100/80 dark:bg-slate-800/80` frosted glass + ring border
+- Active link: white card background + violet text + ring
+
+**Mobile nav (`mobile-nav.tsx`)**
+- Active item: `bg-violet-100 dark:bg-violet-900/40` pill
+
+**Chart tooltips (all data charts)**
+- Unified `TIP_STYLE` with `boxShadow: '0 4px 12px -2px rgba(15,23,42,0.12)'`
+
+#### Info Page Deletion
+
+- Deleted `app/(dashboard)/info/` (page.tsx, loading.tsx, error.tsx)
+- Deleted `components/info/` (about-section.tsx, faq-accordion.tsx, contact-form.tsx)
+- Removed `{ href: '/info', label: 'Info & Contact' }` from `NAV_LINKS` in `lib/constants.ts`
+- Desktop nav now has 5 links: Home · Calendar · Error Log · Data · Tutorial
 
 ---
 
@@ -16,230 +110,132 @@ This document is updated at the end of every session. It records the current fea
 - Next.js 16.2.7 App Router at `/Users/darcywang/sat-prep-website`
 - Supabase auth + database (`lib/supabase/client.ts`, `lib/supabase/server.ts`)
 - `middleware.ts` guards all dashboard routes
-- Full Postgres schema in `supabase/schema.sql` with RLS on all 9 tables
-- Hand-written TypeScript types in `types/database.ts`
+- Full Postgres schema in `supabase/schema.sql` with RLS on all tables
+- Hand-written TypeScript types in `types/database.ts` + `types/index.ts`
 
 ### Authentication
 - Email/password sign-in and sign-up via Supabase Auth
-- `actions/auth.ts` — `signIn`, `signUp`, `signOut`
+- `actions/auth.ts` — `signIn`, `signUp` (handles email confirmation flow), `signOut`
 - Postgres trigger auto-creates a `users` row on signup
 
 ### Onboarding (`/onboarding`)
-- 4-step wizard — basics, domain performance entry, diagnostic analysis, recommendations
-- Saves profile, diagnostic tests, question sessions, study plan, score history, notifications
+- 4-step wizard — basics, domain performance entry, diagnostic analysis, deterministic recommendations
+- Saves profile, diagnostic tests, question sessions, study plan, score history, welcome notification
 - Fires `runAdaptiveReplanner` on completion to seed initial task metadata
 
 ### Study Plan Engine (`lib/study-plan-engine/`)
 - Deterministic day-by-day schedule generator; entry point: `StudyPlanEngine.generate(input)`
 - Writes one `study_plans` row + per-day `calendar_tasks` rows with QB filters and replanner metadata
+- Supports `daySchedule` override (any DOW can be study/review/rest)
+- Domain rotation uses running `studyDayGlobalIdx` counter (not day-of-week)
 
 ### Adaptive Replanner (`lib/adaptive-replanner/`)
 - Entry point: `runAdaptiveReplanner(supabase, userId, triggeredBy, triggerId?)`
-- Re-ranks all 8 domains, updates future unlocked tasks, returns `DomainChange[]` + `predictedScore`
-- Triggered by: question session, error log, onboarding, practice/official test score
-- Writes an audit log row to `replan_audit_logs` on each run
+- **Trigger types:** `question_session` | `error_log` | `practice_test_score` | `manual` | `behind_schedule`
+- 6-factor mastery score (accuracy × 0.30, recent × 0.25, improvement × 0.15, mistakes × 0.15, confidence × 0.10, consistency × 0.05)
+- Volume multipliers: Mastered ×0.70 / Proficient ×1.00 / Developing ×1.25 / Needs Work ×1.50
+- Writes: `topic_mastery`, `score_predictions`, `plan_versions`, `adaptive_recommendations`, `replan_audit_logs`
+- Returns `ReplannerResult` with `DomainChange[]`, `predictedScore`, `auditLogId`
 
 ### Calendar (`/calendar`)
 - **Month / Week / Agenda views** with view switcher; color-coded task chips; drag-and-drop rescheduling
-- **Task Drawer** — QB filters, step-by-step instructions, expected time, adaptive-planner stats
+- **Visual states:** past cells muted, today cell violet tint, future task dot indicators
+- **Task Drawer** — QB filters (ClipboardList icon label), step-by-step QB instructions, expected time, adaptive-planner stats
 - Footer actions: "Log Session" → `SessionWorkflowDialog`, "Enter Score" → `PracticeTestScoreDialog`
 
-### Session Workflow (`SessionWorkflowDialog`) — updated sessions 3 & 5
+### Session Workflow (`SessionWorkflowDialog`)
 - **6-phase UX:** idle → active → review → results → missed_analysis → plan_updated
-- Countdown timer (71s/q R&W, 95s/q Math), per-question A/B/C/D entry, correct-answer review, accuracy vs 90% target
-- **Missed-analysis phase:** per-wrong-answer selects for subtopic + mistake type; answers (A–D) passed through automatically to auto-created error logs; "Skip Analysis" skips tagging; auto-skipped on 100% accuracy
-- **Auto error log creation:** `student_answer` + `correct_answer` now stored in auto-created error_log rows
-- **Plan Updated phase:** improvement %, topic mastery bar, auto-created error log notice
+- Countdown timer (71s/q R&W, 95s/q Math), per-question A/B/C/D entry, correct-answer review
+- **Missed-analysis phase:** per-wrong-answer selects for subtopic + mistake type; auto-creates `error_log` rows
+- **Plan Updated phase:** improvement %, topic mastery bar, replanner domain changes, predicted score
 
-### Error Log (`/error-log`) — fully rebuilt sessions 4 & 5
+### Error Log (`/error-log`)
+- Full-text search, multi-field filters, sort, Active/Archived tabs
+- Edit dialog, confidence rating (1–5), question ID chip (8-char alphanumeric)
+- Mastered badge (CheckCircle2 icon), "Mark mastered" button with icon
+- Mistake-type badges: BookOpen / Zap / Clock / Target / HelpCircle
+- `archiveErrorLog(id, archived)` action
 
-#### Database columns on `error_logs` (all new — apply migration below):
-| Column | Type | Notes |
-|---|---|---|
-| `corrected_explanation` | TEXT | Student's own explanation after review |
-| `confidence_rating` | INTEGER 1–5 | How confident they won't repeat |
-| `archived` | BOOLEAN DEFAULT FALSE | Soft-delete |
-| `custom_mistake_type` | TEXT | Free-text label when `error_type = 'other'` |
-| `question_id` | TEXT | 8-char alphanumeric QB identifier (no question content stored) |
-| `student_answer` | TEXT ('A'–'D') | Wrong answer the student chose |
-| `correct_answer` | TEXT ('A'–'D') | Correct answer |
-
-#### Features
-- **Search** — full-text across description, domain, skill, approaches, corrected explanation
-- **Filters** — section, domain, mistake type, mastery status (collapsible panel with filter-count badge)
-- **Sort** — newest / oldest / domain A–Z / mistake type / confidence low→high / confidence high→low
-- **Active / Archived tabs** with entry counts; archive/restore per row
-- **Edit dialog** (`EditErrorDialog`) — pre-populated form for all fields
-- **Mistake-type badges** (`MistakeTypeBadge`) — color+icon: BookOpen (Concept Gap) / Zap (Careless Error) / Clock (Timing Issue) / Target (Strategy Error) / HelpCircle (Other/custom)
-- **Custom mistake type** — when "Other" is selected, a text field captures any label; shown in badge
-- **Question ID chip** — monospace, `#CBFB2B8D` style; 8-char alphanumeric, validated, stored uppercase
-- **Answer display** — red chip (wrong) + arrow + green chip (correct) in badge row and expanded view
-- **Confidence rating** — 1–5 picker (colored red→green); shown as colored pill on each row
-- **Corrected explanation** — blue-highlighted block in expanded view
-- **"Most Frequent Mistakes" summary card** — mistake-type breakdown bars (active/total counts), weakest domains, mastery %
-- **`archiveErrorLog(id, archived)`** action added to `actions/error-logs.ts`
-- All filtering/sorting client-side in `error-log-client.tsx`; hook loads all errors once
-
-#### Label changes (UI only, DB columns unchanged)
-- "Category" → **"Domain"** throughout error log UI and filter panel
-- "Subcategory" → **"Skill"** throughout error log UI and filter panel
+#### DB columns on `error_logs` (apply Block 2 migration if not done):
+`corrected_explanation`, `confidence_rating`, `archived`, `custom_mistake_type`, `question_id`, `student_answer`, `correct_answer`
 
 ### Data / Analytics (`/data`)
-- Score timeline, accuracy charts, category stats, session summary cards
-- `addScoreEntry` triggers replanning for practice/official/full_length test types
+- 8 parallel server fetches with `noStore()`
+- Sections: Performance, Topic Analysis, Mistake Analysis, Study Habits, Planning Intelligence
+- `useReplanLogs` hook bypasses router cache for fresh replan data
+- `PredictedScoreWidget` + `TopicMasteryCards` imported from `components/ai-coach/`
 
 ### QB Tutorial (`/tutorial`)
-- 7-step interactive onboarding for the College Board QB workflow; per-step help accordions; progress tracker (localStorage); FAQ section; bottom CTA
+- 7-step interactive QB workflow walkthrough; per-step help accordions; localStorage progress tracker; FAQ
 
-### Info Page (`/info`)
-- About, FAQ accordion, contact form
+### Settings (`/settings`)
+- Notification preferences: email + in-app channels, reminder types (daily/overdue/practice test), timezone
+- `saveNotificationPreferences()` + `sendTestReminder()` server actions
 
 ---
 
 ## Required DB Migrations
 
-**Apply ALL of the following in Supabase Dashboard → SQL Editor.** The schema.sql file is the reference.
+Run all three blocks in Supabase SQL Editor. Idempotent (safe to re-run).
+Full SQL in `AI_HANDOFF.md` and `supabase/schema.sql`.
 
-```sql
--- calendar_tasks: Adaptive Replanner columns
-ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS priority_score         NUMERIC    DEFAULT 0;
-ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS mastery_target         INTEGER    DEFAULT 0;
-ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS estimated_score_impact NUMERIC    DEFAULT 0;
-ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replanning_weight      NUMERIC    DEFAULT 0;
-ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS replan_locked          BOOLEAN    DEFAULT FALSE;
-ALTER TABLE calendar_tasks ADD COLUMN IF NOT EXISTS last_replanned_at      TIMESTAMPTZ;
+| Block | Tables/columns |
+|---|---|
+| Block 1 | `calendar_tasks` replanner columns + `replan_audit_logs` |
+| Block 2 | `error_logs` extended columns |
+| Block 3 | `topic_mastery`, `plan_versions`, `score_predictions`, `adaptive_recommendations` |
 
-CREATE INDEX IF NOT EXISTS idx_calendar_tasks_replanner
-  ON calendar_tasks(user_id, task_date, replanning_weight) WHERE NOT replan_locked;
-
-CREATE TABLE IF NOT EXISTS replan_audit_logs (
-  id                    UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id               UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  triggered_by          TEXT        NOT NULL CHECK (triggered_by IN ('question_session','error_log','practice_test_score','manual')),
-  trigger_id            UUID,
-  tasks_updated         INTEGER     DEFAULT 0,
-  domains_reprioritized JSONB,
-  changes_summary       TEXT,
-  created_at            TIMESTAMPTZ DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_replan_audit_user ON replan_audit_logs(user_id, created_at DESC);
-ALTER TABLE replan_audit_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can view own replan logs" ON replan_audit_logs FOR ALL USING (auth.uid() = user_id);
-
--- error_logs: all new columns (sessions 3–5)
-ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS corrected_explanation TEXT;
-ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS confidence_rating     INTEGER CHECK (confidence_rating BETWEEN 1 AND 5);
-ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS archived              BOOLEAN DEFAULT FALSE;
-ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS custom_mistake_type   TEXT;
-ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS question_id           TEXT;
-ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS student_answer        TEXT CHECK (student_answer IN ('A','B','C','D'));
-ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS correct_answer        TEXT CHECK (correct_answer IN ('A','B','C','D'));
-CREATE INDEX IF NOT EXISTS idx_error_logs_user_archived ON error_logs(user_id, archived);
-```
-
-**Verify with:**
-```sql
--- Should return 6 rows
-SELECT column_name FROM information_schema.columns
-WHERE table_name = 'calendar_tasks'
-  AND column_name IN ('priority_score','mastery_target','estimated_score_impact',
-                      'replanning_weight','replan_locked','last_replanned_at');
-
--- Should not error
-SELECT COUNT(*) FROM replan_audit_logs;
-
--- Should return 7 rows
-SELECT column_name FROM information_schema.columns
-WHERE table_name = 'error_logs'
-  AND column_name IN ('corrected_explanation','confidence_rating','archived',
-                      'custom_mistake_type','question_id','student_answer','correct_answer');
-```
+If you see `Could not find column X in schema cache`: run migrations, then reload schema cache via Supabase Dashboard → Database → Reload Schema Cache.
 
 ---
 
-## UI/UX Overhaul (Session 6)
+## Not Yet Built
 
-Complete visual and UX polish pass — no logic, data, or TypeScript types changed.
+1. **"Replan Now" UI** — `triggerManualReplan()` action exists in `actions/adaptive-replanner.ts`. Still need a button in the UI (calendar header or home page).
 
-### Design System (`app/globals.css`)
-- Added `@keyframes sp-shimmer` and `sp-fade-in-up` for skeleton/entrance animations
-- Added `.sp-shimmer` utility class
-- Refined dark mode palette: `--background: #0c1524`, `--card: #172033`, `--border: #2a3a52`, `--muted: #1a2840`
-- Added `--shadow-violet` CSS custom property (violet glow drop shadow)
-- Custom `input[type="range"]` thumb styling with violet color and shadow
+2. **Notifications real-time badge** — `notifications` table is populated, `NotificationsDropdown` renders the list, but there is no live unread count on the bell icon. Options: Supabase Realtime subscription, or fetch-on-mount in the dropdown.
 
-### Layout & Navigation
-- **`components/layout/navbar.tsx`** — pill nav with `bg-slate-100/80` frosted glass, ring border; active link gets white bg card + violet text
-- **`components/layout/mobile-nav.tsx`** — active item gets `bg-violet-100 dark:bg-violet-900/40` pill
-- **`components/layout/notifications-dropdown.tsx`** — emoji type icons replaced with Lucide (`Clock`, `Trophy`, `Radio`, `Bot`); styled empty state
-
-### Home Page Components
-- **`components/home/score-card.tsx`** — colored top accent stripe, Lucide icons, hover lift effect
-- **`components/home/welcome-banner.tsx`** — decorative rings, Lucide `Flame`/`CalendarDays`/`PartyPopper`/`Target` icons replacing all emoji
-- **`components/home/ai-planner-trigger.tsx`** — `CheckCircle2` icon for success state (was ✅ emoji)
-
-### Calendar
-- **`components/calendar/calendar-client.tsx`** — month view: past cells muted bg, today cell violet tint, future task dot indicators; week view: today column border-violet, past column opacity muted
-- **`components/calendar/day-tasks-panel.tsx`** — `ClipboardList` icon replacing 📋 emoji in QB Filters label
-
-### Error Log
-- **`components/error-log/error-log-client.tsx`** — `Archive`/`ScrollText` icons for empty states
-- **`components/error-log/error-row.tsx`** — `CheckCircle2` in Mastered badge and button; clean toast strings
-
-### Data Charts (all in `components/data/`)
-- All chart tooltips: unified `TIP_STYLE` with `boxShadow`
-- All empty states: Lucide icon in styled container (replacing emoji)
-- Files updated: `accuracy-trends`, `score-trend`, `replan-timeline`, `score-timeline`, `study-time-chart`, `topic-mastery-heatmap`, `topic-mastery-trends`, `accuracy-heatmap`, `workload-redistribution`, `mistake-frequency`, `consistency-chart`
-
-### Settings
-- **`components/settings/notification-prefs.tsx`** — `ClipboardList`/`CalendarDays`/`AlertTriangle`/`FileText` icons replacing all emoji
-
-### Onboarding
-- **`components/onboarding/step-3-analysis.tsx`** — `AlertTriangle`/`TrendingUp`/`CheckCircle2` icons in `LevelBadge` replacing unicode symbols
-- **`components/onboarding/step-4-recommendations.tsx`** — `CheckCircle2` icon in study tips list; `ClipboardList` in QB Filters label; clean toast
-- **`components/onboarding/onboarding-wizard.tsx`** — clean toast title (no 🎉)
-
-### Info & Tutorial
-- **`components/info/contact-form.tsx`** — `CheckCircle2` success state
-- **`components/tutorial/tutorial-client.tsx`** — `'Critical'` badge (was `'⚠️ Critical'`)
-
-### Other Cleanups
-- **`components/data/add-score-dialog.tsx`** — clean toast title
-- **`components/calendar/log-session-dialog.tsx`** — clean toast title
-
----
-
-## In-Progress / Unfinished Features
-
-1. **`log-session-dialog.tsx`** — superseded by `SessionWorkflowDialog`. Safe to delete: `components/calendar/log-session-dialog.tsx` and `components/calendar/day-tasks-panel.tsx`.
-
-2. **"Replan Now" button** — no UI to force a manual replanning pass.
-   - Add `triggerManualReplan()` to `actions/study-plan.ts` → calls `runAdaptiveReplanner(..., 'manual')`
-   - Add a `ReplanButton` in the calendar header; show toast with `tasksUpdated` + `predictedScore`
-
-3. **Notifications UI** — `notifications` table is populated but no real-time badge in the navbar.
+3. **QB Tutorial screenshots** — Each step in `tutorial-client.tsx` has a `ScreenshotPlaceholder`. Replace with `<Image>` tags pointing to `public/tutorial/step-{1–7}.png`.
 
 ---
 
 ## Known Issues
 
-None known. If the Supabase schema cache error appears (`Could not find column X in schema cache`), the DB migrations above have not been applied yet. Run the SQL block, then reload the Supabase schema cache via **Supabase Dashboard → Database → Reload Schema Cache**.
+None known. TypeScript is clean (`npx tsc --noEmit` passes with zero errors).
+
+---
+
+## Dead Code (safe to delete — confirmed not imported)
+
+| File | Reason |
+|---|---|
+| `components/calendar/day-tasks-panel.tsx` | Legacy sidebar, never rendered |
+| `components/calendar/log-session-dialog.tsx` | Superseded by SessionWorkflowDialog |
+| `components/data/topic-rankings.tsx` | Removed from Data tab in Session 8 |
+| `components/data/stats-cards.tsx` | Legacy, not imported |
+| `components/data/score-timeline.tsx` | Legacy (data tab uses `score-trend.tsx`) |
+| `components/data/accuracy-chart.tsx` | Legacy (data tab uses `accuracy-trends.tsx`) |
+| `components/data/category-stats.tsx` | Legacy, not imported |
+| `components/ai-coach/ai-coach-panel.tsx` | Route `/ai-coach` deleted in Session 8 |
 
 ---
 
 ## Next Recommended Tasks
 
-### Option A — Notifications badge in navbar
-Wire up the `notifications` table to a live unread-count badge on the bell icon in `components/layout/navbar.tsx`. The `NotificationsDropdown` component already exists — add a `useEffect` that subscribes to Supabase realtime or fetches on mount.
+### Option A — "Replan Now" button
+Add a manual replanning trigger. `triggerManualReplan()` is ready in `actions/adaptive-replanner.ts`. Add a button to the calendar header (`calendar-client.tsx`) or home page. Show a toast with `tasksUpdated` + `predictedScore` on success.
 
-### Option B — "Replan Now" button
-Add a manual replanning trigger to the calendar header so users can force a plan refresh at any time.
+### Option B — Notifications live unread count
+Wire the bell icon to show a red dot or count badge. Subscribe to the `notifications` table via `supabase.channel(...)` + `on('postgres_changes', ...)` in `notifications-dropdown.tsx`, or poll on mount. The dropdown UI is already built.
 
 ### Option C — QB Tutorial screenshots
-Replace `ScreenshotPlaceholder` in each step of `components/tutorial/tutorial-client.tsx` with real `<Image>` tags. Save screenshots to `public/tutorial/step-{1–7}.png`.
+Capture real screenshots of each QB step and save to `public/tutorial/step-{1–7}.png`. Replace `ScreenshotPlaceholder` in `components/tutorial/tutorial-client.tsx`.
 
-### Option D — Error Log analytics on /data page
-Surface the error log data on the `/data` page: a breakdown chart of mistake types over time, domain weakness heatmap, confidence trend line.
+### Option D — Delete dead code
+Remove the 8 files listed in Dead Code above. No other files import them (verified by absence of any import statement referencing them in the current codebase).
+
+### Option E — Error Log analytics on /data
+Surface the error log data in the Data page: mistake-type breakdown chart, domain weakness heatmap, confidence trend line. Components already exist (`MistakeFrequency`) — extend with date-filtered variants.
 
 ---
 
@@ -247,11 +243,13 @@ Surface the error log data on the `/data` page: a breakdown chart of mistake typ
 
 1. **No OpenAI.** All planning is deterministic TypeScript. Never introduce an LLM dependency.
 2. **Tailwind CSS v4** — use `@import "tailwindcss"` in `globals.css`. Never use `@tailwind base/components/utilities`.
-3. **TypeScript strict mode.** No `any` except intentional Supabase cast workarounds (marked with comments).
+3. **TypeScript strict.** No `any` except intentional Supabase cast workarounds (marked with comments).
 4. **`schema.sql` is a reference, not an auto-migration.** Always apply changes manually in Supabase.
-5. **Never store SAT question content.** Question ID is an 8-char identifier only.
+5. **Never store SAT question content.** Question ID is an 8-char identifier only. Never store text, passages, or answer choices.
 6. **Answer choices stored as A/B/C/D letters only.** Never store the text of answer choices.
 7. **`replan_locked = true` tasks are immutable to the replanner.** Set by `toggleTaskComplete`.
-8. **Replanner never deletes.** Only UPDATEs.
-9. **Supabase `as any` casts** are intentional type workarounds — mark with comments.
-10. **QB URL:** `https://satsuiteeducatorquestionbank.collegeboard.org/digital/search` — in `lib/constants.ts`.
+8. **Replanner never deletes or adds tasks.** Only UPDATEs existing rows.
+9. **`question_sessions` is the canonical source of truth** for topic performance — not `diagnostic_tests`.
+10. **`data/page.tsx` must always use `noStore()`.** Never remove it.
+11. **QB URL:** `https://satsuiteeducatorquestionbank.collegeboard.org/digital/search` — always in `lib/constants.ts`.
+12. **No emoji in component JSX.** Use Lucide React icons. All emoji have been removed as of Session 10.

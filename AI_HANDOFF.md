@@ -1,6 +1,6 @@
 # SAT Study Planner AI — Complete Handoff
 
-**Last updated:** 2026-06-05 (Session 9)
+**Last updated:** 2026-06-07 (Session 10)
 **Project root:** `/Users/darcywang/sat-prep-website`
 **Stack:** Next.js 16.2.7 (App Router), React 19, TypeScript 5 strict, Tailwind CSS v4, Supabase
 **No external AI API** — all planning logic is deterministic TypeScript.
@@ -10,7 +10,7 @@
 ## ⚠️ Critical: CWD mismatch
 
 The shell always resets CWD to `/Users/darcywang/Desktop/sat-prep-website` (a ghost folder with only `.claude/` and `.next/`).
-The real project is at `/Users/darcywang/sat-prep-website`. Always use absolute paths or cd there first.
+The real project is at `/Users/darcywang/sat-prep-website`. Always use absolute paths or `cd` there first.
 
 ---
 
@@ -164,6 +164,7 @@ actions/
   auth.ts                 signIn(), signUp() [returns {needsConfirmation:true} if email unconfirmed], signOut()
   calendar.ts             CRUD; rescheduleCalendarTask (drag-drop); toggleTaskComplete (sets replan_locked)
   error-logs.ts           createErrorLog, updateErrorLog, archiveErrorLog, markErrorMastered, deleteErrorLog
+  notification-preferences.ts  saveNotificationPreferences(), sendTestReminder()
   onboarding.ts           saveOnboarding → seeds question_sessions + score_history + engine + replanner
   question-sessions.ts    createQuestionSession(data, missedAnalysis?) → runs replanner, returns SessionMetrics + ReplannerResult
   score-history.ts        addScoreEntry → updates current_score (even partial); triggers replanner for non-diagnostic
@@ -177,8 +178,11 @@ app/
   (dashboard)/data        Full analytics dashboard — 8 parallel fetches, noStore()
   (dashboard)/error-log   Mistake tracking with search/filter/archive
   (dashboard)/tutorial    Static QB tutorial (7-step workflow)
-  (dashboard)/info        About, FAQ, contact
+  (dashboard)/settings    Notification preferences
   onboarding/             4-step wizard
+
+  DELETED:
+    (dashboard)/info      About, FAQ, contact — removed Session 10
 
 lib/
   study-plan-engine/
@@ -197,48 +201,72 @@ lib/
     missed-assignment.service.ts recoverMissedAssignments() — redistributes overdue tasks into next 14 days
     plan-version.service.ts     savePlanVersion(), restorePlanVersion()
     recommendations.service.ts  generateRecommendations(), saveRecommendations()
-  constants.ts            NAV_LINKS, MATH_DOMAINS, RW_DOMAINS, COLLEGE_BOARD_QB_URL, ERROR_TYPES, TEST_TYPES
+  constants.ts            NAV_LINKS (5 links — /info removed), MATH_DOMAINS, RW_DOMAINS, COLLEGE_BOARD_QB_URL, ERROR_TYPES, TEST_TYPES
   utils.ts                cn, todayISO, etc.
 
 components/
   home/
-    ai-planner-trigger.tsx    "AI Adaptive Replanner" card — scores + test date + hours/day + day schedule picker
+    welcome-banner.tsx         Score progress bar, streak pill, test countdown. Lucide icons: Flame, CalendarDays, Target, PartyPopper.
+    score-card.tsx             Stat cards with colored accent stripe, Lucide icons, hover lift.
+    ai-planner-trigger.tsx     "AI Adaptive Replanner" card — scores + test date + hours/day + day schedule picker.
+    quick-stats.tsx            Summary stats row.
+    upcoming-tasks.tsx         Next 3 upcoming tasks preview.
   calendar/
-    calendar-client.tsx       Month/week/agenda orchestrator + drag-and-drop
-    task-drawer.tsx           Slide-over: QB filters, instructions, replanner stats, session buttons
-    session-workflow-dialog.tsx  6-phase UX (idle→active→review→results→missed_analysis→plan_updated)
-    practice-test-score-dialog.tsx  Do NOT modify
-    task-form-dialog.tsx      Manual task creation
-    task-colors.ts            Domain color map
+    calendar-client.tsx        Month/week/agenda orchestrator + drag-and-drop.
+                               Past cells muted, today cell violet tint, week view today-column border.
+    task-drawer.tsx            Slide-over: QB filters, ClipboardList icon label, instructions, replanner stats, session buttons.
+    session-workflow-dialog.tsx  6-phase UX (idle→active→review→results→missed_analysis→plan_updated).
+    practice-test-score-dialog.tsx  Do NOT modify.
+    task-form-dialog.tsx       Manual task creation.
+    task-colors.ts             Domain color map.
+    day-tasks-panel.tsx        LEGACY — never rendered. Safe to delete.
+    log-session-dialog.tsx     LEGACY — superseded by SessionWorkflowDialog. Safe to delete.
   data/
-    data-client.tsx           Dashboard orchestrator (imports TopicMasteryCards + PredictedScoreWidget from ai-coach/)
+    data-client.tsx            Dashboard orchestrator (imports TopicMasteryCards + PredictedScoreWidget from ai-coach/).
     accuracy-trends.tsx, score-trend.tsx, topic-mastery-heatmap.tsx, topic-mastery-trends.tsx,
     mistake-frequency.tsx, study-time-chart.tsx, consistency-chart.tsx, replan-timeline.tsx,
     workload-redistribution.tsx, accuracy-heatmap.tsx, add-score-dialog.tsx
-    [REMOVED: topic-rankings.tsx still exists as file but is no longer imported]
-  ai-coach/                   Components shared with Data tab (route /ai-coach was deleted)
-    topic-mastery-cards.tsx   8 domain cards sorted weakest→strongest, color-coded by mastery tier
-    predicted-score-widget.tsx Predicted score + CI + recharts trend line
-    plan-version-history.tsx  Version list with restore
-    ai-recommendations.tsx    AI coach message list with dismiss
-    ai-coach-panel.tsx        [UNUSED — route deleted, file remains]
+    topic-rankings.tsx         NOT IMPORTED — dead code, safe to delete.
+    stats-cards.tsx, score-timeline.tsx, accuracy-chart.tsx, category-stats.tsx  — LEGACY, not imported. Safe to delete.
+  ai-coach/                   Components shared with Data tab (route /ai-coach was deleted in Session 8).
+    topic-mastery-cards.tsx   8 domain cards sorted weakest→strongest, color-coded by mastery tier.
+    predicted-score-widget.tsx Predicted score + CI + recharts trend line.
+    plan-version-history.tsx  Version list with restore.
+    ai-recommendations.tsx    AI coach message list with dismiss.
+    ai-coach-panel.tsx        UNUSED — route deleted, file remains. Safe to delete.
   error-log/
     error-log-client.tsx, error-row.tsx, add-error-dialog.tsx, edit-error-dialog.tsx, mistake-type-badge.tsx
   layout/
-    navbar.tsx                Desktop nav (reads NAV_LINKS from constants.ts)
-    mobile-nav.tsx            Bottom nav: Home, Calendar, Errors, Data, Info
+    navbar.tsx                Desktop nav (reads NAV_LINKS from constants.ts — 5 links).
+    mobile-nav.tsx            Bottom nav: Home · Calendar · Errors · Data · Settings.
+    notifications-dropdown.tsx Lucide icons: Clock (reminder), Trophy (achievement), Radio (system), Bot (ai_suggestion).
+    saturn-path-logo.tsx, theme-toggle.tsx, theme-provider.tsx
+  onboarding/
+    onboarding-wizard.tsx, step-1-basics.tsx, step-2-performance.tsx
+    step-3-analysis.tsx       LevelBadge uses AlertTriangle/TrendingUp/CheckCircle2 (no unicode symbols).
+    step-4-recommendations.tsx ClipboardList icon for QB Filters label; CheckCircle2 in study tips.
+    wizard-progress.tsx
+  settings/
+    notification-prefs.tsx    ClipboardList/CalendarDays/AlertTriangle/FileText icons (no emoji).
+  tutorial/
+    tutorial-client.tsx       7-step QB walkthrough. "Critical" badge text (no emoji).
+  ui/                         shadcn/ui primitives — do not modify.
+
+  DELETED (Session 10):
+    components/info/          about-section.tsx, faq-accordion.tsx, contact-form.tsx
 
 hooks/
-  use-replan-logs.ts          Client-side replan_audit_logs fetch (bypasses router cache) — KEEP IN data-client.tsx
-  use-calendar-tasks-range.ts Flexible date-range loader for calendar views
-  use-error-logs.ts           All errors once; client-side filter/sort
+  use-replan-logs.ts          Client-side replan_audit_logs fetch (bypasses router cache) — KEEP in data-client.tsx.
+  use-calendar-tasks-range.ts Flexible date-range loader for calendar views.
+  use-error-logs.ts           All errors once; client-side filter/sort.
   use-score-history.ts, use-calendar-tasks.ts
 
 types/
-  database.ts    Full row/insert/update types for all 12 tables
-  index.ts       App-level re-exports (User, CalendarTask, TopicMastery, PlanVersion, ScorePrediction, AdaptiveRecommendation, ...)
+  database.ts    Full row/insert/update types for all 12 tables.
+  index.ts       App-level re-exports (User, CalendarTask, TopicMastery, PlanVersion, ScorePrediction, AdaptiveRecommendation, ...).
+                 NOTE: AIPlanRequest, AIStudyPlan, AIPlanWeek, AIPlanTask are exported but unused since Session 8.
 
-supabase/schema.sql   Complete reference schema + all ALTER TABLE migrations
+supabase/schema.sql   Complete reference schema + all ALTER TABLE migrations.
 ```
 
 ---
@@ -372,8 +400,8 @@ ciWidth: <5 sessions→±100, 5–19→±70, 20–49→±50, 50+→±30
 
 5. **Planning Intelligence** — ReplanTimeline + WorkloadRedistribution
 
-> **Note:** `TopicRankings` (Weakest/Strongest boxes) was removed in session 8. The file still exists but is not imported.
 > `PredictedScoreWidget` and `TopicMasteryCards` do NOT apply the date-range filter — they always show all-time data.
+> `topic-rankings.tsx` was removed in Session 8. File still exists but is not imported.
 
 ---
 
@@ -393,24 +421,57 @@ Supabase Dashboard → Authentication → Settings → uncheck "Enable email con
 
 | Surface | Links |
 |---|---|
-| Desktop (navbar.tsx) | Home · Calendar · Error Log · Data · QB Tutorial · Info & Contact |
-| Mobile (mobile-nav.tsx) | Home · Calendar · Errors · Data · Info |
+| Desktop (`navbar.tsx`) | Home · Calendar · Error Log · Data · Tutorial |
+| Mobile (`mobile-nav.tsx`) | Home · Calendar · Errors · Data · Settings |
 
-The `/ai-coach` route was **deleted** in session 8. `components/ai-coach/` components remain because the Data tab imports them.
+Notes:
+- `/info` route was **deleted in Session 10** — removed from `NAV_LINKS` in `lib/constants.ts`
+- `/ai-coach` route was **deleted in Session 8** — `components/ai-coach/` components remain because the Data tab imports them
 
 ---
 
-## Theme Colors (Session 9)
+## Design System (Session 10)
 
-The app uses **violet/purple** as the primary theme color (`#7c3aed` = `violet-600`), matching the logo.
+The app uses **violet/purple** as primary (`#7c3aed` = `violet-600`), matching the logo.
 
-**Intentionally kept blue (do not change):**
+### CSS Design Tokens (`app/globals.css`)
+```css
+/* Dark mode palette */
+.dark {
+  --background: #0c1524;
+  --card: #172033;
+  --border: #2a3a52;
+  --muted: #1a2840;
+  --muted-foreground: #8facc8;
+  --shadow-violet: 0 10px 24px -6px rgba(109,40,217,0.45);
+}
+
+/* Shimmer skeleton animation */
+.sp-shimmer { animation: sp-shimmer 1.6s ease-in-out infinite; }
+@keyframes sp-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+
+/* Entrance animation */
+@keyframes sp-fade-in-up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+```
+
+### Calendar visual states
+| State | Styling |
+|---|---|
+| Past cell (month) | `bg-slate-50/70 dark:bg-slate-900/40`, muted day number |
+| Today cell (month) | `bg-violet-50/60 dark:bg-violet-900/10` |
+| Future cell with tasks | Small violet dot indicator |
+| Today column (week) | `border-violet-300 dark:border-violet-700` |
+
+### Icon policy
+All emoji removed from component JSX. Replaced with Lucide React icons throughout.
+Plain-text strings (toast titles) are also clean — no emoji.
+
+### Blue colors intentionally kept (do not change)
 - `components/home/score-card.tsx` — `blue` colorMap entry (Current Score card)
 - `components/home/quick-stats.tsx` — Study Time stat icon
 - `components/calendar/task-colors.ts` — Algebra domain color
 - `components/error-log/mistake-type-badge.tsx` — Timing Issue badge (`time` key)
-- `components/info/about-section.tsx` — Step 1 "Generate Your AI Plan" icon background
-- `components/data/` — All chart colors (score-timeline, accuracy-trends, accuracy-chart, score-trend, mistake-frequency, category-stats, replan-timeline, stats-cards, data-client)
+- All chart colors in `components/data/` — score-timeline, accuracy-trends, accuracy-chart, score-trend, mistake-frequency, category-stats, replan-timeline, stats-cards, data-client
 
 ---
 
@@ -433,13 +494,18 @@ The app uses **violet/purple** as the primary theme color (`#7c3aed` = `violet-6
 
 ---
 
-## Dead Code (safe to delete)
+## Dead Code (safe to delete — no references anywhere)
 
-- `components/data/topic-rankings.tsx` — removed from Data tab, file not imported
-- `components/data/day-tasks-panel.tsx`, `log-session-dialog.tsx` — legacy, never rendered
-- `components/data/stats-cards.tsx`, `score-timeline.tsx`, `accuracy-chart.tsx`, `category-stats.tsx` — legacy
-- `components/ai-coach/ai-coach-panel.tsx` — route deleted, component unused
-- `types/index.ts` exports `AIPlanRequest`, `AIStudyPlan`, `AIPlanWeek`, `AIPlanTask` — unused after session 8 refactor
+| File | Why dead |
+|---|---|
+| `components/data/topic-rankings.tsx` | Removed from Data tab in Session 8; file not imported |
+| `components/calendar/day-tasks-panel.tsx` | Legacy sidebar; never rendered in current calendar |
+| `components/calendar/log-session-dialog.tsx` | Superseded by SessionWorkflowDialog |
+| `components/data/stats-cards.tsx` | Legacy, not imported by data-client |
+| `components/data/score-timeline.tsx` | Legacy, not imported (data tab uses score-trend.tsx instead) |
+| `components/data/accuracy-chart.tsx` | Legacy, not imported (data tab uses accuracy-trends.tsx) |
+| `components/data/category-stats.tsx` | Legacy, not imported |
+| `components/ai-coach/ai-coach-panel.tsx` | Route deleted in Session 8; component unused |
 
 ---
 
@@ -451,3 +517,16 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
 Both are required. Set in `.env.local` for local dev; Supabase dashboard for production.
+
+---
+
+## Session History
+
+| Session | Key changes |
+|---|---|
+| 1–5 | Initial build: auth, onboarding, study plan engine, calendar, error log, data page |
+| 6 | Adaptive Replanner v1: `replan_audit_logs`, priority_score, replanning_weight, calendar task metadata |
+| 7 | Error log rebuild: search/filter/archive, confidence rating, question ID, auto error creation |
+| 8 | Adaptive Replanner v2: topic_mastery, plan_versions, score_predictions, adaptive_recommendations; deleted /ai-coach route; removed TopicRankings |
+| 9 | Session workflow overhaul: missed_analysis phase, auto error log creation, plan_updated screen, timer |
+| 10 | UI/UX overhaul: design tokens, Lucide icons throughout (all emoji removed), dark mode palette, calendar visual states, chart tooltip polish. Deleted /info page + components. |

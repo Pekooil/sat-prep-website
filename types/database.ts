@@ -536,6 +536,37 @@ export interface Database {
         }
         Relationships: []
       }
+      question_inventory: {
+        Row: {
+          id: string
+          section: 'Reading and Writing' | 'Math'
+          domain: string
+          skill: string
+          difficulty: 'easy' | 'medium' | 'hard'
+          available_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          section: 'Reading and Writing' | 'Math'
+          domain: string
+          skill: string
+          difficulty: 'easy' | 'medium' | 'hard'
+          available_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          section?: 'Reading and Writing' | 'Math'
+          domain?: string
+          skill?: string
+          difficulty?: 'easy' | 'medium' | 'hard'
+          available_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       adaptive_recommendations: {
         Row: {
           id: string
