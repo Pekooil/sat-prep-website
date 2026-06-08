@@ -52,8 +52,7 @@ const DOMAINS: DomainEntry[] = [
     pointsPerQuestion: R,
     skills: [
       { label: 'Central ideas and details',           difficulty: 'easy' },
-      { label: 'Command of evidence (textual)',        difficulty: 'medium' },
-      { label: 'Command of evidence (quantitative)',  difficulty: 'medium' },
+      { label: 'Command of Evidence',                  difficulty: 'medium' },
       { label: 'Inferences',                          difficulty: 'hard' },
     ],
   },
@@ -120,7 +119,6 @@ const DOMAINS: DomainEntry[] = [
     skills: [
       { label: 'Equivalent expressions',               difficulty: 'easy' },
       { label: 'Nonlinear equations in one variable',  difficulty: 'medium' },
-      { label: 'Systems of equations',                 difficulty: 'medium' },
       { label: 'Nonlinear functions',                  difficulty: 'hard' },
     ],
   },
@@ -132,11 +130,13 @@ const DOMAINS: DomainEntry[] = [
     questionCount: 9,
     pointsPerQuestion: M,
     skills: [
-      { label: 'Ratios, rates, and proportional relationships', difficulty: 'easy' },
-      { label: 'Percentages',                                    difficulty: 'easy' },
-      { label: 'Two-variable data: models and scatterplots',     difficulty: 'medium' },
-      { label: 'Probability and conditional probability',        difficulty: 'medium' },
-      { label: 'Evaluating statistical claims',                  difficulty: 'hard' },
+      { label: 'Ratios, rates, and proportional relationships',                difficulty: 'easy'   },
+      { label: 'Percentages',                                                   difficulty: 'easy'   },
+      { label: 'One-variable data: distributions and measures of center and spread', difficulty: 'medium' },
+      { label: 'Two-variable data: models and scatterplots',                    difficulty: 'medium' },
+      { label: 'Probability and conditional probability',                       difficulty: 'medium' },
+      { label: 'Inference from sample statistics and margin of error',          difficulty: 'hard'   },
+      { label: 'Evaluating statistical claims',                                 difficulty: 'hard'   },
     ],
   },
   {

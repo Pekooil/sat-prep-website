@@ -6,11 +6,22 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-07 (Session 11)
+2026-06-08 (Session 12)
 
 ---
 
 ## What Was Done This Session
+
+### Session 12 — Remove "Systems of equations" from Advanced Math
+
+Removed the `'Systems of equations'` skill from the **Advanced Math** category across all three source files:
+- `lib/constants.ts` — removed from `MATH_DOMAINS` Advanced Math skills array
+- `lib/study-plan-engine/domain-catalog.ts` — removed from `advancedMath` domain skills
+- `lib/sat-planner.ts` — removed from `advancedMath` domain skills
+
+The **Algebra** category's `'Systems of linear equations'` skill was left untouched in all files.
+
+---
 
 ### Session 11 — Question Inventory Page
 

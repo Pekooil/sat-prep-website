@@ -16,7 +16,6 @@ export const MATH_DOMAINS = [
     skills: [
       'Equivalent expressions',
       'Nonlinear equations in one variable',
-      'Systems of equations',
       'Nonlinear functions',
     ],
   },
@@ -26,10 +25,10 @@ export const MATH_DOMAINS = [
     skills: [
       'Ratios, rates, proportional relationships',
       'Percentages',
-      'One-variable data: distributions and measures',
+      'One-variable data: distributions and measures of center and spread',
       'Two-variable data: models and scatterplots',
       'Probability and conditional probability',
-      'Inference from sample statistics',
+      'Inference from sample statistics and margin of error',
       'Evaluating statistical claims',
     ],
   },
@@ -51,8 +50,7 @@ export const RW_DOMAINS = [
     value: 'information_ideas',
     skills: [
       'Central ideas and details',
-      'Command of evidence (textual)',
-      'Command of evidence (quantitative)',
+      'Command of Evidence',
       'Inferences',
     ],
   },
