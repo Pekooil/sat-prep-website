@@ -10,31 +10,33 @@ const buttonVariants = cva(
     'inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium',
     'rounded-[var(--radius)] border border-transparent cursor-pointer select-none',
     'transition-[background-color,color,border-color,box-shadow,transform]',
-    'duration-[var(--dur-normal)]',
-    'focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_#fff,0_0_0_4px_var(--ring)]',
+    'duration-[var(--dur-fast)] ease-[var(--ease-out)]',
+    'focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_var(--ring)]',
     'disabled:pointer-events-none disabled:opacity-50',
+    '[&_svg]:shrink-0 [&_svg]:pointer-events-none',
   ].join(' '),
   {
     variants: {
       variant: {
         default:
-          'bg-violet-600 text-white shadow-[var(--shadow-xs)] hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600',
+          'bg-violet-600 text-white shadow-[var(--shadow-xs)] hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400 dark:text-white',
         destructive:
-          'bg-red-500 text-white hover:bg-red-600',
+          'bg-red-500 text-white shadow-[var(--shadow-xs)] hover:bg-red-600',
         outline:
-          'border-[var(--border)] bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800',
+          'border-[var(--border-strong)] bg-[var(--surface-raised)] text-[var(--text-body)] shadow-[var(--shadow-xs)] hover:bg-[var(--surface-sunken)] hover:text-[var(--text-heading)]',
         secondary:
-          'bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700',
+          'bg-[var(--surface-sunken)] text-[var(--text-heading)] hover:bg-[color-mix(in_srgb,var(--surface-sunken)_80%,var(--foreground)_8%)]',
         ghost:
-          'hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100',
+          'text-[var(--text-body)] hover:bg-[var(--surface-sunken)] hover:text-[var(--text-heading)]',
         link:
-          'text-violet-600 underline-offset-4 hover:underline dark:text-violet-400 h-auto p-0 border-0',
+          'text-[var(--accent)] underline-offset-4 hover:underline h-auto p-0 border-0',
       },
       size: {
-        default: 'h-10 px-4 py-2 text-sm',
-        sm:      'h-8 px-3 text-xs',
-        lg:      'h-11 px-8 text-base',
-        icon:    'h-10 w-10',
+        sm:      'h-8 px-3 text-xs gap-1.5 [&_svg]:size-4',
+        default: 'h-10 px-4 text-sm [&_svg]:size-4',
+        lg:      'h-11 px-6 text-base [&_svg]:size-[18px]',
+        icon:    'h-10 w-10 [&_svg]:size-[18px]',
+        'icon-sm':'h-8 w-8 [&_svg]:size-4',
       },
     },
     defaultVariants: {

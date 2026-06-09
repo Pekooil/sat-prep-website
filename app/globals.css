@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Keyframes
+   ============================================================ */
 @keyframes tutorial-zoom {
   from { transform: scale(1); }
   to   { transform: scale(1.6); }
@@ -22,12 +25,17 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Override Tailwind violet/purple to match SaturnPath DS palette */
+/* ============================================================
+   @theme — single source of truth for color ramps + fonts.
+   These generate Tailwind utilities (bg-violet-600, text-slate-500…)
+   AND expose CSS vars (--color-violet-600) consumed by the
+   semantic aliases below. Don't duplicate these values elsewhere.
+   ============================================================ */
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Violet ramp — DS values */
+  /* Violet ramp — brand */
   --color-violet-50:  #f5f3ff;
   --color-violet-100: #ede9fe;
   --color-violet-200: #ddd6fe;
@@ -39,7 +47,7 @@
   --color-violet-800: #6b21a8;
   --color-violet-900: #581c87;
 
-  /* Slate ramp — DS values (match Tailwind defaults exactly) */
+  /* Slate ramp — neutrals (Tailwind-aligned) */
   --color-slate-50:  #f8fafc;
   --color-slate-100: #f1f5f9;
   --color-slate-200: #e2e8f0;
@@ -53,34 +61,38 @@
 }
 
 /* ============================================================
-   SaturnPath Design System — CSS custom properties
+   SaturnPath Design System — semantic tokens (light)
+   ------------------------------------------------------------
+   Ramps below alias the @theme values so there is one source of
+   truth. Components should prefer SEMANTIC tokens (--surface-*,
+   --border, --accent, --text-*) over raw ramp values.
    ============================================================ */
 :root {
-  /* ---- Brand: Violet ramp ---- */
-  --violet-50:  #f5f3ff;
-  --violet-100: #ede9fe;
-  --violet-200: #ddd6fe;
-  --violet-300: #c4b5fd;
-  --violet-400: #a78bfa;
-  --violet-500: #a855f7;
-  --violet-600: #9333ea;   /* PRIMARY */
-  --violet-700: #7c3aed;   /* primary-hover / chart line */
-  --violet-800: #6b21a8;
-  --violet-900: #581c87;
+  /* ---- Brand ramp aliases (point at @theme) ---- */
+  --violet-50:  var(--color-violet-50);
+  --violet-100: var(--color-violet-100);
+  --violet-200: var(--color-violet-200);
+  --violet-300: var(--color-violet-300);
+  --violet-400: var(--color-violet-400);
+  --violet-500: var(--color-violet-500);
+  --violet-600: var(--color-violet-600);   /* PRIMARY */
+  --violet-700: var(--color-violet-700);
+  --violet-800: var(--color-violet-800);
+  --violet-900: var(--color-violet-900);
   --purple-600: #9333ea;
-  --purple-700: #7e22ce;   /* banner gradient tail */
+  --purple-700: #7e22ce;
 
-  /* ---- Neutrals: Slate ---- */
-  --slate-50:  #f8fafc;
-  --slate-100: #f1f5f9;
-  --slate-200: #e2e8f0;
-  --slate-300: #cbd5e1;
-  --slate-400: #94a3b8;
-  --slate-500: #64748b;
-  --slate-600: #475569;
-  --slate-700: #334155;
-  --slate-800: #1e293b;
-  --slate-900: #0f172a;
+  /* ---- Neutral ramp aliases ---- */
+  --slate-50:  var(--color-slate-50);
+  --slate-100: var(--color-slate-100);
+  --slate-200: var(--color-slate-200);
+  --slate-300: var(--color-slate-300);
+  --slate-400: var(--color-slate-400);
+  --slate-500: var(--color-slate-500);
+  --slate-600: var(--color-slate-600);
+  --slate-700: var(--color-slate-700);
+  --slate-800: var(--color-slate-800);
+  --slate-900: var(--color-slate-900);
 
   /* ---- Semantic accents ---- */
   --blue-500:    #3b82f6;  --blue-600:    #2563eb;
@@ -94,27 +106,53 @@
   --green-500:   #22c55e;  --green-600:   #16a34a;
   --cyan-500:    #06b6d4;  --cyan-600:    #0891b2;
 
-  /* ---- Semantic aliases ---- */
-  --background:        var(--slate-50);
-  --foreground:        var(--slate-900);
-  --surface-card:      #ffffff;
-  --card:              #ffffff;
-  --card-foreground:   var(--slate-900);
-  --border:            var(--slate-200);
-  --input-border:      var(--slate-200);
-  --muted:             var(--slate-100);
+  /* ---- Surface elevation (warm-tinted off-whites) ----
+     base    = page background
+     raised  = cards / panels
+     overlay = dialogs / popovers / dropdowns
+     sunken  = inset wells, tracks, code blocks            */
+  --surface-base:    #f7f6fb;
+  --surface-raised:  #ffffff;
+  --surface-overlay: #ffffff;
+  --surface-sunken:  #f1eff7;
+
+  /* Back-compat semantic aliases */
+  --background:      var(--surface-base);
+  --foreground:      var(--slate-900);
+  --surface-card:    var(--surface-raised);
+  --card:            var(--surface-raised);
+  --card-foreground: var(--slate-900);
+  --popover:            var(--surface-overlay);
+  --popover-foreground: var(--slate-900);
+  --muted:             var(--surface-sunken);
   --muted-foreground:  var(--slate-500);
 
-  --primary:            var(--violet-600);  /* #9333ea */
+  /* ---- Borders (hairline ~8% / interactive ~12%) ---- */
+  --border:        rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(15, 23, 42, 0.12);
+  --input-border:  rgba(15, 23, 42, 0.14);
+  --ring:          var(--violet-600);
+
+  /* ---- Brand / accent ----
+     --primary       : solid fills (white text rides on top)
+     --accent        : brand color for text, icons, active states
+     --accent-soft   : tinted background for active/selected states */
+  --primary:            var(--violet-600);
   --primary-hover:      var(--violet-700);
   --primary-foreground: #ffffff;
-  --ring:               var(--violet-600);
+  --accent:             var(--violet-600);
+  --accent-hover:       var(--violet-700);
+  --accent-soft:        rgba(147, 51, 234, 0.10);
+  --accent-soft-hover:  rgba(147, 51, 234, 0.15);
+  --accent-soft-foreground: var(--violet-700);
 
+  /* ---- Text ---- */
   --text-heading: var(--slate-900);
   --text-body:    var(--slate-700);
   --text-muted:   var(--slate-500);
   --text-on-primary: #ffffff;
 
+  /* ---- Status ---- */
   --success:     var(--emerald-600);
   --warning:     var(--amber-600);
   --destructive: var(--red-500);
@@ -124,20 +162,24 @@
   --gradient-brand:  linear-gradient(90deg, #9333ea 0%, #7c3aed 55%, #7e22ce 100%);
   --gradient-avatar: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
   --gradient-card:   linear-gradient(180deg, rgba(245,243,255,0.5) 0%, #ffffff 100%);
+  --gradient-mesh:   radial-gradient(60% 60% at 20% 0%, rgba(147,51,234,0.10) 0%, transparent 60%),
+                     radial-gradient(50% 50% at 90% 10%, rgba(124,58,237,0.08) 0%, transparent 55%);
 
-  /* ---- Typography tokens ---- */
+  /* ---- Typography ---- */
   --font-display: var(--font-sans);
 
-  --text-2xs: 0.625rem;
-  --text-xs:  0.75rem;
-  --text-sm:  0.875rem;
-  --text-base:1rem;
-  --text-lg:  1.125rem;
-  --text-xl:  1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-4xl: 2.25rem;
-  --text-5xl: 3rem;
+  --text-2xs: 0.6875rem;  /* 11px */
+  --text-xs:  0.75rem;    /* 12px */
+  --text-sm:  0.875rem;   /* 14px */
+  --text-base:0.9375rem;  /* 15px — refined body */
+  --text-md:  1rem;       /* 16px */
+  --text-lg:  1.125rem;   /* 18px */
+  --text-xl:  1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.75rem;    /* 28px — display floor */
+  --text-4xl: 2rem;       /* 32px */
+  --text-5xl: 2.5rem;     /* 40px — display ceiling */
+  --text-6xl: 3rem;       /* 48px — marketing hero */
 
   --weight-normal:   400;
   --weight-medium:   500;
@@ -151,11 +193,12 @@
   --leading-relaxed: 1.65;
 
   --tracking-tighter: -0.03em;
-  --tracking-tight:   -0.015em;
+  --tracking-tight:   -0.02em;   /* display headings */
+  --tracking-snug:    -0.01em;
   --tracking-normal:  0;
   --tracking-wide:    0.04em;
 
-  /* ---- Spacing (4px grid) ---- */
+  /* ---- Spacing (8px base grid) ---- */
   --space-0:  0;
   --space-1:  0.25rem;
   --space-2:  0.5rem;
@@ -168,59 +211,92 @@
   --space-12: 3rem;
   --space-16: 4rem;
 
-  /* ---- Radius ---- */
-  --radius-sm:   0.375rem;
-  --radius:      0.5rem;
-  --radius-md:   0.5rem;
-  --radius-lg:   0.75rem;
-  --radius-xl:   1rem;
-  --radius-2xl:  1.5rem;
+  /* ---- Radius (standardized 8 / 10 / 14) ---- */
+  --radius-xs:   0.375rem;  /* 6px  — chips, dots */
+  --radius-sm:   0.5rem;    /* 8px  — inputs, small controls */
+  --radius:      0.625rem;  /* 10px — buttons, default */
+  --radius-md:   0.625rem;  /* 10px */
+  --radius-lg:   0.875rem;  /* 14px — cards */
+  --radius-xl:   1.125rem;  /* 18px — large panels */
+  --radius-2xl:  1.5rem;    /* 24px — hero surfaces */
   --radius-full: 9999px;
 
-  /* ---- Shadows (cool slate, low spread) ---- */
-  --shadow-xs: 0 1px 2px 0 rgba(15,23,42,0.05);
-  --shadow-sm: 0 1px 3px 0 rgba(15,23,42,0.08), 0 1px 2px -1px rgba(15,23,42,0.06);
-  --shadow-md: 0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -2px rgba(15,23,42,0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(15,23,42,0.10), 0 4px 6px -4px rgba(15,23,42,0.06);
-  --shadow-xl: 0 20px 25px -5px rgba(15,23,42,0.12), 0 8px 10px -6px rgba(15,23,42,0.07);
-  --shadow-violet: 0 10px 24px -6px rgba(124,58,237,0.35);
+  /* ---- Shadows (1px ring + soft layered shadow) ---- */
+  --shadow-xs: 0 0 0 1px rgba(15,23,42,0.04), 0 1px 2px 0 rgba(15,23,42,0.05);
+  --shadow-sm: 0 0 0 1px rgba(15,23,42,0.04), 0 1px 3px 0 rgba(15,23,42,0.07), 0 1px 2px -1px rgba(15,23,42,0.05);
+  --shadow-md: 0 0 0 1px rgba(15,23,42,0.04), 0 4px 8px -2px rgba(15,23,42,0.10), 0 2px 4px -2px rgba(15,23,42,0.06);
+  --shadow-lg: 0 0 0 1px rgba(15,23,42,0.04), 0 12px 24px -6px rgba(15,23,42,0.12), 0 4px 8px -4px rgba(15,23,42,0.07);
+  --shadow-xl: 0 0 0 1px rgba(15,23,42,0.05), 0 24px 48px -12px rgba(15,23,42,0.18), 0 8px 16px -8px rgba(15,23,42,0.10);
+  --shadow-violet: 0 8px 24px -6px rgba(124,58,237,0.35);
 
   /* ---- Motion ---- */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-fast:   120ms;
+  --dur-fast:   150ms;
   --dur-normal: 200ms;
-  --dur-slow:   700ms;
+  --dur-slow:   400ms;
+  --dur-shimmer: 1600ms;
 
-  --sidebar-width: 240px;
+  /* ---- Layout ---- */
+  --sidebar-width:          248px;
+  --sidebar-width-collapsed: 72px;
+  --topbar-height:          56px;
 }
 
+/* ============================================================
+   Dark mode — layered slate (950 → 900 → 800), violet-400 accent
+   ============================================================ */
 .dark {
-  --background: #0c1524;
-  --foreground: #f1f5f9;
-  --surface-card: #172033;
-  --card:          #172033;
+  --surface-base:    #0a0e1a;
+  --surface-raised:  #121829;
+  --surface-overlay: #1a2236;
+  --surface-sunken:  #0c1120;
+
+  --background:      var(--surface-base);
+  --foreground:      #f1f5f9;
+  --surface-card:    var(--surface-raised);
+  --card:            var(--surface-raised);
   --card-foreground: #f1f5f9;
-  --border:        #2a3a52;
-  --input-border:  #2a3a52;
+  --popover:            var(--surface-overlay);
+  --popover-foreground: #f1f5f9;
+  --muted:             var(--surface-sunken);
+  --muted-foreground:  #93a4bd;
+
+  --border:        rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.13);
+  --input-border:  rgba(255, 255, 255, 0.15);
+  --ring:          var(--violet-400);
+
   --primary:       var(--violet-500);
-  --primary-hover: var(--violet-600);
-  --muted:         #1a2840;
-  --muted-foreground: #8facc8;
-  --destructive:   #f87171;
-  --ring:          var(--violet-500);
+  --primary-hover: var(--violet-400);
+  --accent:             var(--violet-400);
+  --accent-hover:       var(--violet-300);
+  --accent-soft:        rgba(167, 139, 250, 0.14);
+  --accent-soft-hover:  rgba(167, 139, 250, 0.20);
+  --accent-soft-foreground: var(--violet-300);
+
   --text-heading:  #f1f5f9;
-  --text-body:     #c4d4e8;
-  --text-muted:    #8facc8;
+  --text-body:     #c7d3e6;
+  --text-muted:    #93a4bd;
 
-  /* Dark mode richer gradients */
+  --success:     #34d399;
+  --warning:     #fbbf24;
+  --destructive: #f87171;
+  --info:        #818cf8;
+
+  /* Dark gradients */
   --gradient-brand:  linear-gradient(90deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%);
-  --gradient-card:   linear-gradient(180deg, rgba(23,32,51,0.5) 0%, #172033 100%);
+  --gradient-card:   linear-gradient(180deg, rgba(26,34,54,0.6) 0%, #121829 100%);
+  --gradient-mesh:   radial-gradient(60% 60% at 20% 0%, rgba(124,58,237,0.18) 0%, transparent 60%),
+                     radial-gradient(50% 50% at 90% 10%, rgba(91,33,182,0.14) 0%, transparent 55%);
 
-  /* Dark mode shadow — warmer tint */
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.25), 0 2px 4px -2px rgba(0,0,0,0.18);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.28), 0 4px 6px -4px rgba(0,0,0,0.18);
-  --shadow-violet: 0 10px 24px -6px rgba(109,40,217,0.45);
+  /* Dark shadows — soft white ring + deep shadow */
+  --shadow-xs: 0 0 0 1px rgba(255,255,255,0.04), 0 1px 2px 0 rgba(0,0,0,0.40);
+  --shadow-sm: 0 0 0 1px rgba(255,255,255,0.04), 0 1px 3px 0 rgba(0,0,0,0.45), 0 1px 2px -1px rgba(0,0,0,0.35);
+  --shadow-md: 0 0 0 1px rgba(255,255,255,0.05), 0 4px 8px -2px rgba(0,0,0,0.50), 0 2px 4px -2px rgba(0,0,0,0.35);
+  --shadow-lg: 0 0 0 1px rgba(255,255,255,0.05), 0 12px 24px -6px rgba(0,0,0,0.55), 0 4px 8px -4px rgba(0,0,0,0.40);
+  --shadow-xl: 0 0 0 1px rgba(255,255,255,0.06), 0 24px 48px -12px rgba(0,0,0,0.65), 0 8px 16px -8px rgba(0,0,0,0.45);
+  --shadow-violet: 0 8px 24px -6px rgba(109,40,217,0.50);
 }
 
 /* ============================================================
@@ -237,15 +313,30 @@ body {
 }
 
 ::selection { background: var(--violet-200); color: var(--violet-900); }
+.dark ::selection { background: rgba(167,139,250,0.30); color: #f5f3ff; }
 
-a { color: var(--primary); text-underline-offset: 2px; }
-header nav a { color: black; }
-.dark header nav a { color: white; }
+a { color: var(--accent); text-underline-offset: 2px; }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--slate-400); border-radius: 3px; }
-.dark ::-webkit-scrollbar-thumb { background: var(--slate-600); }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--slate-400) 55%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--slate-400); }
+.dark ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--slate-600) 70%, transparent); background-clip: padding-box; }
+
+/* Respect reduced motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* ============================================================
    Design system helper primitives
@@ -255,6 +346,15 @@ header nav a { color: black; }
 .sp-numeric {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-snug);
+}
+
+/* Display heading helper — tight tracking */
+.sp-display {
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  color: var(--text-heading);
 }
 
 /* Eyebrow / kicker label */
@@ -282,66 +382,69 @@ header nav a { color: black; }
   background-clip: text;
 }
 
+/* Subtle brand mesh background (hero / auth panels) */
+.sp-mesh { background-image: var(--gradient-mesh); }
+
 /* Shimmer skeleton */
 .sp-shimmer {
   background: linear-gradient(
     90deg,
     var(--muted) 0%,
-    color-mix(in srgb, var(--muted) 60%, var(--background) 40%) 50%,
+    color-mix(in srgb, var(--muted) 55%, var(--surface-raised) 45%) 50%,
     var(--muted) 100%
   );
   background-size: 200% 100%;
-  animation: sp-shimmer 1.6s ease-in-out infinite;
+  animation: sp-shimmer var(--dur-shimmer) ease-in-out infinite;
 }
 
 /* Fade-in-up list entry */
-.sp-enter {
-  animation: sp-fade-in-up 200ms var(--ease-out) both;
+.sp-enter { animation: sp-fade-in-up var(--dur-normal) var(--ease-out) both; }
+
+/* Card hover-lift — fast, transform-based (no layout shift) */
+.sp-hover-lift {
+  transition: transform var(--dur-normal) var(--ease-out),
+              box-shadow var(--dur-normal) var(--ease-out);
+}
+.sp-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Chart tooltip base */
 .sp-chart-tooltip {
-  background-color: var(--card) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-lg) !important;
-  box-shadow: var(--shadow-md) !important;
+  background-color: var(--popover) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
   font-size: 12px !important;
   padding: 8px 12px !important;
+  color: var(--foreground) !important;
 }
 
 /* Focus ring — visible and consistent */
 .sp-focus-ring {
   outline: none;
-  ring-color: var(--ring);
   box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
 }
 
 /* Inset card — subtle inner shadow for depth */
-.sp-card-inset {
-  box-shadow: inset 0 1px 3px 0 rgba(15,23,42,0.06);
-}
-.dark .sp-card-inset {
-  box-shadow: inset 0 1px 3px 0 rgba(0,0,0,0.25);
-}
+.sp-card-inset { box-shadow: inset 0 1px 3px 0 rgba(15,23,42,0.06); }
+.dark .sp-card-inset { box-shadow: inset 0 1px 3px 0 rgba(0,0,0,0.30); }
 
-/* Button active press — applied globally via data attribute or class */
-button:active:not(:disabled) {
-  transform: translateY(0.5px) scale(0.99);
-}
+/* Button active press */
+button:active:not(:disabled) { transform: translateY(0.5px) scale(0.99); }
 
 /* Range input — unified violet thumb across browsers */
-input[type="range"] {
-  accent-color: var(--primary);
-}
+input[type="range"] { accent-color: var(--accent); }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 18px;
   height: 18px;
   border-radius: 9999px;
-  background: var(--primary);
+  background: var(--accent);
   box-shadow: 0 1px 4px rgba(124,58,237,0.4);
   cursor: pointer;
-  transition: transform 150ms var(--ease-standard), box-shadow 150ms var(--ease-standard);
+  transition: transform var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
 }
 input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.15);
@@ -351,7 +454,7 @@ input[type="range"]::-moz-range-thumb {
   width: 18px;
   height: 18px;
   border-radius: 9999px;
-  background: var(--primary);
+  background: var(--accent);
   border: none;
   box-shadow: 0 1px 4px rgba(124,58,237,0.4);
   cursor: pointer;

@@ -13,7 +13,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      'inline-flex h-10 items-center justify-center rounded-md bg-slate-100 p-1 text-[var(--muted-foreground)] dark:bg-slate-800',
+      'inline-flex h-10 items-center justify-center rounded-[var(--radius)] bg-[var(--surface-sunken)] p-1 text-[var(--muted-foreground)]',
       className
     )}
     {...props}
@@ -28,11 +28,11 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all',
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]',
+      'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--radius-sm)] px-3 py-1.5 text-sm font-medium transition-all duration-[var(--dur-fast)] cursor-pointer',
+      'hover:text-[var(--text-heading)]',
+      'focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_var(--ring)]',
       'disabled:pointer-events-none disabled:opacity-50',
-      'data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm',
-      'dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-slate-100',
+      'data-[state=active]:bg-[var(--surface-raised)] data-[state=active]:text-[var(--text-heading)] data-[state=active]:shadow-[var(--shadow-xs)]',
       className
     )}
     {...props}

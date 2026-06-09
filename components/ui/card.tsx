@@ -1,13 +1,19 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Adds a subtle transform + shadow lift on hover. */
+  interactive?: boolean
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, interactive = false, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
-        'rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)]',
-        'shadow-[var(--shadow-sm)]',
+        'rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-raised)] text-[var(--card-foreground)]',
+        'shadow-[var(--shadow-xs)]',
+        interactive && 'sp-hover-lift cursor-pointer',
         className
       )}
       {...props}
@@ -39,7 +45,7 @@ CardTitle.displayName = 'CardTitle'
 
 const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
   ({ className, ...props }, ref) => (
-    <p ref={ref} className={cn('text-sm text-[var(--muted-foreground)]', className)} {...props} />
+    <p ref={ref} className={cn('text-sm text-[var(--muted-foreground)] leading-snug', className)} {...props} />
   )
 )
 CardDescription.displayName = 'CardDescription'

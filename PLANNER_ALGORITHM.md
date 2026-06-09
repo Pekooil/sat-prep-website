@@ -104,19 +104,27 @@ Difficulty is further gated by current accuracy:
 
 ### Step 4 — Domain Rotation (scheduler.service.ts)
 
-A 7-slot pool drives Mon–Fri assignments:
+Each study day produces **two blocks** — one R&W and one Math — so students practice both subjects every day. The domains within each subject follow independent 7-slot priority pools:
+
 ```
-[rank0, rank1, rank2, rank3, rank4, rank0, rank1]
+R&W pool (4 domains):   [rwRank0, rwRank1, rwRank2, rwRank3, rwRank0, rwRank0, rwRank1]
+Math pool (4 domains):  [mRank0,  mRank1,  mRank2,  mRank3,  mRank0,  mRank0,  mRank1]
 ```
-Monday and Friday both get the weakest domain (rank0). Pool shifts every 4-week macro-cycle so all 8 domains rotate in.
+
+The weakest domain within each subject gets the most weekly exposure. Each pool shifts every 4-week macro-cycle so all 8 domains (4 R&W + 4 Math) rotate in. The two pools advance independently via separate global index counters.
 
 ### Step 5 — Question Count
 
+Daily minutes are split evenly between the two blocks. Each block's question target is computed at 90% efficiency (≥90% of the block's time goes to answering questions):
+
 ```
-baseQuestions = clamp(floor(dailyStudyMinutes × 0.80 / 1.25), 10, 80)
-ramp = 0.80 + (weekNum / totalWeeks) × 0.40   → 80% in week 1, 120% in final week
-questionCount = round(baseQuestions × ramp)
+halfMinutes   = floor(dailyStudyMinutes / 2)
+halfBase      = clamp(floor(halfMinutes × 0.90 / 1.25), 10, 80)
+ramp          = 0.80 + (weekNum / totalWeeks) × 0.40   → 80% in week 1, 120% in final week
+questionCount = round(halfBase × ramp)   per block
 ```
+
+For a 60-minute day: `halfMinutes = 30`, `halfBase = 21`, giving each block ≈ 17–25 questions depending on the week.
 
 ### Step 6 — Persistence (plan-store.service.ts)
 
@@ -175,7 +183,7 @@ questionCount = round(baseQuestions × ramp)
 | Never modify completed tasks | `WHERE replan_locked = FALSE` filter |
 | Never delete tasks | Only UPDATE operations — no DELETEs |
 | Never remove practice tests | Category check skips content updates |
-| Never exceed daily study time | Question count ceiling: `floor(duration × 0.80 / 1.25)` |
+| Never exceed block study time | Question count ceiling: `floor(duration × 0.90 / 1.25)` |
 | Only touch active plan | `WHERE study_plan_id = activePlanId` |
 
 ### replanning_weight Usage

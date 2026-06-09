@@ -18,7 +18,7 @@ export function MobileNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--border)] bg-[var(--card)]/95 backdrop-blur-md">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--border)] bg-[var(--surface-raised)]/95 backdrop-blur-md">
       <div className="flex items-center justify-around h-16 px-1">
         {mobileLinks.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(href + '/')
@@ -26,24 +26,23 @@ export function MobileNav() {
             <Link
               key={href}
               href={href}
-              className={cn(
-                'flex flex-col items-center gap-0.5 min-w-0 flex-1',
-                'transition-all duration-150',
-              )}
+              aria-current={isActive ? 'page' : undefined}
+              className="flex min-w-0 flex-1 flex-col items-center gap-0.5"
             >
               <span className={cn(
-                'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-150',
-                isActive
-                  ? 'bg-violet-100 dark:bg-violet-900/40'
-                  : 'hover:bg-slate-100 dark:hover:bg-slate-800/60',
+                'flex flex-col items-center gap-0.5 rounded-[var(--radius-sm)] px-3 py-1.5 transition-colors duration-[var(--dur-fast)]',
+                isActive ? 'bg-[var(--accent-soft)]' : 'hover:bg-[var(--surface-sunken)]',
               )}>
-                <Icon className={cn(
-                  'h-5 w-5 transition-colors duration-150',
-                  isActive ? 'text-violet-600 dark:text-violet-400' : 'text-[var(--muted-foreground)]',
-                )} />
+                <Icon
+                  className={cn(
+                    'h-5 w-5 transition-colors duration-[var(--dur-fast)]',
+                    isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]',
+                  )}
+                  strokeWidth={1.75}
+                />
                 <span className={cn(
-                  'text-[10px] font-medium leading-none truncate transition-colors duration-150',
-                  isActive ? 'text-violet-600 dark:text-violet-400' : 'text-[var(--muted-foreground)]',
+                  'truncate text-[10px] font-medium leading-none transition-colors duration-[var(--dur-fast)]',
+                  isActive ? 'text-[var(--accent-soft-foreground)]' : 'text-[var(--text-muted)]',
                 )}>
                   {label}
                 </span>

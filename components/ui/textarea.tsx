@@ -5,10 +5,12 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttribu
   ({ className, ...props }, ref) => (
     <textarea
       className={cn(
-        'flex min-h-[80px] w-full rounded-md border border-[var(--input-border)] bg-[var(--card)] px-3 py-2 text-sm',
-        'placeholder:text-[var(--muted-foreground)]',
-        'focus:outline-none focus:ring-2 focus:ring-[var(--ring)]',
-        'disabled:cursor-not-allowed disabled:opacity-50 resize-none',
+        'flex min-h-[88px] w-full rounded-[var(--radius-sm)] border border-[var(--input-border)]',
+        'bg-[var(--surface-raised)] px-3 py-2 text-sm text-[var(--foreground)]',
+        'placeholder:text-[var(--text-muted)] resize-none',
+        'transition-[border-color,box-shadow] duration-[var(--dur-fast)]',
+        'focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-soft)]',
+        'disabled:cursor-not-allowed disabled:bg-[var(--surface-sunken)] disabled:opacity-70',
         className
       )}
       ref={ref}

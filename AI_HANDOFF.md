@@ -321,7 +321,9 @@ interface StudyPlanEngineInput {
 ### Day scheduling
 - Default: Mon–Fri=study, Sat=review (or practice_test in practice-test weeks), Sun=rest
 - With `daySchedule`: any DOW can be any type; practice test promotion is still automatic ('review' on practice-test week → 'practice_test')
-- Domain rotation uses `studyDayGlobalIdx` (running counter), NOT day-of-week index, so rotation works correctly with any schedule
+- Each study day produces **two** tasks: one R&W domain block + one Math domain block
+- Two independent rotation counters (`rwStudyDayGlobalIdx` / `mathStudyDayGlobalIdx`) drive separate 7-slot pools per subject
+- Each block gets `floor(dailyStudyMinutes / 2)` minutes; question count uses 90% efficiency factor
 
 ### AI Adaptive Replanner form (Home page)
 - `hoursPerDay` (0.5–8, step 0.5) → `dailyStudyMinutes = hoursPerDay × 60` (clamped 15–300)

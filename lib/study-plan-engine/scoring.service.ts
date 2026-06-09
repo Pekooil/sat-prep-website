@@ -101,9 +101,10 @@ export function masteryTargetForDomain(currentAccuracy: number): number {
  * Compute how many questions fit in a study session.
  *
  * Average pace:  ~1.25 min/question (blend of Math ~1.5 and R&W ~1.0).
- * 80 % efficiency factor accounts for reading instructions, error logging.
+ * 90 % efficiency factor — at least 90 % of the session time goes to answering
+ * questions; the remaining 10 % covers setup, QB navigation, error logging.
  * Hard bounds: 10–80 questions.
  */
 export function dailyQuestionTarget(minutes: number): number {
-  return Math.max(10, Math.min(80, Math.floor((minutes * 0.80) / 1.25)))
+  return Math.max(10, Math.min(80, Math.ceil((minutes * 0.90) / 1.25)))
 }

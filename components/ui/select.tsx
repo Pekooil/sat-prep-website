@@ -16,8 +16,9 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      'flex h-10 w-full items-center justify-between rounded-md border border-[var(--input-border)] bg-[var(--card)] px-3 py-2 text-sm',
-      'placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]',
+      'flex h-10 w-full items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-[var(--input-border)] bg-[var(--surface-raised)] px-3 py-2 text-sm cursor-pointer',
+      'transition-[border-color,box-shadow] duration-[var(--dur-fast)] data-[placeholder]:text-[var(--text-muted)]',
+      'focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-soft)]',
       'disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
       className
     )}
@@ -67,7 +68,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-md',
+        'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-overlay)] text-[var(--card-foreground)] shadow-[var(--shadow-lg)]',
         'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
         position === 'popper' &&
@@ -112,8 +113,8 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none',
-      'focus:bg-slate-100 focus:text-slate-900 dark:focus:bg-slate-700 dark:focus:text-slate-100',
+      'relative flex w-full cursor-pointer select-none items-center rounded-[var(--radius-xs)] py-1.5 pl-8 pr-2 text-sm outline-none transition-colors',
+      'focus:bg-[var(--accent-soft)] focus:text-[var(--accent-soft-foreground)] data-[state=checked]:font-medium',
       'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className
     )}

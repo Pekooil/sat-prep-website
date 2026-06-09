@@ -3,24 +3,31 @@
 // Generates the complete day-by-day study schedule from plan start to test date.
 //
 // Day classification (repeating 7-day calendar):
-//   Mon–Fri  → Study day (one priority domain per session)
+//   Mon–Fri  → Study day (one R&W block + one Math block per session)
 //   Saturday → Review day (all domains studied that week, short sets)
 //              OR Practice Test (every N weeks, see practiceTestWeeks)
 //   Sunday   → Rest (no tasks)
 //
+// Dual-subject study days:
+//   Each study day produces TWO blocks — one Reading & Writing domain and one
+//   Math domain — each using half the daily study minutes. This guarantees the
+//   student practices both subjects every day.
+//
 // Domain rotation across study days:
-//   A 7-slot pool: [rank0, rank1, rank2, rank3, rank4, rank0, rank1]
-//   Mon gets rank0, Fri gets rank0 again → weakest domain gets 2 sessions/week.
-//   The pool advances through all 8 domains over a 4-week cycle so lower-ranked
-//   domains still receive attention.
+//   Two independent 7-slot pools, one for R&W (4 domains) and one for Math
+//   (4 domains). Each pool follows the same priority pattern:
+//     [rank0, rank1, rank2, rank3, rank0, rank0, rank1]
+//   The weakest domain within each subject gets the most weekly exposure.
+//   Pools shift every 4-week macro-cycle so all domains rotate in.
 //
 // Skill advancement:
 //   Each domain tracks how many sessions it has had (domainStudyCount).
 //   This counter drives skillFocusForSession() to cycle through the skill list.
 //
 // Question count ramp:
-//   Starts at 80 % of the daily target in week 1, reaches 120 % by the final
-//   study week, building stamina progressively.
+//   Starts at 80 % of the per-block target in week 1, reaches 120 % by the
+//   final study week, building stamina progressively. The per-block base is
+//   computed from half the daily study minutes at 90 % efficiency.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -255,13 +262,20 @@ export function buildSchedule(
   const totalDays  = totalCalendarDays(input.testDate)
   const totalWeeks = Math.ceil(totalDays / 7)
   const practiceTestWeeks = practiceTestWeekSet(totalWeeks)
-  const baseQuestions = dailyQuestionTarget(input.dailyStudyMinutes)
   const maxPriorityScore = ranked[0]?.priorityScore ?? 1
 
-  // Track per-domain study count for skill progression
-  const domainStudyCounters = new Map<string, number>(
-    ranked.map(rd => [rd.entry.key, 0])
-  )
+  // Each study day is split evenly between R&W and Math.
+  // 90% of each half goes to questions (enforced in dailyQuestionTarget).
+  const halfMinutes = Math.floor(input.dailyStudyMinutes / 2)
+  const halfBase    = dailyQuestionTarget(halfMinutes)
+
+  // Separate domain pools for R&W and Math subjects
+  const rwRanked   = ranked.filter(rd => rd.entry.subject === 'reading_writing')
+  const mathRanked = ranked.filter(rd => rd.entry.subject === 'math')
+
+  // Per-domain study count for skill progression (separate per subject)
+  const rwDomainStudyCounters   = new Map<string, number>(rwRanked.map(rd => [rd.entry.key, 0]))
+  const mathDomainStudyCounters = new Map<string, number>(mathRanked.map(rd => [rd.entry.key, 0]))
 
   // Track which domains were studied in the current review week
   let weekDomains: RankedDomain[] = []
@@ -272,7 +286,9 @@ export function buildSchedule(
   const phaseWeekRanges = new Map<Phase, { start: number; end: number }>()
 
   const schedule: DaySchedule[] = []
-  let studyDayGlobalIdx = 0   // running count across all study days (any DOW)
+  // Independent pool indices for each subject — advances every study day
+  let rwStudyDayGlobalIdx   = 0
+  let mathStudyDayGlobalIdx = 0
 
   for (let dayIdx = 0; dayIdx < totalDays; dayIdx++) {
     const date       = isoDate(addDays(new Date(), dayIdx))
@@ -316,7 +332,7 @@ export function buildSchedule(
     }
 
     if (dayType === 'review') {
-      // Review covers unique domains studied Mon–Fri this week
+      // Review covers unique domains (R&W + Math) studied during the week
       const uniqueDomains = [...new Map(weekDomains.map(d => [d.entry.key, d])).values()]
       if (uniqueDomains.length === 0) {
         // Edge case: week started on Saturday (unlikely but guard it)
@@ -337,30 +353,52 @@ export function buildSchedule(
       continue
     }
 
-    // ── Study day ──────────────────────────────────────────────────────────
-    // Use global study-day counter so any day-of-week can be a study day.
-    const macroCycle = Math.floor((weekNum - 1) / 4)
-    const pool       = buildDomainPool(ranked, macroCycle)
-    const rd         = pool[studyDayGlobalIdx % pool.length]
-    studyDayGlobalIdx++
+    // ── Study day: one R&W block + one Math block ──────────────────────────
+    // Each block gets half the daily minutes so total time equals dailyStudyMinutes.
+    const macroCycle  = Math.floor((weekNum - 1) / 4)
+    const studyBlocks: StudyBlock[] = []
 
-    const studyCount = domainStudyCounters.get(rd.entry.key) ?? 0
-    const block = buildStudyBlock(
-      rd, phase,
-      input.dailyStudyMinutes,
-      baseQuestions,
-      weekNum, totalWeeks,
-      studyCount,
-      maxPriorityScore,
-    )
-    domainStudyCounters.set(rd.entry.key, studyCount + 1)
-    weekDomains.push(rd)
+    // R&W block
+    if (rwRanked.length > 0) {
+      const rwPool  = buildDomainPool(rwRanked, macroCycle)
+      const rwRd    = rwPool[rwStudyDayGlobalIdx % rwPool.length]
+      const rwCount = rwDomainStudyCounters.get(rwRd.entry.key) ?? 0
+      const rwBlock = buildStudyBlock(
+        rwRd, phase,
+        halfMinutes, halfBase,
+        weekNum, totalWeeks,
+        rwCount,
+        maxPriorityScore,
+      )
+      rwDomainStudyCounters.set(rwRd.entry.key, rwCount + 1)
+      weekDomains.push(rwRd)
+      studyBlocks.push(rwBlock)
+    }
+    rwStudyDayGlobalIdx++
+
+    // Math block
+    if (mathRanked.length > 0) {
+      const mathPool  = buildDomainPool(mathRanked, macroCycle)
+      const mathRd    = mathPool[mathStudyDayGlobalIdx % mathPool.length]
+      const mathCount = mathDomainStudyCounters.get(mathRd.entry.key) ?? 0
+      const mathBlock = buildStudyBlock(
+        mathRd, phase,
+        halfMinutes, halfBase,
+        weekNum, totalWeeks,
+        mathCount,
+        maxPriorityScore,
+      )
+      mathDomainStudyCounters.set(mathRd.entry.key, mathCount + 1)
+      weekDomains.push(mathRd)
+      studyBlocks.push(mathBlock)
+    }
+    mathStudyDayGlobalIdx++
 
     schedule.push({
       date, dayOfWeek, dayType, weekNumber: weekNum, phase,
-      blocks: [block],
-      totalDurationMinutes: block.durationMinutes,
-      totalQuestions:       block.questionCount,
+      blocks: studyBlocks,
+      totalDurationMinutes: studyBlocks.reduce((s, b) => s + b.durationMinutes, 0),
+      totalQuestions:       studyBlocks.reduce((s, b) => s + b.questionCount, 0),
     })
   }
 

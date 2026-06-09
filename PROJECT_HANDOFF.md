@@ -6,11 +6,52 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-08 (Session 12)
+2026-06-08 (Session 13 — UI/UX Rebuild, Foundation)
 
 ---
 
 ## What Was Done This Session
+
+### Session 13 — Premium UI/UX Rebuild: Foundation (Phases 0–2)
+
+Ground-up visual elevation of the app. **Foundation only** this session (tokens →
+primitives → layout shell); page-by-page redesign is the next checkpoint, paused for
+review. Branch: `ui-rebuild-premium`. No functional, schema, action, or planner
+changes — `npm run build` clean, `npm run test` green (44/44).
+
+**Phase 0 — Design tokens (`app/globals.css`):**
+- Single-sourced color ramps via `@theme`; `:root` ramp aliases point at them.
+- New **surface-elevation** tokens (`--surface-base/-raised/-overlay/-sunken`),
+  warm-tinted off-whites in light, layered slate-950→900→800 in dark.
+- **Hairline border** tokens (`--border` ~8%, `--border-strong` ~12%, `--input-border`).
+- **`shadow-xs`→`xl`** scale = 1px ring + soft layered shadow (light + dark variants).
+- Refined type scale (body 15px, display 28–40px @ `-0.02em`), radii standardized to
+  8/10/14 (`--radius-sm/-md/-lg`), motion 150–200ms.
+- Added `--accent` / `--accent-soft` (brand text/active states; violet-400 in dark),
+  `--gradient-mesh`, `.sp-hover-lift`, `.sp-display`, `.sp-mesh` helpers, and a global
+  `prefers-reduced-motion` guard. All prior token names + `sp-*` helpers preserved.
+
+**Phase 1 — Primitives (`components/ui/`):**
+- Refined: Button (depth + `icon-sm` size), Card (`interactive` prop, radius-lg,
+  shadow-xs), Input/Textarea/Select (size variants, accent focus ring, surfaces),
+  Badge (size variants), Tabs, Switch, Checkbox, Progress, Skeleton (shimmer),
+  Dialog/Dropdown/Select/Toast (overlay surface + shadow-lg/xl), Label.
+- **New:** `tooltip.tsx`, `segmented-control.tsx`, `empty-state.tsx`,
+  `stat-card.tsx` (StatCard + MetricCard + DeltaBadge), `page-header.tsx`.
+
+**Phase 2 — Layout shell (sidebar + top bar):**
+- New `components/layout/sidebar.tsx` — fixed left sidebar, icon+label nav with active
+  rail, user menu at bottom. New `components/layout/topbar.tsx` — breadcrumb (desktop) /
+  logo (mobile), theme toggle, notification bell.
+- `app/(dashboard)/layout.tsx` rewired to sidebar + offset content column; `mobile-nav`
+  restyled to accent tokens; notification badge given a ring.
+- `components/layout/navbar.tsx` is now **orphaned** (old top pill-nav, left in place,
+  not imported). Safe to delete during page-redesign phase.
+
+**Next:** page redesigns in order home → calendar → data → error-log → onboarding →
+auth → tutorial → settings → inventory → marketing landing.
+
+---
 
 ### Session 12 — Remove "Systems of equations" from Advanced Math
 
