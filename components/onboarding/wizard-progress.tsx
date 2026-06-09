@@ -23,9 +23,9 @@ export function WizardProgress({ currentStep, hideAccountStep = false }: WizardP
       {/* Step row */}
       <div className="flex items-center justify-between relative">
         {/* Connecting lines */}
-        <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 dark:bg-slate-700 mx-10 z-0" />
+        <div className="absolute top-5 left-0 right-0 h-0.5 bg-[var(--surface-sunken)] mx-10 z-0" />
         <div
-          className="absolute top-5 left-0 h-0.5 bg-violet-500 transition-all duration-500 ease-in-out mx-10 z-0"
+          className="absolute top-5 left-0 h-0.5 bg-[var(--accent)] transition-all duration-500 ease-in-out mx-10 z-0"
           style={{ right: `${((totalSteps - Math.min(currentStep, totalSteps)) / (totalSteps - 1)) * 100}%` }}
         />
 
@@ -41,9 +41,9 @@ export function WizardProgress({ currentStep, hideAccountStep = false }: WizardP
               <div
                 className={cn(
                   'flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300',
-                  isCompleted && 'bg-violet-600 border-violet-600 text-white shadow-lg shadow-violet-500/25',
-                  isActive && 'bg-violet-600 border-violet-600 text-white shadow-lg shadow-violet-500/40 scale-110',
-                  isPending && 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'
+                  isCompleted && 'bg-[var(--accent)] border-[var(--accent)] text-white shadow-[var(--shadow-xs)]',
+                  isActive && 'bg-[var(--accent)] border-[var(--accent)] text-white shadow-[var(--shadow-accent)] scale-110',
+                  isPending && 'bg-[var(--surface-raised)] border-[var(--border-strong)] text-[var(--text-muted)]'
                 )}
               >
                 {isCompleted ? (
@@ -56,12 +56,12 @@ export function WizardProgress({ currentStep, hideAccountStep = false }: WizardP
                 <span
                   className={cn(
                     'text-xs font-semibold leading-none',
-                    (isActive || isCompleted) ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'
+                    (isActive || isCompleted) ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
                   )}
                 >
                   {step.label}
                 </span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 leading-none">
+                <span className="text-[10px] text-[var(--text-muted)] mt-0.5 leading-none">
                   {step.description}
                 </span>
               </div>
@@ -72,10 +72,10 @@ export function WizardProgress({ currentStep, hideAccountStep = false }: WizardP
 
       {/* Mobile: current step label */}
       <div className="sm:hidden mt-4 text-center">
-        <p className="text-sm font-semibold text-violet-600 dark:text-violet-400">
+        <p className="text-sm font-semibold text-[var(--accent)]">
           Step {currentStep} of {totalSteps} — {visibleSteps[currentStep - 1]?.label}
         </p>
-        <p className="text-xs text-slate-400 mt-0.5">{visibleSteps[currentStep - 1]?.description}</p>
+        <p className="text-xs text-[var(--text-muted)] mt-0.5">{visibleSteps[currentStep - 1]?.description}</p>
       </div>
     </div>
   )

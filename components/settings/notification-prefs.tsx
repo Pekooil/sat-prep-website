@@ -38,16 +38,16 @@ function PrefRow({
 }) {
   return (
     <div className={cn(
-      'flex items-start justify-between gap-4 rounded-xl border p-4 transition-colors',
+      'flex items-start justify-between gap-4 rounded-[var(--radius-lg)] border p-4 transition-colors',
       checked
-        ? 'border-violet-200 bg-violet-50/40 dark:border-violet-800 dark:bg-violet-950/20'
+        ? 'border-[var(--border-strong)] bg-[var(--accent-soft)]'
         : 'border-[var(--border)] bg-[var(--card)]',
       disabled && 'opacity-50',
     )}>
       <div className="flex items-start gap-3">
         <div className={cn(
-          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg',
-          checked ? 'bg-violet-100 dark:bg-violet-900/40' : 'bg-[var(--muted)]',
+          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)]',
+          checked ? 'bg-[var(--accent-soft)] text-[var(--accent-soft-foreground)]' : 'bg-[var(--surface-sunken)] text-[var(--text-muted)]',
         )}>
           {icon}
         </div>
@@ -119,7 +119,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Bell className="h-4 w-4 text-violet-500" />
+            <Bell className="h-4 w-4 text-[var(--accent)]" />
             Delivery Channels
           </CardTitle>
           <p className="text-xs text-[var(--muted-foreground)]">
@@ -128,14 +128,14 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
         </CardHeader>
         <CardContent className="space-y-3">
           <PrefRow
-            icon={<Mail className="h-4 w-4 text-violet-600" />}
+            icon={<Mail className="h-4 w-4" />}
             label="Email Reminders"
             description="Daily digest sent to your registered email address"
             checked={prefs.email_reminders_enabled}
             onCheckedChange={v => set('email_reminders_enabled', v)}
           />
           <PrefRow
-            icon={<Bell className="h-4 w-4 text-indigo-600" />}
+            icon={<Bell className="h-4 w-4" />}
             label="In-App Notifications"
             description="Reminders shown in the notification bell in the navbar"
             checked={prefs.inapp_reminders_enabled}
@@ -157,7 +157,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <ClipboardList className="h-4 w-4 text-violet-500" />
+            <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
             What to Remind
           </CardTitle>
           <p className="text-xs text-[var(--muted-foreground)]">
@@ -166,7 +166,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
         </CardHeader>
         <CardContent className="space-y-3">
           <PrefRow
-            icon={<CalendarDays className="h-4 w-4 text-violet-600" />}
+            icon={<CalendarDays className="h-4 w-4" />}
             label="Today's Assignments"
             description="Remind me about study tasks due today"
             checked={prefs.daily_assignment_reminder}
@@ -174,7 +174,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
             disabled={!anyEnabled}
           />
           <PrefRow
-            icon={<AlertTriangle className="h-4 w-4 text-amber-500" />}
+            icon={<AlertTriangle className="h-4 w-4" />}
             label="Overdue Assignments"
             description="Alert me when I have incomplete tasks from previous days"
             checked={prefs.overdue_reminder}
@@ -182,7 +182,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
             disabled={!anyEnabled}
           />
           <PrefRow
-            icon={<FileText className="h-4 w-4 text-indigo-600" />}
+            icon={<FileText className="h-4 w-4" />}
             label="Upcoming Practice Tests"
             description="Notify me about practice tests scheduled in the next 7 days"
             checked={prefs.practice_test_reminder}
@@ -196,7 +196,7 @@ export function NotificationPrefs({ initial }: { initial: NotificationPrefsInput
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="h-4 w-4 text-violet-500" />
+            <Clock className="h-4 w-4 text-[var(--accent)]" />
             Reminder Schedule
           </CardTitle>
           <p className="text-xs text-[var(--muted-foreground)]">

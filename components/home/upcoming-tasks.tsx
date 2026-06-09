@@ -64,7 +64,7 @@ export function UpcomingTasks({ tasks: initialTasks }: UpcomingTasksProps) {
       <Card className="h-full flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between pb-3 shrink-0">
           <CardTitle className="text-base flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-violet-500" />
+            <CalendarDays className="h-4 w-4 text-[var(--text-muted)]" strokeWidth={1.75} />
             Upcoming Tasks
           </CardTitle>
           <Link href="/calendar">
@@ -98,12 +98,12 @@ export function UpcomingTasks({ tasks: initialTasks }: UpcomingTasksProps) {
                     key={task.id}
                     onClick={() => handleTaskClick(task)}
                     className={cn(
-                      'rounded-lg border border-[var(--border)] border-l-4 p-3 space-y-2',
+                      'rounded-[var(--radius-md)] border border-[var(--border)] border-l-[3px] p-3 space-y-2',
                       'cursor-pointer transition-colors select-none',
                       colors.leftBar,
                       task.is_completed
-                        ? 'opacity-60 bg-slate-50 dark:bg-slate-800/30'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50',
+                        ? 'opacity-60 bg-[var(--surface-sunken)]'
+                        : 'hover:bg-[var(--surface-sunken)]',
                     )}
                   >
                     {/* Row: title + session icon */}
@@ -155,7 +155,7 @@ export function UpcomingTasks({ tasks: initialTasks }: UpcomingTasksProps) {
                             </span>
                           )}
                           {isPracticeTest && (
-                            <Badge className="text-[10px] py-0 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                            <Badge size="sm" className="text-[10px] py-0">
                               Practice Test
                             </Badge>
                           )}
@@ -168,7 +168,7 @@ export function UpcomingTasks({ tasks: initialTasks }: UpcomingTasksProps) {
                       {/* Session indicator for incomplete plan tasks */}
                       {!task.is_completed && isPlanTask && (
                         <span className="shrink-0 mt-0.5" title="Click to start practice session">
-                          <ClipboardList className="h-4 w-4 text-violet-400" />
+                          <ClipboardList className="h-4 w-4 text-[var(--accent)]" strokeWidth={1.75} />
                         </span>
                       )}
                     </div>

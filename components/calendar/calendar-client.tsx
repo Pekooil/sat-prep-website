@@ -57,7 +57,7 @@ function dateRangeForView(view: CalendarView, anchor: Date): { start: Date; end:
 
 const LEGEND_ITEMS = [
   { dot: 'bg-blue-500',   label: 'Algebra' },
-  { dot: 'bg-violet-500', label: 'Advanced Math' },
+  { dot: 'bg-indigo-500', label: 'Advanced Math' },
   { dot: 'bg-orange-500', label: 'Problem-Solving' },
   { dot: 'bg-teal-500',   label: 'Geometry' },
   { dot: 'bg-green-500',  label: 'Information & Ideas' },
@@ -239,11 +239,11 @@ function MonthView({
               className={cn(
                 'min-h-[100px] sm:min-h-[110px] p-1.5 flex flex-col transition-colors duration-150',
                 todayCell
-                  ? 'bg-violet-50/60 dark:bg-violet-900/10'
+                  ? 'bg-[var(--accent-soft)]'
                   : isPastCell
-                  ? 'bg-slate-50/70 dark:bg-slate-900/40'
+                  ? 'bg-[var(--surface-sunken)]'
                   : 'bg-[var(--card)]',
-                isOver && 'bg-violet-100/80 dark:bg-violet-900/30 ring-1 ring-inset ring-violet-300 dark:ring-violet-700',
+                isOver && 'bg-[var(--accent-soft)] ring-1 ring-inset ring-[var(--accent)]',
               )}
               onDragOver={(e) => onDragOver(e, ds)}
               onDragLeave={onDragLeave}
@@ -254,16 +254,16 @@ function MonthView({
                 <span className={cn(
                   'flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium transition-colors',
                   todayCell
-                    ? 'bg-violet-600 text-white font-bold shadow-sm'
+                    ? 'bg-[var(--accent)] text-white font-semibold shadow-[var(--shadow-xs)]'
                     : isPastCell
-                    ? 'text-slate-400 dark:text-slate-600'
+                    ? 'text-[var(--text-muted)]'
                     : 'text-[var(--foreground)]',
                 )}>
                   {day}
                 </span>
                 {/* Dot indicator when there are tasks (future days) */}
                 {hasTasks && !isPastCell && !todayCell && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-violet-400 dark:bg-violet-500 opacity-70" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] opacity-70" />
                 )}
               </div>
 
@@ -274,7 +274,7 @@ function MonthView({
                 ))}
                 {dayTasks.length > 3 && (
                   <button
-                    className="text-[9px] text-violet-600 dark:text-violet-400 font-medium pl-1 hover:underline w-full text-left cursor-pointer"
+                    className="text-[9px] text-[var(--accent)] font-medium pl-1 hover:underline w-full text-left cursor-pointer"
                     onClick={() => onOpenTask(dayTasks[3])}
                   >
                     +{dayTasks.length - 3} more
@@ -343,11 +343,11 @@ function WeekView({
               <div
                 key={ds}
                 className={cn(
-                  'flex flex-col rounded-xl border transition-colors overflow-hidden',
+                  'flex flex-col rounded-[var(--radius-lg)] border transition-colors overflow-hidden',
                   todayCell
-                    ? 'border-violet-300 dark:border-violet-700'
+                    ? 'border-[var(--accent)]'
                     : 'border-[var(--border)]',
-                  isOver && 'ring-2 ring-violet-400 border-violet-400 bg-violet-50 dark:bg-violet-900/20',
+                  isOver && 'ring-2 ring-[var(--accent)] border-[var(--accent)] bg-[var(--accent-soft)]',
                 )}
                 onDragOver={(e) => onDragOver(e, ds)}
                 onDragLeave={onDragLeave}
@@ -357,27 +357,27 @@ function WeekView({
                 <div className={cn(
                   'px-2 py-2 text-center border-b border-[var(--border)]',
                   todayCell
-                    ? 'bg-violet-600'
+                    ? 'bg-[var(--accent)]'
                     : isPastCell
-                    ? 'bg-slate-50/80 dark:bg-slate-900/40'
+                    ? 'bg-[var(--surface-sunken)]'
                     : 'bg-[var(--muted)]',
                 )}>
                   <p className={cn(
                     'text-[10px] font-semibold uppercase tracking-wide',
                     todayCell
-                      ? 'text-violet-200'
+                      ? 'text-white/80'
                       : isPastCell
-                      ? 'text-slate-400 dark:text-slate-600'
+                      ? 'text-[var(--text-muted)]'
                       : 'text-[var(--muted-foreground)]',
                   )}>
                     {format(day, 'EEE')}
                   </p>
                   <p className={cn(
-                    'text-sm font-bold leading-none mt-0.5',
+                    'text-sm font-semibold leading-none mt-0.5',
                     todayCell
                       ? 'text-white'
                       : isPastCell
-                      ? 'text-slate-400 dark:text-slate-600'
+                      ? 'text-[var(--text-muted)]'
                       : 'text-[var(--foreground)]',
                   )}>
                     {format(day, 'd')}
@@ -460,7 +460,7 @@ function AgendaView({
             <div className="flex items-center gap-2 mb-2">
               <span className={cn(
                 'text-sm font-semibold',
-                isToday_ ? 'text-violet-600 dark:text-violet-400' : 'text-[var(--foreground)]',
+                isToday_ ? 'text-[var(--accent)]' : 'text-[var(--foreground)]',
               )}>
                 {isToday_ ? 'Today' : format(date, 'EEEE')}
               </span>
@@ -468,7 +468,7 @@ function AgendaView({
                 {format(date, 'MMM d, yyyy')}
               </span>
               {isToday_ && (
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-600" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
               )}
             </div>
 
@@ -527,7 +527,7 @@ function AgendaView({
                         {filters && (
                           <div className="mt-2 flex items-center gap-2 flex-wrap">
                             {filters.domain && (
-                              <span className="text-[10px] bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded">
+                              <span className="text-[10px] bg-[var(--accent-soft)] text-[var(--accent-soft-foreground)] px-1.5 py-0.5 rounded">
                                 {filters.domain}
                               </span>
                             )}
@@ -825,11 +825,11 @@ function ViewTab({
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors',
+        'flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors cursor-pointer',
         'border-r border-[var(--border)] last:border-r-0',
         active
-          ? 'bg-violet-600 text-white'
-          : 'bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]',
+          ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
+          : 'bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--surface-sunken)] hover:text-[var(--foreground)]',
       )}
     >
       {icon}

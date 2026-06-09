@@ -51,7 +51,7 @@ export function SaturnPathLogo({
   const pathStyle = pathColor ? { color: pathColor } : undefined
   const pathText =
     variant === 'dark' ? (
-      <span style={pathStyle ?? { color: '#a855f7' }}>Path</span>
+      <span style={pathStyle ?? { color: 'var(--color-violet-400)' }}>Path</span>
     ) : pathColor ? (
       /* explicit override in auto mode */
       <span style={pathStyle}>Path</span>

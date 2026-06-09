@@ -1,5 +1,31 @@
 @import "tailwindcss";
 
+/* ════════════════════════════════════════════════════════════════════════
+   SaturnPath Design System — "Quiet Monochrome"
+   ────────────────────────────────────────────────────────────────────────
+   Reference bar: Vercel · Linear · Notion · Superhuman.
+
+   INTENT
+   • Near-monochrome. True-neutral grays (zinc) do almost all the work.
+   • A SINGLE restrained accent (refined violet) appears only with intent:
+     focus rings, active nav, selection, and a few key data points.
+   • The PRIMARY action is a high-contrast NEUTRAL fill (near-black on light,
+     near-white on dark) — the Vercel/Linear signature — NOT the accent.
+   • Elevation = hairline borders + very soft shadows (light) / borders + a
+     faint inset top-highlight (dark). No gradient fills, no mesh, no washes.
+   • Typography-led hierarchy: tight tracking on headings, weights favor
+     500/600 over 700, real vertical rhythm on an 8px grid.
+   • Motion is quiet and fast: 120–200ms ease-out; prefers-reduced-motion honored.
+
+   ARCHITECTURE
+   • @theme defines the raw color ramps + fonts → generates Tailwind utilities
+     AND CSS vars. The "slate-*" names now carry TRUE-GRAY (zinc) values, and
+     "violet-*" carries the refined accent ramp. Names are kept for cascade
+     stability; only values changed.
+   • :root / .dark define SEMANTIC tokens (--surface-*, --border, --accent,
+     --primary, --text-*). Components consume SEMANTIC tokens, not raw ramps.
+   ════════════════════════════════════════════════════════════════════════ */
+
 /* ============================================================
    Keyframes
    ============================================================ */
@@ -27,62 +53,57 @@
 
 /* ============================================================
    @theme — single source of truth for color ramps + fonts.
-   These generate Tailwind utilities (bg-violet-600, text-slate-500…)
-   AND expose CSS vars (--color-violet-600) consumed by the
-   semantic aliases below. Don't duplicate these values elsewhere.
+   "violet" = refined accent ramp.  "slate" = TRUE-GRAY (zinc).
    ============================================================ */
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Violet ramp — brand */
+  /* Violet ramp — the single restrained accent (refined / true violet) */
   --color-violet-50:  #f5f3ff;
   --color-violet-100: #ede9fe;
   --color-violet-200: #ddd6fe;
   --color-violet-300: #c4b5fd;
   --color-violet-400: #a78bfa;
-  --color-violet-500: #a855f7;
-  --color-violet-600: #9333ea;
-  --color-violet-700: #7c3aed;
-  --color-violet-800: #6b21a8;
-  --color-violet-900: #581c87;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #7c3aed;
+  --color-violet-700: #6d28d9;
+  --color-violet-800: #5b21b6;
+  --color-violet-900: #4c1d95;
 
-  /* Slate ramp — neutrals (Tailwind-aligned) */
-  --color-slate-50:  #f8fafc;
-  --color-slate-100: #f1f5f9;
-  --color-slate-200: #e2e8f0;
-  --color-slate-300: #cbd5e1;
-  --color-slate-400: #94a3b8;
-  --color-slate-500: #64748b;
-  --color-slate-600: #475569;
-  --color-slate-700: #334155;
-  --color-slate-800: #1e293b;
-  --color-slate-900: #0f172a;
+  /* "slate" ramp — re-authored to TRUE-GRAY (zinc) so the whole app reads
+     monochrome. Names kept for cascade stability. */
+  --color-slate-50:  #fafafa;
+  --color-slate-100: #f4f4f5;
+  --color-slate-200: #e4e4e7;
+  --color-slate-300: #d4d4d8;
+  --color-slate-400: #a1a1aa;
+  --color-slate-500: #71717a;
+  --color-slate-600: #52525b;
+  --color-slate-700: #3f3f46;
+  --color-slate-800: #27272a;
+  --color-slate-900: #18181b;
 }
 
 /* ============================================================
-   SaturnPath Design System — semantic tokens (light)
-   ------------------------------------------------------------
-   Ramps below alias the @theme values so there is one source of
-   truth. Components should prefer SEMANTIC tokens (--surface-*,
-   --border, --accent, --text-*) over raw ramp values.
+   Semantic tokens — LIGHT (Vercel/Notion: crisp near-white)
    ============================================================ */
 :root {
-  /* ---- Brand ramp aliases (point at @theme) ---- */
+  /* ---- Accent ramp aliases (point at @theme) ---- */
   --violet-50:  var(--color-violet-50);
   --violet-100: var(--color-violet-100);
   --violet-200: var(--color-violet-200);
   --violet-300: var(--color-violet-300);
   --violet-400: var(--color-violet-400);
   --violet-500: var(--color-violet-500);
-  --violet-600: var(--color-violet-600);   /* PRIMARY */
+  --violet-600: var(--color-violet-600);
   --violet-700: var(--color-violet-700);
   --violet-800: var(--color-violet-800);
   --violet-900: var(--color-violet-900);
-  --purple-600: #9333ea;
-  --purple-700: #7e22ce;
+  --purple-600: var(--color-violet-600);
+  --purple-700: var(--color-violet-700);
 
-  /* ---- Neutral ramp aliases ---- */
+  /* ---- Neutral ramp aliases (true gray) ---- */
   --slate-50:  var(--color-slate-50);
   --slate-100: var(--color-slate-100);
   --slate-200: var(--color-slate-200);
@@ -94,7 +115,7 @@
   --slate-800: var(--color-slate-800);
   --slate-900: var(--color-slate-900);
 
-  /* ---- Semantic accents ---- */
+  /* ---- Status / data accents (used sparingly, key data points only) ---- */
   --blue-500:    #3b82f6;  --blue-600:    #2563eb;
   --indigo-500:  #6366f1;  --indigo-600:  #4f46e5;
   --emerald-500: #10b981;  --emerald-600: #059669;
@@ -106,15 +127,15 @@
   --green-500:   #22c55e;  --green-600:   #16a34a;
   --cyan-500:    #06b6d4;  --cyan-600:    #0891b2;
 
-  /* ---- Surface elevation (warm-tinted off-whites) ----
-     base    = page background
-     raised  = cards / panels
+  /* ---- Surface elevation (true neutrals) ----
+     base    = page background (a hair off-white)
+     raised  = cards / panels (pure white → gentle lift over base)
      overlay = dialogs / popovers / dropdowns
-     sunken  = inset wells, tracks, code blocks            */
-  --surface-base:    #f7f6fb;
+     sunken  = inset wells, tracks, secondary fills            */
+  --surface-base:    #fafafa;
   --surface-raised:  #ffffff;
   --surface-overlay: #ffffff;
-  --surface-sunken:  #f1eff7;
+  --surface-sunken:  #f4f4f5;
 
   /* Back-compat semantic aliases */
   --background:      var(--surface-base);
@@ -125,45 +146,47 @@
   --popover:            var(--surface-overlay);
   --popover-foreground: var(--slate-900);
   --muted:             var(--surface-sunken);
-  --muted-foreground:  var(--slate-500);
+  --muted-foreground:  var(--text-muted);
 
-  /* ---- Borders (hairline ~8% / interactive ~12%) ---- */
-  --border:        rgba(15, 23, 42, 0.08);
-  --border-strong: rgba(15, 23, 42, 0.12);
-  --input-border:  rgba(15, 23, 42, 0.14);
-  --ring:          var(--violet-600);
+  /* ---- Borders (hairline ~7% / interactive ~12% / input ~14%) ---- */
+  --border:        rgba(9, 9, 11, 0.07);
+  --border-strong: rgba(9, 9, 11, 0.12);
+  --input-border:  rgba(9, 9, 11, 0.14);
+  --ring:          var(--accent);
 
-  /* ---- Brand / accent ----
-     --primary       : solid fills (white text rides on top)
-     --accent        : brand color for text, icons, active states
-     --accent-soft   : tinted background for active/selected states */
-  --primary:            var(--violet-600);
-  --primary-hover:      var(--violet-700);
-  --primary-foreground: #ffffff;
-  --accent:             var(--violet-600);
-  --accent-hover:       var(--violet-700);
-  --accent-soft:        rgba(147, 51, 234, 0.10);
-  --accent-soft-hover:  rgba(147, 51, 234, 0.15);
-  --accent-soft-foreground: var(--violet-700);
+  /* ---- Primary (the premium CTA) = high-contrast NEUTRAL ---- */
+  --primary:            #0a0a0a;
+  --primary-hover:      #27272a;          /* zinc-800 */
+  --primary-foreground: #fafafa;
+
+  /* ---- Accent (single restrained chromatic token) ----
+     --accent      : brand color for focus, active nav, selection, links, key data
+     --accent-soft : tinted background for active/selected states */
+  --accent:             #6d28d9;          /* violet-700 */
+  --accent-hover:       #5b21b6;          /* violet-800 */
+  --accent-soft:        rgba(109, 40, 217, 0.10);
+  --accent-soft-hover:  rgba(109, 40, 217, 0.15);
+  --accent-soft-foreground: #6d28d9;
 
   /* ---- Text ---- */
-  --text-heading: var(--slate-900);
-  --text-body:    var(--slate-700);
-  --text-muted:   var(--slate-500);
-  --text-on-primary: #ffffff;
+  --text-heading: #0a0a0a;
+  --text-body:    #3f3f46;                /* zinc-700 */
+  --text-muted:   #71717a;                /* zinc-500 (AA on white) */
+  --text-on-primary: #fafafa;
 
   /* ---- Status ---- */
   --success:     var(--emerald-600);
   --warning:     var(--amber-600);
-  --destructive: var(--red-500);
+  --destructive: var(--red-600);
   --info:        var(--indigo-600);
 
-  /* ---- Gradients ---- */
-  --gradient-brand:  linear-gradient(90deg, #9333ea 0%, #7c3aed 55%, #7e22ce 100%);
-  --gradient-avatar: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
-  --gradient-card:   linear-gradient(180deg, rgba(245,243,255,0.5) 0%, #ffffff 100%);
-  --gradient-mesh:   radial-gradient(60% 60% at 20% 0%, rgba(147,51,234,0.10) 0%, transparent 60%),
-                     radial-gradient(50% 50% at 90% 10%, rgba(124,58,237,0.08) 0%, transparent 55%);
+  /* ---- Gradients RETIRED → flat neutral fallbacks ----
+     Kept as names so any lingering consumer degrades to a flat surface
+     instead of breaking. The redesign authors flat surfaces directly. */
+  --gradient-brand:  var(--accent);
+  --gradient-avatar: var(--surface-sunken);
+  --gradient-card:   var(--surface-raised);
+  --gradient-mesh:   none;
 
   /* ---- Typography ---- */
   --font-display: var(--font-sans);
@@ -176,10 +199,10 @@
   --text-lg:  1.125rem;   /* 18px */
   --text-xl:  1.25rem;    /* 20px */
   --text-2xl: 1.5rem;     /* 24px */
-  --text-3xl: 1.75rem;    /* 28px — display floor */
+  --text-3xl: 1.75rem;    /* 28px */
   --text-4xl: 2rem;       /* 32px */
-  --text-5xl: 2.5rem;     /* 40px — display ceiling */
-  --text-6xl: 3rem;       /* 48px — marketing hero */
+  --text-5xl: 2.5rem;     /* 40px */
+  --text-6xl: 3rem;       /* 48px */
 
   --weight-normal:   400;
   --weight-medium:   500;
@@ -194,7 +217,7 @@
 
   --tracking-tighter: -0.03em;
   --tracking-tight:   -0.02em;   /* display headings */
-  --tracking-snug:    -0.01em;
+  --tracking-snug:    -0.011em;
   --tracking-normal:  0;
   --tracking-wide:    0.04em;
 
@@ -211,30 +234,34 @@
   --space-12: 3rem;
   --space-16: 4rem;
 
-  /* ---- Radius (standardized 8 / 10 / 14) ---- */
-  --radius-xs:   0.375rem;  /* 6px  — chips, dots */
-  --radius-sm:   0.5rem;    /* 8px  — inputs, small controls */
-  --radius:      0.625rem;  /* 10px — buttons, default */
-  --radius-md:   0.625rem;  /* 10px */
-  --radius-lg:   0.875rem;  /* 14px — cards */
-  --radius-xl:   1.125rem;  /* 18px — large panels */
-  --radius-2xl:  1.5rem;    /* 24px — hero surfaces */
+  /* ---- Radius (sharper, Linear/Vercel) — ctrl 8 · card 12 · panel 16 ---- */
+  --radius-xs:   0.25rem;   /* 4px  — chips, dots */
+  --radius-sm:   0.375rem;  /* 6px  — small controls */
+  --radius:      0.5rem;    /* 8px  — buttons, inputs, default */
+  --radius-md:   0.5rem;    /* 8px */
+  --radius-lg:   0.75rem;   /* 12px — cards */
+  --radius-xl:   1rem;      /* 16px — large panels */
+  --radius-2xl:  1.25rem;   /* 20px — hero surfaces */
   --radius-full: 9999px;
 
-  /* ---- Shadows (1px ring + soft layered shadow) ---- */
-  --shadow-xs: 0 0 0 1px rgba(15,23,42,0.04), 0 1px 2px 0 rgba(15,23,42,0.05);
-  --shadow-sm: 0 0 0 1px rgba(15,23,42,0.04), 0 1px 3px 0 rgba(15,23,42,0.07), 0 1px 2px -1px rgba(15,23,42,0.05);
-  --shadow-md: 0 0 0 1px rgba(15,23,42,0.04), 0 4px 8px -2px rgba(15,23,42,0.10), 0 2px 4px -2px rgba(15,23,42,0.06);
-  --shadow-lg: 0 0 0 1px rgba(15,23,42,0.04), 0 12px 24px -6px rgba(15,23,42,0.12), 0 4px 8px -4px rgba(15,23,42,0.07);
-  --shadow-xl: 0 0 0 1px rgba(15,23,42,0.05), 0 24px 48px -12px rgba(15,23,42,0.18), 0 8px 16px -8px rgba(15,23,42,0.10);
-  --shadow-violet: 0 8px 24px -6px rgba(124,58,237,0.35);
+  /* ---- Shadows — very soft, low-spread (Vercel). 1px ring + faint drop ---- */
+  --shadow-xs: 0 1px 2px 0 rgba(9,9,11,0.05);
+  --shadow-sm: 0 1px 2px 0 rgba(9,9,11,0.05), 0 1px 3px 0 rgba(9,9,11,0.05);
+  --shadow-md: 0 2px 4px -1px rgba(9,9,11,0.06), 0 4px 12px -2px rgba(9,9,11,0.08);
+  --shadow-lg: 0 4px 8px -2px rgba(9,9,11,0.07), 0 12px 28px -6px rgba(9,9,11,0.12);
+  --shadow-xl: 0 8px 16px -6px rgba(9,9,11,0.08), 0 24px 48px -12px rgba(9,9,11,0.16);
+  --shadow-accent: 0 4px 16px -4px rgba(109,40,217,0.25);
+  --shadow-violet: var(--shadow-accent);  /* back-compat alias */
+
+  /* Faint inset top highlight (used by dark elevation; no-op in light) */
+  --elevation-highlight: 0 0 0 0 transparent;
 
   /* ---- Motion ---- */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-fast:   150ms;
+  --dur-fast:   140ms;
   --dur-normal: 200ms;
-  --dur-slow:   400ms;
+  --dur-slow:   320ms;
   --dur-shimmer: 1600ms;
 
   /* ---- Layout ---- */
@@ -244,59 +271,67 @@
 }
 
 /* ============================================================
-   Dark mode — layered slate (950 → 900 → 800), violet-400 accent
+   Semantic tokens — DARK (Linear/Superhuman: deep near-black)
+   Elevation via borders + faint inset top highlight; quiet shadows.
    ============================================================ */
 .dark {
-  --surface-base:    #0a0e1a;
-  --surface-raised:  #121829;
-  --surface-overlay: #1a2236;
-  --surface-sunken:  #0c1120;
+  --surface-base:    #09090b;   /* zinc-950 near-black */
+  --surface-raised:  #141417;
+  --surface-overlay: #1c1c20;
+  --surface-sunken:  #0c0c0f;
 
   --background:      var(--surface-base);
-  --foreground:      #f1f5f9;
+  --foreground:      #fafafa;
   --surface-card:    var(--surface-raised);
   --card:            var(--surface-raised);
-  --card-foreground: #f1f5f9;
+  --card-foreground: #fafafa;
   --popover:            var(--surface-overlay);
-  --popover-foreground: #f1f5f9;
+  --popover-foreground: #fafafa;
   --muted:             var(--surface-sunken);
-  --muted-foreground:  #93a4bd;
+  --muted-foreground:  var(--text-muted);
 
   --border:        rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.13);
-  --input-border:  rgba(255, 255, 255, 0.15);
-  --ring:          var(--violet-400);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --input-border:  rgba(255, 255, 255, 0.16);
+  --ring:          var(--accent);
 
-  --primary:       var(--violet-500);
-  --primary-hover: var(--violet-400);
-  --accent:             var(--violet-400);
-  --accent-hover:       var(--violet-300);
-  --accent-soft:        rgba(167, 139, 250, 0.14);
-  --accent-soft-hover:  rgba(167, 139, 250, 0.20);
-  --accent-soft-foreground: var(--violet-300);
+  /* Primary = high-contrast near-white neutral */
+  --primary:            #fafafa;
+  --primary-hover:      #e4e4e7;          /* zinc-200 */
+  --primary-foreground: #0a0a0a;
 
-  --text-heading:  #f1f5f9;
-  --text-body:     #c7d3e6;
-  --text-muted:    #93a4bd;
+  --accent:             #8b5cf6;          /* violet-500 */
+  --accent-hover:       #a78bfa;          /* violet-400 */
+  --accent-soft:        rgba(139, 92, 246, 0.16);
+  --accent-soft-hover:  rgba(139, 92, 246, 0.24);
+  --accent-soft-foreground: #c4b5fd;      /* violet-300 */
+
+  --text-heading:  #fafafa;
+  --text-body:     #c8c8cd;
+  --text-muted:    #8a8a92;
 
   --success:     #34d399;
   --warning:     #fbbf24;
   --destructive: #f87171;
   --info:        #818cf8;
 
-  /* Dark gradients */
-  --gradient-brand:  linear-gradient(90deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%);
-  --gradient-card:   linear-gradient(180deg, rgba(26,34,54,0.6) 0%, #121829 100%);
-  --gradient-mesh:   radial-gradient(60% 60% at 20% 0%, rgba(124,58,237,0.18) 0%, transparent 60%),
-                     radial-gradient(50% 50% at 90% 10%, rgba(91,33,182,0.14) 0%, transparent 55%);
+  /* Gradients RETIRED → flat neutral fallbacks */
+  --gradient-brand:  var(--accent);
+  --gradient-avatar: var(--surface-sunken);
+  --gradient-card:   var(--surface-raised);
+  --gradient-mesh:   none;
 
-  /* Dark shadows — soft white ring + deep shadow */
-  --shadow-xs: 0 0 0 1px rgba(255,255,255,0.04), 0 1px 2px 0 rgba(0,0,0,0.40);
-  --shadow-sm: 0 0 0 1px rgba(255,255,255,0.04), 0 1px 3px 0 rgba(0,0,0,0.45), 0 1px 2px -1px rgba(0,0,0,0.35);
-  --shadow-md: 0 0 0 1px rgba(255,255,255,0.05), 0 4px 8px -2px rgba(0,0,0,0.50), 0 2px 4px -2px rgba(0,0,0,0.35);
-  --shadow-lg: 0 0 0 1px rgba(255,255,255,0.05), 0 12px 24px -6px rgba(0,0,0,0.55), 0 4px 8px -4px rgba(0,0,0,0.40);
-  --shadow-xl: 0 0 0 1px rgba(255,255,255,0.06), 0 24px 48px -12px rgba(0,0,0,0.65), 0 8px 16px -8px rgba(0,0,0,0.45);
-  --shadow-violet: 0 8px 24px -6px rgba(109,40,217,0.50);
+  /* Faint inset top highlight that rides on raised surfaces */
+  --elevation-highlight: inset 0 1px 0 rgba(255,255,255,0.05);
+
+  /* Dark shadows — minimal drop + ring + inset top highlight */
+  --shadow-xs: var(--elevation-highlight), 0 1px 2px 0 rgba(0,0,0,0.45);
+  --shadow-sm: var(--elevation-highlight), 0 1px 3px 0 rgba(0,0,0,0.50);
+  --shadow-md: var(--elevation-highlight), 0 4px 12px -2px rgba(0,0,0,0.55);
+  --shadow-lg: var(--elevation-highlight), 0 12px 28px -6px rgba(0,0,0,0.62);
+  --shadow-xl: var(--elevation-highlight), 0 24px 48px -12px rgba(0,0,0,0.70);
+  --shadow-accent: 0 4px 18px -4px rgba(139,92,246,0.40);
+  --shadow-violet: var(--shadow-accent);
 }
 
 /* ============================================================
@@ -312,8 +347,8 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-::selection { background: var(--violet-200); color: var(--violet-900); }
-.dark ::selection { background: rgba(167,139,250,0.30); color: #f5f3ff; }
+::selection { background: rgba(109,40,217,0.16); color: #4c1d95; }
+.dark ::selection { background: rgba(139,92,246,0.30); color: #ede9fe; }
 
 a { color: var(--accent); text-underline-offset: 2px; }
 
@@ -349,9 +384,9 @@ a { color: var(--accent); text-underline-offset: 2px; }
   letter-spacing: var(--tracking-snug);
 }
 
-/* Display heading helper — tight tracking */
+/* Display heading helper — tight tracking, weight 600 (not 700) */
 .sp-display {
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-tight);
   line-height: var(--leading-tight);
   color: var(--text-heading);
@@ -363,27 +398,29 @@ a { color: var(--accent); text-underline-offset: 2px; }
   font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  color: var(--muted-foreground);
+  color: var(--text-muted);
 }
 
-/* Signature SaturnPath gradient banner */
+/* Banner — RETIRED gradient → flat neutral panel with hairline border */
 .sp-banner {
-  background: var(--gradient-brand);
-  color: #fff;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
+  background: var(--surface-raised);
+  color: var(--text-heading);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
 }
 
-/* Gradient text */
+/* Gradient text — RETIRED → solid heading color */
 .sp-gradient-text {
-  background: var(--gradient-brand);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: currentColor;
+  color: var(--text-heading);
 }
 
-/* Subtle brand mesh background (hero / auth panels) */
-.sp-mesh { background-image: var(--gradient-mesh); }
+/* Mesh background — RETIRED → no-op */
+.sp-mesh { background-image: none; }
 
 /* Shimmer skeleton */
 .sp-shimmer {
@@ -400,14 +437,16 @@ a { color: var(--accent); text-underline-offset: 2px; }
 /* Fade-in-up list entry */
 .sp-enter { animation: sp-fade-in-up var(--dur-normal) var(--ease-out) both; }
 
-/* Card hover-lift — fast, transform-based (no layout shift) */
+/* Card hover-lift — quiet, transform-based (no layout shift) */
 .sp-hover-lift {
   transition: transform var(--dur-normal) var(--ease-out),
-              box-shadow var(--dur-normal) var(--ease-out);
+              box-shadow var(--dur-normal) var(--ease-out),
+              border-color var(--dur-normal) var(--ease-out);
 }
 .sp-hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
 }
 
 /* Chart tooltip base */
@@ -427,36 +466,36 @@ a { color: var(--accent); text-underline-offset: 2px; }
   box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
 }
 
-/* Inset card — subtle inner shadow for depth */
-.sp-card-inset { box-shadow: inset 0 1px 3px 0 rgba(15,23,42,0.06); }
-.dark .sp-card-inset { box-shadow: inset 0 1px 3px 0 rgba(0,0,0,0.30); }
+/* Inset card — subtle inner depth */
+.sp-card-inset { box-shadow: inset 0 1px 2px 0 rgba(9,9,11,0.05); }
+.dark .sp-card-inset { box-shadow: inset 0 1px 2px 0 rgba(0,0,0,0.40); }
 
 /* Button active press */
-button:active:not(:disabled) { transform: translateY(0.5px) scale(0.99); }
+button:active:not(:disabled) { transform: translateY(0.5px); }
 
-/* Range input — unified violet thumb across browsers */
+/* Range input — accent thumb across browsers */
 input[type="range"] { accent-color: var(--accent); }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 9999px;
   background: var(--accent);
-  box-shadow: 0 1px 4px rgba(124,58,237,0.4);
+  box-shadow: 0 1px 3px rgba(9,9,11,0.25);
   cursor: pointer;
   transition: transform var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
 }
 input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 2px 8px rgba(124,58,237,0.5);
+  transform: scale(1.12);
+  box-shadow: 0 2px 6px rgba(9,9,11,0.30);
 }
 input[type="range"]::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 9999px;
   background: var(--accent);
   border: none;
-  box-shadow: 0 1px 4px rgba(124,58,237,0.4);
+  box-shadow: 0 1px 3px rgba(9,9,11,0.25);
   cursor: pointer;
 }
 
@@ -465,6 +504,6 @@ input[type="range"]::-moz-range-thumb {
   nav, aside, header { display: none !important; }
   body { background: #fff !important; color: #000 !important; }
   main { padding: 0 !important; margin: 0 !important; }
-  .card, [class*="Card"] { box-shadow: none !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; }
+  .card, [class*="Card"] { box-shadow: none !important; border: 1px solid #e4e4e7 !important; break-inside: avoid; }
   @page { margin: 1.5cm; }
 }

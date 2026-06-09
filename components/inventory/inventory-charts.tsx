@@ -67,15 +67,15 @@ export function InventoryCharts({ items }: InventoryChartsProps) {
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={sectionData} barCategoryGap="35%">
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="var(--border)" />
-              <YAxis tick={{ fontSize: 11 }} stroke="var(--border)" />
+              <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--text-muted)' }} stroke="var(--border)" />
+              <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" />
               <Tooltip
-                contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                contentStyle={{ background: 'var(--popover)', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 12, boxShadow: 'var(--shadow-lg)', color: 'var(--foreground)' }}
               />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="available" name="Available" fill="#a78bfa" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="assigned"  name="Assigned"  fill="#60a5fa" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="completed" name="Completed" fill="#34d399" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="available" name="Available" fill="var(--accent)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="assigned"  name="Assigned"  fill="var(--text-muted)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="completed" name="Completed" fill="var(--success)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -90,13 +90,13 @@ export function InventoryCharts({ items }: InventoryChartsProps) {
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={diffData} barCategoryGap="35%">
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="var(--border)" />
-              <YAxis tick={{ fontSize: 11 }} stroke="var(--border)" />
+              <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--text-muted)' }} stroke="var(--border)" />
+              <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" />
               <Tooltip
-                contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                contentStyle={{ background: 'var(--popover)', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 12, boxShadow: 'var(--shadow-lg)', color: 'var(--foreground)' }}
               />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="available" name="Available" fill="#a78bfa" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="available" name="Available" fill="var(--accent)" radius={[4, 4, 0, 0]} />
               <Bar dataKey="remaining" name="Remaining" radius={[4, 4, 0, 0]}>
                 {diffData.map((entry, i) => (
                   <Cell key={i} fill={remainingColor(entry.available > 0 ? (entry.remaining / entry.available) * 100 : 100)} />
@@ -116,14 +116,14 @@ export function InventoryCharts({ items }: InventoryChartsProps) {
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={depletedSkills} layout="vertical" barCategoryGap="20%">
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} stroke="var(--border)" tickFormatter={v => `${v}%`} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} stroke="var(--border)" width={180} />
+              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" tickFormatter={v => `${v}%`} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" width={180} />
               <Tooltip
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 formatter={(v: any, _name: any, entry: any) =>
                   [`${v}% (${entry?.payload?.remaining ?? 0}/${entry?.payload?.available ?? 0})`, 'Remaining']
                 }
-                contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                contentStyle={{ background: 'var(--popover)', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 12, boxShadow: 'var(--shadow-lg)', color: 'var(--foreground)' }}
               />
               <Bar dataKey="pct" name="Remaining %" radius={[0, 4, 4, 0]}>
                 {depletedSkills.map((entry, i) => (

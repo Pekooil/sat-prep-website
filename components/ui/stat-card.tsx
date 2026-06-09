@@ -105,7 +105,7 @@ export function MetricCard({
           {delta && <DeltaBadge {...delta} />}
         </div>
         <div className="mt-2 flex items-baseline gap-1">
-          <span className="sp-numeric text-4xl font-bold tracking-[var(--tracking-tight)] text-[var(--text-heading)]">
+          <span className="sp-numeric text-4xl font-semibold tracking-[var(--tracking-tight)] text-[var(--text-heading)]">
             {value}
           </span>
           {unit && <span className="text-sm font-medium text-[var(--text-muted)]">{unit}</span>}

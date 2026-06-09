@@ -52,7 +52,7 @@ function DomainGrid({
                       'inline-block rounded px-2 py-0.5 text-[10px] font-medium truncate max-w-[180px]',
                       sAcc !== null
                         ? `${cellBg(sAcc)} text-white`
-                        : 'bg-slate-100 dark:bg-slate-800 text-[var(--muted-foreground)]',
+                        : 'bg-[var(--surface-sunken)] text-[var(--text-muted)]',
                     )}
                   >
                     {skill.label}
@@ -68,7 +68,7 @@ function DomainGrid({
 }
 
 function cellBg(acc: number | null): string {
-  if (acc === null) return 'bg-slate-100 dark:bg-slate-800/50'
+  if (acc === null) return 'bg-[var(--surface-sunken)]'
   if (acc >= 90)   return 'bg-emerald-500 dark:bg-emerald-600'
   if (acc >= 75)   return 'bg-emerald-400 dark:bg-emerald-700'
   if (acc >= 60)   return 'bg-amber-400 dark:bg-amber-500'
@@ -117,8 +117,8 @@ export function AccuracyHeatmap({ sessions }: AccuracyHeatmapProps) {
           <CardTitle className="text-base">Accuracy by Topic</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col items-center justify-center py-14">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mb-3">
-            <Map className="h-5 w-5 text-[var(--muted-foreground)]" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-sunken)] mb-3">
+            <Map className="h-5 w-5 text-[var(--text-muted)]" strokeWidth={1.75} />
           </div>
           <p className="font-medium text-sm">No session data</p>
           <p className="text-xs text-[var(--muted-foreground)] mt-1 text-center">
@@ -152,7 +152,7 @@ export function AccuracyHeatmap({ sessions }: AccuracyHeatmapProps) {
         {/* Legend */}
         <div className="flex items-center gap-3 mt-4 text-[10px] text-[var(--muted-foreground)] flex-wrap">
           {[
-            { bg: 'bg-slate-100 dark:bg-slate-800/50', label: 'No data' },
+            { bg: 'bg-[var(--surface-sunken)]', label: 'No data' },
             { bg: 'bg-red-500', label: '<40%' },
             { bg: 'bg-orange-400', label: '40–59%' },
             { bg: 'bg-amber-400', label: '60–74%' },

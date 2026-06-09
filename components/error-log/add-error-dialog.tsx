@@ -119,10 +119,10 @@ export function AddErrorDialog({ open, onOpenChange, onSuccess }: AddErrorDialog
                 <button key={s} type="button"
                   onClick={() => { setSubject(s); setSelectedDomain(''); setSelectedSkill('') }}
                   className={cn(
-                    'flex-1 py-2 rounded-md text-sm font-medium border transition-colors',
+                    'flex-1 py-2 rounded-md text-sm font-medium border transition-colors cursor-pointer',
                     subject === s
-                      ? s === 'math' ? 'bg-purple-600 text-white border-purple-600' : 'bg-violet-600 text-white border-violet-600'
-                      : 'border-[var(--border)] hover:bg-slate-50 dark:hover:bg-slate-800'
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'border-[var(--border)] text-[var(--text-body)] hover:bg-[var(--surface-sunken)]'
                   )}
                 >
                   {s === 'math' ? 'Math' : 'Reading & Writing'}

@@ -83,9 +83,9 @@ export function PracticeTestScoreDialog({
           <DialogTitle>Log Practice Test Score</DialogTitle>
         </DialogHeader>
 
-        <div className="rounded-md bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900 p-3 text-sm">
-          <p className="font-medium text-purple-800 dark:text-purple-300">{task.title}</p>
-          <p className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">{task.task_date}</p>
+        <div className="rounded-[var(--radius)] bg-[var(--accent-soft)] border border-[var(--border)] p-3 text-sm">
+          <p className="font-medium text-[var(--text-heading)]">{task.title}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">{task.task_date}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

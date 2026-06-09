@@ -17,10 +17,10 @@ interface ConsistencyChartProps {
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 function cellColor(count: number): string {
-  if (count === 0) return 'bg-slate-100 dark:bg-slate-800'
-  if (count === 1) return 'bg-emerald-200 dark:bg-emerald-900/70'
-  if (count <= 3)  return 'bg-emerald-400 dark:bg-emerald-700'
-  return                  'bg-emerald-600 dark:bg-emerald-500'
+  if (count === 0) return 'bg-[var(--surface-sunken)]'
+  if (count === 1) return 'bg-violet-200 dark:bg-violet-900/60'
+  if (count <= 3)  return 'bg-violet-400 dark:bg-violet-700'
+  return                  'bg-violet-600 dark:bg-violet-500'
 }
 
 export function ConsistencyChart({ sessions, dateRange }: ConsistencyChartProps) {
@@ -104,13 +104,13 @@ export function ConsistencyChart({ sessions, dateRange }: ConsistencyChartProps)
             </p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-2xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+            <p className="text-2xl font-semibold font-mono tabular-nums text-[var(--accent)]">
               {consistencyScore}%
             </p>
             <div className="flex items-center justify-end gap-0.5 text-[10px] text-[var(--muted-foreground)]">
               {streak > 0 ? (
                 <>
-                  <Flame className="h-3 w-3 text-orange-500 shrink-0" />
+                  <Flame className="h-3 w-3 text-[var(--warning)] shrink-0" />
                   <span>{streak}-day streak</span>
                 </>
               ) : activeDays > 0 ? (
@@ -163,10 +163,10 @@ export function ConsistencyChart({ sessions, dateRange }: ConsistencyChartProps)
         <div className="flex items-center gap-2 mt-3 text-[10px] text-[var(--muted-foreground)]">
           <span>Less</span>
           {[
-            'bg-slate-100 dark:bg-slate-800',
-            'bg-emerald-200 dark:bg-emerald-900/70',
-            'bg-emerald-400 dark:bg-emerald-700',
-            'bg-emerald-600 dark:bg-emerald-500',
+            'bg-[var(--surface-sunken)]',
+            'bg-violet-200 dark:bg-violet-900/60',
+            'bg-violet-400 dark:bg-violet-700',
+            'bg-violet-600 dark:bg-violet-500',
           ].map((c, i) => (
             <div key={i} className={cn('h-3 w-3 rounded-[2px]', c)} />
           ))}

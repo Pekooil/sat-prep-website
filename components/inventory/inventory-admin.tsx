@@ -188,7 +188,7 @@ export function InventoryAdmin({ items, onUpdate }: Props) {
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex gap-2 flex-wrap">
-        <Button onClick={openAdd} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white">
+        <Button onClick={openAdd} className="gap-2">
           <Plus className="h-4 w-4" />
           Add category
         </Button>
@@ -207,7 +207,7 @@ export function InventoryAdmin({ items, onUpdate }: Props) {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-[var(--border)] bg-slate-50 dark:bg-slate-800/60">
+              <thead className="border-b border-[var(--border)] bg-[var(--surface-sunken)]">
                 <tr>
                   {['Section', 'Domain', 'Skill', 'Difficulty', 'Available', ''].map(h => (
                     <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
@@ -218,7 +218,7 @@ export function InventoryAdmin({ items, onUpdate }: Props) {
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
                 {sortedItems.map(item => (
-                  <tr key={item.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors">
+                  <tr key={item.id} className="hover:bg-[var(--surface-sunken)] transition-colors">
                     <td className="px-3 py-2.5 text-xs text-[var(--muted-foreground)] font-medium">
                       {item.section === 'Reading and Writing' ? 'R&W' : 'Math'}
                     </td>
@@ -239,7 +239,7 @@ export function InventoryAdmin({ items, onUpdate }: Props) {
                       <div className="flex gap-1 justify-end">
                         <Button
                           variant="ghost" size="icon"
-                          className="h-7 w-7 text-[var(--muted-foreground)] hover:text-violet-600"
+                          className="h-7 w-7 text-[var(--muted-foreground)] hover:text-[var(--accent)]"
                           onClick={() => openEdit(item)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -322,7 +322,7 @@ export function InventoryAdmin({ items, onUpdate }: Props) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancel</Button>
-            <Button onClick={submitForm} disabled={pending} className="bg-violet-600 hover:bg-violet-700 text-white">
+            <Button onClick={submitForm} disabled={pending}>
               {pending ? 'Saving…' : editingId ? 'Save changes' : 'Add category'}
             </Button>
           </DialogFooter>
@@ -363,7 +363,7 @@ export function InventoryAdmin({ items, onUpdate }: Props) {
               <Button
                 size="sm"
                 variant={importMode === 'csv' ? 'default' : 'outline'}
-                className={cn('gap-1.5', importMode === 'csv' && 'bg-violet-600 hover:bg-violet-700 text-white')}
+                className="gap-1.5"
                 onClick={() => setImportMode('csv')}
               >
                 <FileText className="h-3.5 w-3.5" />
@@ -372,7 +372,7 @@ export function InventoryAdmin({ items, onUpdate }: Props) {
               <Button
                 size="sm"
                 variant={importMode === 'json' ? 'default' : 'outline'}
-                className={cn('gap-1.5', importMode === 'json' && 'bg-violet-600 hover:bg-violet-700 text-white')}
+                className="gap-1.5"
                 onClick={() => setImportMode('json')}
               >
                 <FileJson className="h-3.5 w-3.5" />
@@ -398,7 +398,7 @@ export function InventoryAdmin({ items, onUpdate }: Props) {
             </p>
 
             <textarea
-              className="w-full h-48 rounded-lg border border-[var(--border)] bg-slate-50 dark:bg-slate-800/60 p-3 text-xs font-mono resize-none focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="w-full h-48 rounded-[var(--radius)] border border-[var(--input-border)] bg-[var(--surface-sunken)] p-3 text-xs font-mono resize-none focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
               placeholder={importMode === 'csv'
                 ? 'section,domain,skill,difficulty,available_count\nMath,Algebra,Linear equations in one variable,easy,80'
                 : '[{"section":"Math","domain":"Algebra","skill":"Linear equations in one variable","difficulty":"easy","available_count":80}]'
@@ -430,7 +430,6 @@ export function InventoryAdmin({ items, onUpdate }: Props) {
             <Button
               disabled={pending || !importText.trim()}
               onClick={handleImport}
-              className="bg-violet-600 hover:bg-violet-700 text-white"
             >
               {pending ? 'Importing…' : 'Import'}
             </Button>

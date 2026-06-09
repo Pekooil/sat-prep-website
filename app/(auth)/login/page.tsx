@@ -27,8 +27,8 @@ export default function LoginPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">Welcome back</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-1">Sign in to your SaturnPath account</p>
+        <h1 className="sp-display text-2xl">Welcome back</h1>
+        <p className="text-sm text-[var(--text-muted)] mt-1">Sign in to your SaturnPath account</p>
       </div>
 
       {/* Form */}
@@ -76,13 +76,13 @@ export default function LoginPage() {
           <span className="w-full border-t border-[var(--border)]" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white dark:bg-slate-950 px-3 text-[var(--muted-foreground)]">New here?</span>
+          <span className="bg-[var(--surface-base)] px-3 text-[var(--text-muted)]">New here?</span>
         </div>
       </div>
 
-      <p className="text-sm text-center text-[var(--muted-foreground)]">
+      <p className="text-sm text-center text-[var(--text-muted)]">
         Don&apos;t have an account?{' '}
-        <Link href="/onboarding" className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">
+        <Link href="/onboarding" className="font-semibold text-[var(--accent)] hover:underline">
           Create one free
         </Link>
       </p>

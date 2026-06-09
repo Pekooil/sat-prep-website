@@ -150,21 +150,20 @@ function scoresToCSV(scores: ScoreHistory[]): string {
 // ─── KPI card ─────────────────────────────────────────────────────────────────
 
 function KpiCard({
-  icon: Icon, label, value, sub, iconBg, iconColor,
+  icon: Icon, label, value, sub,
 }: {
   icon: React.FC<{ className?: string }>
   label: string; value: string; sub?: string
-  iconBg: string; iconColor: string
 }) {
   return (
     <Card>
       <CardContent className="p-4">
-        <div className={cn('inline-flex h-8 w-8 items-center justify-center rounded-lg mb-3', iconBg)}>
-          <Icon className={cn('h-4 w-4', iconColor)} />
+        <div className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-sunken)] text-[var(--text-muted)] mb-3">
+          <Icon className="h-4 w-4" />
         </div>
-        <p className="text-xl font-bold leading-none">{value}</p>
-        <p className="text-xs font-medium text-[var(--muted-foreground)] mt-1">{label}</p>
-        {sub && <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">{sub}</p>}
+        <p className="sp-numeric text-xl font-semibold leading-none text-[var(--text-heading)]">{value}</p>
+        <p className="text-xs font-medium text-[var(--text-muted)] mt-1">{label}</p>
+        {sub && <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{sub}</p>}
       </CardContent>
     </Card>
   )
@@ -258,8 +257,8 @@ export function DataClient({
       {/* ── Header bar ─────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between no-print">
         <div>
-          <h1 className="text-2xl font-bold">Analytics</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-0.5">
+          <h1 className="sp-display text-2xl">Analytics</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">
             Your SAT prep performance, habits, and planning insights
           </p>
         </div>
@@ -303,10 +302,10 @@ export function DataClient({
               key={p.value}
               onClick={() => setPreset(p.value)}
               className={cn(
-                'px-3 py-1.5 text-xs font-medium transition-colors',
+                'px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer',
                 preset === p.value
-                  ? 'bg-[var(--primary)] text-white'
-                  : 'bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]',
+                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
+                  : 'bg-[var(--surface-raised)] text-[var(--text-muted)] hover:bg-[var(--surface-sunken)]',
               )}
             >
               {p.label}
@@ -327,48 +326,36 @@ export function DataClient({
           label="Latest Score"
           value={latestScore ? latestScore.toString() : '—'}
           sub={profile?.target_score ? `Target: ${profile.target_score}` : 'out of 1600'}
-          iconBg="bg-indigo-50 dark:bg-indigo-900/20"
-          iconColor="text-indigo-600 dark:text-indigo-400"
         />
         <KpiCard
           icon={Target}
           label="Overall Accuracy"
           value={overallAcc !== null ? `${overallAcc}%` : '—'}
           sub={totalAttempted > 0 ? `${totalCorrect}/${totalAttempted} correct` : 'No sessions yet'}
-          iconBg="bg-emerald-50 dark:bg-emerald-900/20"
-          iconColor="text-emerald-600 dark:text-emerald-400"
         />
         <KpiCard
           icon={BookOpen}
           label="Questions"
           value={totalAttempted.toLocaleString()}
           sub={`${totalCorrect} correct`}
-          iconBg="bg-blue-50 dark:bg-blue-900/20"
-          iconColor="text-blue-600 dark:text-blue-400"
         />
         <KpiCard
           icon={Clock}
           label="Study Time"
           value={totalMinutes > 0 ? `${hours}h ${mins}m` : '0h'}
           sub={`${filteredSessions.length} sessions`}
-          iconBg="bg-violet-50 dark:bg-violet-900/20"
-          iconColor="text-violet-600 dark:text-violet-400"
         />
         <KpiCard
           icon={Flame}
           label="Current Streak"
           value={streak > 0 ? `${streak}d` : '—'}
           sub={streak > 0 ? 'consecutive days' : 'Study today!'}
-          iconBg="bg-orange-50 dark:bg-orange-900/20"
-          iconColor="text-orange-600 dark:text-orange-400"
         />
         <KpiCard
           icon={CheckCircle2}
           label="Open Errors"
           value={unmasteredErrors.toString()}
           sub={`${filteredErrors.filter(e => e.mastered).length} mastered`}
-          iconBg="bg-rose-50 dark:bg-rose-900/20"
-          iconColor="text-rose-600 dark:text-rose-400"
         />
       </div>
 

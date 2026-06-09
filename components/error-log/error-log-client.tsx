@@ -83,7 +83,7 @@ function FrequencySummary({ errors }: { errors: ErrorLog[] }) {
                   {t.total - t.unmastered}/{t.total} reviewed
                 </span>
               </div>
-              <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+              <div className="h-1.5 rounded-full bg-[var(--surface-sunken)] overflow-hidden">
                 <div
                   className={cn('h-full rounded-full transition-all', MISTAKE_BAR_COLOR[t.value])}
                   style={{ width: `${(t.total / maxCount) * 100}%` }}
@@ -254,13 +254,13 @@ export function ErrorLogClient() {
         <Button
           size="sm"
           variant="outline"
-          className={cn('gap-1.5 shrink-0 h-9', filtersOpen && 'bg-slate-100 dark:bg-slate-800')}
+          className={cn('gap-1.5 shrink-0 h-9', filtersOpen && 'bg-[var(--surface-sunken)]')}
           onClick={() => setFiltersOpen(v => !v)}
         >
           <SlidersHorizontal className="h-4 w-4" />
           <span className="hidden sm:inline">Filters</span>
           {hasFilters && (
-            <span className="ml-0.5 h-4 w-4 rounded-full bg-violet-600 text-[9px] text-white flex items-center justify-center font-bold">
+            <span className="ml-0.5 h-4 w-4 rounded-full bg-[var(--accent)] text-[9px] text-white flex items-center justify-center font-semibold">
               {[subject, category, errorType, mastered].filter(v => v !== 'all').length}
             </span>
           )}
@@ -334,7 +334,7 @@ export function ErrorLogClient() {
 
               {hasFilters && (
                 <button
-                  className="text-xs text-violet-600 dark:text-violet-400 hover:underline"
+                  className="text-xs text-[var(--accent)] hover:underline"
                   onClick={clearFilters}
                 >
                   Clear filters

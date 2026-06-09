@@ -82,7 +82,7 @@ export function NotificationsDropdown({ userId }: NotificationsDropdownProps) {
           <span>Notifications</span>
           {unreadCount > 0 && (
             <button
-              className="text-xs text-violet-600 dark:text-violet-400 hover:underline font-normal"
+              className="text-xs text-[var(--accent)] hover:underline font-normal"
               onClick={markAllRead}
             >
               Mark all read
@@ -117,7 +117,7 @@ export function NotificationsDropdown({ userId }: NotificationsDropdownProps) {
                     <p className="text-xs text-[var(--muted-foreground)] mt-0.5 line-clamp-2">{n.message}</p>
                   </div>
                   {!n.is_read && (
-                    <span className="h-2 w-2 rounded-full bg-violet-500 mt-1.5 shrink-0" />
+                    <span className="h-2 w-2 rounded-full bg-[var(--accent)] mt-1.5 shrink-0" />
                   )}
                 </div>
                 <span className="text-[10px] text-[var(--muted-foreground)] ml-9.5">

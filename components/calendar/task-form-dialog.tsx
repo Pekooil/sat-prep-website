@@ -93,10 +93,10 @@ export function TaskFormDialog({ open, onOpenChange, defaultDate, onSuccess }: T
                   key={s}
                   type="button"
                   onClick={() => { setSubject(s); setSelectedDomain('') }}
-                  className={`flex-1 py-1.5 rounded-md text-xs font-medium border transition-colors ${
+                  className={`flex-1 py-1.5 rounded-md text-xs font-medium border transition-colors cursor-pointer ${
                     subject === s
-                      ? 'bg-violet-600 text-white border-violet-600'
-                      : 'border-[var(--border)] hover:bg-slate-50 dark:hover:bg-slate-800'
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'border-[var(--border)] text-[var(--text-body)] hover:bg-[var(--surface-sunken)]'
                   }`}
                 >
                   {s === 'math' ? 'Math' : s === 'reading_writing' ? 'Reading & Writing' : 'Both'}

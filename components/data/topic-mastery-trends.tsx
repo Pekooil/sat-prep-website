@@ -17,7 +17,7 @@ interface TopicMasteryTrendsProps {
 // Hex colors matching task-colors.ts domains
 const DOMAIN_COLORS: Record<string, string> = {
   'Algebra':                              '#3b82f6',
-  'Advanced Math':                        '#8b5cf6',
+  'Advanced Math':                        '#6366f1',
   'Problem-Solving and Data Analysis':    '#f97316',
   'Geometry and Trigonometry':            '#14b8a6',
   'Information and Ideas':                '#22c55e',
@@ -38,12 +38,13 @@ const DOMAIN_STROKE: Record<string, string> = {
 }
 
 const TIP_STYLE = {
-  backgroundColor: 'var(--card)',
-  border: '1px solid var(--border)',
-  borderRadius: '10px',
+  backgroundColor: 'var(--popover)',
+  border: '1px solid var(--border-strong)',
+  borderRadius: '8px',
   fontSize: '12px',
-  boxShadow: '0 4px 12px -2px rgba(15,23,42,0.12), 0 2px 6px -2px rgba(15,23,42,0.08)',
+  boxShadow: 'var(--shadow-lg)',
   padding: '8px 12px',
+  color: 'var(--foreground)',
 }
 
 export function TopicMasteryTrends({ sessions }: TopicMasteryTrendsProps) {
@@ -80,8 +81,8 @@ export function TopicMasteryTrends({ sessions }: TopicMasteryTrendsProps) {
           <CardTitle className="text-base">Topic Mastery Trends</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col items-center justify-center py-14">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mb-3">
-            <BarChart2 className="h-5 w-5 text-[var(--muted-foreground)]" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-sunken)] mb-3">
+            <BarChart2 className="h-5 w-5 text-[var(--text-muted)]" strokeWidth={1.75} />
           </div>
           <p className="font-medium text-sm">No data yet</p>
           <p className="text-xs text-[var(--muted-foreground)] mt-1 text-center">
@@ -141,9 +142,9 @@ export function TopicMasteryTrends({ sessions }: TopicMasteryTrendsProps) {
             />
             <ReferenceLine
               y={90}
-              stroke="#22c55e"
+              stroke="var(--success)"
               strokeDasharray="4 3"
-              label={{ value: '90%', fontSize: 9, fill: '#22c55e', position: 'insideTopRight' }}
+              label={{ value: '90%', fontSize: 9, fill: 'var(--success)', position: 'insideTopRight' }}
             />
             {activeDomains.map(d => (
               <Line

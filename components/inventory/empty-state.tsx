@@ -11,8 +11,8 @@ interface EmptyStateProps {
 export function EmptyState({ onImport, onCreate }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 dark:bg-violet-900/30 mb-4">
-        <Package className="h-8 w-8 text-violet-600 dark:text-violet-400" />
+      <div className="flex h-16 w-16 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--accent-soft)] text-[var(--accent-soft-foreground)] mb-4">
+        <Package className="h-8 w-8" strokeWidth={1.75} />
       </div>
       <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2">No inventory yet</h3>
       <p className="text-sm text-[var(--muted-foreground)] max-w-sm mb-8">
@@ -28,7 +28,7 @@ export function EmptyState({ onImport, onCreate }: EmptyStateProps) {
           Import inventory
         </Button>
         <Button
-          className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+          className="gap-2"
           onClick={onCreate}
         >
           <Plus className="h-4 w-4" />

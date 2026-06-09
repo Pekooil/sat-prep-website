@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 import { SaturnPathLogo } from '@/components/layout/saturn-path-logo'
 
@@ -59,22 +58,21 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
 
-      {/* ── Left brand panel (desktop only) ── */}
-      <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12 xl:p-16 bg-gradient-to-br from-violet-700 via-violet-800 to-indigo-900 overflow-hidden select-none">
+      {/* ── Left brand panel (desktop only) — confident near-black, single accent ── */}
+      <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12 xl:p-16 bg-[#0a0a0a] overflow-hidden select-none">
 
-        {/* Background texture rings */}
+        {/* Hairline orbit texture + one restrained accent glow */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-white/5" />
-          <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-white/5" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-white/5" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] rounded-full border border-white/5" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-white/[0.05]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[440px] h-[440px] rounded-full border border-white/[0.05]" />
+          <div className="absolute left-1/2 top-[38%] -translate-x-1/2 -translate-y-1/2 h-72 w-72 rounded-full bg-[var(--color-violet-500)] opacity-20 blur-[110px]" />
         </div>
 
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center text-center max-w-sm">
           {/* Logo + wordmark */}
           <div className="mb-10">
-            <SaturnPathLogo variant="dark" size="lg" asLink={false} pathColor="#ede9fe" />
+            <SaturnPathLogo variant="dark" size="lg" asLink={false} pathColor="var(--color-violet-400)" />
           </div>
 
           {/* Saturn illustration */}
@@ -83,18 +81,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           {/* Headline */}
-          <h1 className="text-3xl xl:text-4xl font-bold text-white leading-tight tracking-tight mb-3">
+          <h1 className="text-3xl xl:text-4xl font-semibold text-white leading-tight tracking-[var(--tracking-tight)] mb-3">
             Your personalized path to a higher SAT score.
           </h1>
-          <p className="text-violet-200 text-sm leading-relaxed mb-8">
+          <p className="text-white/55 text-sm leading-relaxed mb-8">
             Build a smart study plan in minutes. Track your progress. Reach your target.
           </p>
 
           {/* Feature list */}
           <ul className="space-y-3 text-left w-full">
             {FEATURES.map(f => (
-              <li key={f} className="flex items-start gap-2.5 text-sm text-violet-100">
-                <CheckCircle2 className="h-4 w-4 text-violet-300 shrink-0 mt-0.5" />
+              <li key={f} className="flex items-start gap-2.5 text-sm text-white/75">
+                <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--color-violet-400)' }} />
                 {f}
               </li>
             ))}
@@ -103,7 +101,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* ── Right form panel ── */}
-      <div className="flex-1 lg:w-1/2 flex flex-col items-center justify-center min-h-screen bg-white dark:bg-slate-950 p-6 sm:p-10">
+      <div className="flex-1 lg:w-1/2 flex flex-col items-center justify-center min-h-screen bg-[var(--surface-base)] p-6 sm:p-10">
 
         {/* Mobile-only compact header */}
         <div className="lg:hidden mb-8 self-start">

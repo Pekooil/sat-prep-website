@@ -72,8 +72,8 @@ export function InventoryTable({ items }: Props) {
   function SortIcon({ col }: { col: SortKey }) {
     if (sortKey !== col) return <ChevronUp className="h-3 w-3 opacity-30" />
     return sortDir === 'asc'
-      ? <ChevronUp className="h-3 w-3 text-violet-600" />
-      : <ChevronDown className="h-3 w-3 text-violet-600" />
+      ? <ChevronUp className="h-3 w-3 text-[var(--accent)]" />
+      : <ChevronDown className="h-3 w-3 text-[var(--accent)]" />
   }
 
   const colClass = 'px-3 py-2.5 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide cursor-pointer select-none hover:text-[var(--foreground)] transition-colors'
@@ -132,7 +132,7 @@ export function InventoryTable({ items }: Props) {
       <div className="rounded-xl border border-[var(--border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-[var(--border)]">
+            <thead className="bg-[var(--surface-sunken)] border-b border-[var(--border)]">
               <tr>
                 {(
                   [
@@ -168,8 +168,8 @@ export function InventoryTable({ items }: Props) {
                   <tr
                     key={item.id}
                     className={cn(
-                      'hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors',
-                      remPct < 0.2 && 'bg-red-50/30 dark:bg-red-950/10',
+                      'hover:bg-[var(--surface-sunken)] transition-colors',
+                      remPct < 0.2 && 'bg-red-500/[0.06]',
                     )}
                   >
                     <td className={tdClass}>

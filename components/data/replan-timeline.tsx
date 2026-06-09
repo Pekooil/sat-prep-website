@@ -10,11 +10,11 @@ interface ReplanTimelineProps {
   replans: ReplanAuditLog[]
 }
 
-const TRIGGER_META: Record<string, { label: string; icon: React.FC<{ className?: string }>; color: string }> = {
-  question_session:    { label: 'Session',      icon: BookOpen,    color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
-  error_log:           { label: 'Error Log',    icon: RefreshCw,   color: 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800' },
-  practice_test_score: { label: 'Test Score',   icon: TrendingUp,  color: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
-  manual:              { label: 'Manual',       icon: Settings2,   color: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700' },
+const TRIGGER_META: Record<string, { label: string; icon: React.FC<{ className?: string }> }> = {
+  question_session:    { label: 'Session',    icon: BookOpen    },
+  error_log:           { label: 'Error Log',  icon: RefreshCw   },
+  practice_test_score: { label: 'Test Score', icon: TrendingUp  },
+  manual:              { label: 'Manual',     icon: Settings2   },
 }
 
 type DomainPriority = {
@@ -31,8 +31,8 @@ export function ReplanTimeline({ replans }: ReplanTimelineProps) {
           <CardTitle className="text-base">Replan History</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col items-center justify-center py-14">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mb-3">
-            <RefreshCw className="h-5 w-5 text-[var(--muted-foreground)]" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-sunken)] mb-3">
+            <RefreshCw className="h-5 w-5 text-[var(--text-muted)]" strokeWidth={1.75} />
           </div>
           <p className="font-medium text-sm">No replanning yet</p>
           <p className="text-xs text-[var(--muted-foreground)] mt-1 text-center">
@@ -79,7 +79,7 @@ export function ReplanTimeline({ replans }: ReplanTimelineProps) {
                   <div className="flex-1 min-w-0 pb-4">
                     <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
                       <div className="flex items-center gap-2">
-                        <Badge className={`text-[10px] py-0 px-2 border font-medium rounded-full ${meta.color}`}>
+                        <Badge variant="secondary" size="sm" className="text-[10px] py-0">
                           {meta.label}
                         </Badge>
                         {r.tasks_updated > 0 && (

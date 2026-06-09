@@ -2,7 +2,6 @@
 
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
 import { DOMAIN_CATALOG } from '@/lib/study-plan-engine/domain-catalog'
 
 interface MasteryRow {
@@ -40,31 +39,31 @@ const LEVEL_CONFIG: Record<MasteryLevel, {
 }> = {
   mastered:   {
     label:       'Mastered',
-    badgeClass:  'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
+    badgeClass:  'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
     barClass:    '[&>div]:bg-emerald-500',
-    borderClass: 'border-emerald-200 dark:border-emerald-800',
-    bgClass:     'bg-emerald-50/50 dark:bg-emerald-950/20',
+    borderClass: 'border-[var(--border)]',
+    bgClass:     'bg-[var(--surface-raised)]',
   },
   proficient: {
     label:       'Proficient',
-    badgeClass:  'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
-    barClass:    '[&>div]:bg-violet-500',
-    borderClass: 'border-violet-200 dark:border-violet-800',
-    bgClass:     'bg-violet-50/50 dark:bg-violet-950/20',
+    badgeClass:  'bg-[var(--accent-soft)] text-[var(--accent-soft-foreground)]',
+    barClass:    '[&>div]:bg-[var(--accent)]',
+    borderClass: 'border-[var(--border)]',
+    bgClass:     'bg-[var(--surface-raised)]',
   },
   developing: {
     label:       'Developing',
-    badgeClass:  'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+    badgeClass:  'bg-amber-500/10 text-amber-700 dark:text-amber-300',
     barClass:    '[&>div]:bg-amber-500',
-    borderClass: 'border-amber-200 dark:border-amber-800',
-    bgClass:     'bg-amber-50/50 dark:bg-amber-950/20',
+    borderClass: 'border-[var(--border)]',
+    bgClass:     'bg-[var(--surface-raised)]',
   },
   needs_work: {
     label:       'Needs Work',
-    badgeClass:  'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+    badgeClass:  'bg-rose-500/10 text-rose-700 dark:text-rose-300',
     barClass:    '[&>div]:bg-rose-500',
-    borderClass: 'border-rose-200 dark:border-rose-800',
-    bgClass:     'bg-rose-50/50 dark:bg-rose-950/20',
+    borderClass: 'border-[var(--border)]',
+    bgClass:     'bg-[var(--surface-raised)]',
   },
 }
 
@@ -117,7 +116,7 @@ export function TopicMasteryCards({ mastery }: TopicMasteryCardsProps) {
             <div
               key={d.key}
               className={cn(
-                'rounded-xl border p-4 space-y-3 transition-shadow hover:shadow-sm',
+                'rounded-[var(--radius-lg)] border p-4 space-y-3 shadow-[var(--shadow-xs)] transition-shadow hover:shadow-[var(--shadow-sm)]',
                 cfg.borderClass,
                 cfg.bgClass,
               )}
@@ -138,7 +137,7 @@ export function TopicMasteryCards({ mastery }: TopicMasteryCardsProps) {
               {/* Mastery score */}
               <div>
                 <div className="flex items-end justify-between mb-1">
-                  <span className="text-2xl font-bold leading-none font-mono tabular-nums">{d.score}</span>
+                  <span className="text-2xl font-semibold leading-none font-mono tabular-nums text-[var(--text-heading)]">{d.score}</span>
                   <span className="text-[11px] text-[var(--muted-foreground)]">/100</span>
                 </div>
                 <Progress

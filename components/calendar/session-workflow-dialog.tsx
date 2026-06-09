@@ -373,7 +373,7 @@ export function SessionWorkflowDialog({
                 href={COLLEGE_BOARD_QB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/30 px-4 py-2.5 text-sm font-medium text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-950/50 transition-colors"
+                className="flex items-center justify-center gap-2 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--accent-soft)] px-4 py-2.5 text-sm font-medium text-[var(--accent-soft-foreground)] hover:bg-[var(--accent-soft-hover)] transition-colors"
               >
                 <ExternalLink className="h-4 w-4 shrink-0" />
                 Open College Board Question Bank
@@ -501,15 +501,15 @@ export function SessionWorkflowDialog({
 
             <div className="px-6 pb-4 space-y-4">
               <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/30 p-3">
+                <div className="rounded-[var(--radius)] bg-[var(--surface-sunken)] p-3">
                   <p className="text-xs text-[var(--muted-foreground)]">Score</p>
-                  <p className="text-2xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+                  <p className="text-2xl font-semibold font-mono tabular-nums text-[var(--success)]">
                     {correct}/{attempted}
                   </p>
                 </div>
-                <div className="rounded-lg bg-violet-50 dark:bg-violet-950/30 p-3">
+                <div className="rounded-[var(--radius)] bg-[var(--surface-sunken)] p-3">
                   <p className="text-xs text-[var(--muted-foreground)]">Accuracy</p>
-                  <p className="text-2xl font-bold font-mono tabular-nums text-violet-600 dark:text-violet-400">{accuracy}%</p>
+                  <p className="text-2xl font-semibold font-mono tabular-nums text-[var(--accent)]">{accuracy}%</p>
                 </div>
                 <div className={cn(
                   'rounded-lg p-3',
@@ -786,7 +786,7 @@ export function SessionWorkflowDialog({
                                 <span className="text-amber-600 dark:text-amber-400"> · {change.difficultyChange}</span>
                               )}
                               {change.questionChange && (
-                                <span className="text-violet-600 dark:text-violet-400"> · {change.questionChange}</span>
+                                <span className="text-[var(--accent)]"> · {change.questionChange}</span>
                               )}
                             </p>
                           </div>

@@ -32,22 +32,13 @@ function masteryTierLabel(target: number | null | undefined): string {
   return 'Peak Target'
 }
 
-/** Color class for the mastery target badge based on how demanding the goal is. */
-function masteryTierColor(target: number | null | undefined): string {
-  if (!target) return 'bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-900'
-  if (target <= 65) return 'bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-900'
-  if (target <= 75) return 'bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900'
-  if (target <= 82) return 'bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900'
-  if (target <= 90) return 'bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-900'
-  return 'bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900'
+/** Card surface for the mastery target panel — calm neutral, accent reserved for the value. */
+function masteryTierColor(_target: number | null | undefined): string {
+  return 'bg-[var(--surface-sunken)] border border-[var(--border)]'
 }
 
-function masteryTierIconColor(target: number | null | undefined): string {
-  if (!target) return 'text-violet-500'
-  if (target <= 65) return 'text-sky-500'
-  if (target <= 75) return 'text-blue-500'
-  if (target <= 82) return 'text-indigo-500'
-  return 'text-violet-500'
+function masteryTierIconColor(_target: number | null | undefined): string {
+  return 'text-[var(--accent)]'
 }
 
 // ─── Copy ─────────────────────────────────────────────────────────────────────
@@ -154,7 +145,7 @@ function SessionResultsPanel({
               />
               {/* Goal marker */}
               <div
-                className="absolute inset-y-0 w-0.5 rounded-full bg-violet-600 dark:bg-violet-400"
+                className="absolute inset-y-0 w-0.5 rounded-full bg-[var(--accent)]"
                 style={{ left: `${Math.min(99, masteryTarget!)}%`, transform: 'translateX(-50%)' }}
               />
             </div>
@@ -167,8 +158,8 @@ function SessionResultsPanel({
               )}>
                 Your score: {accuracy}%
               </span>
-              <span className="text-violet-600 dark:text-violet-400 font-medium flex items-center gap-0.5">
-                <span className="inline-block h-2 w-0.5 rounded-full bg-violet-600 dark:bg-violet-400" />
+              <span className="text-[var(--accent)] font-medium flex items-center gap-0.5">
+                <span className="inline-block h-2 w-0.5 rounded-full bg-[var(--accent)]" />
                 Goal: {masteryTarget}%
               </span>
             </div>
@@ -367,10 +358,7 @@ export function TaskDrawer({
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)] mb-2">
                     College Board Question Bank Filters
                   </h3>
-                  <div className={cn(
-                    'rounded-xl border p-4 space-y-3',
-                    'bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800',
-                  )}>
+                  <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--accent-soft)] p-4 space-y-3">
                     {filters.domain && (
                       <FilterRow label="Domain" value={filters.domain} />
                     )}
@@ -393,9 +381,9 @@ export function TaskDrawer({
                       </div>
                     )}
                     {questionCount && (
-                      <div className="flex items-center justify-between text-sm border-t border-violet-200 dark:border-violet-800 pt-2">
+                      <div className="flex items-center justify-between text-sm border-t border-[var(--border)] pt-2">
                         <span className="text-[var(--muted-foreground)]">Target questions</span>
-                        <span className="font-semibold text-violet-700 dark:text-violet-300">{questionCount}</span>
+                        <span className="font-semibold text-[var(--accent-soft-foreground)]">{questionCount}</span>
                       </div>
                     )}
                   </div>
@@ -403,7 +391,7 @@ export function TaskDrawer({
                     href={COLLEGE_BOARD_QB_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2.5 inline-flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:underline font-medium"
+                    className="mt-2.5 inline-flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline font-medium"
                   >
                     Open College Board Question Bank
                     <ExternalLink className="h-3 w-3" />
@@ -431,7 +419,7 @@ export function TaskDrawer({
                   ) : (
                     <Link
                       href="/tutorial"
-                      className="inline-flex items-center gap-1.5 text-sm text-violet-600 dark:text-violet-400 hover:underline font-medium"
+                      className="inline-flex items-center gap-1.5 text-sm text-[var(--accent)] hover:underline font-medium"
                     >
                       View the Tutorial for step-by-step instructions
                       <ChevronRight className="h-3.5 w-3.5" />
@@ -475,14 +463,14 @@ export function TaskDrawer({
                     <MetaStat
                       label="Priority"
                       value={String(task.priority_score)}
-                      colorClass="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900"
-                      icon={<Zap className="h-3 w-3 text-amber-500" />}
+                      colorClass="bg-[var(--surface-sunken)] border border-[var(--border)]"
+                      icon={<Zap className="h-3 w-3 text-[var(--warning)]" />}
                     />
                     <MetaStat
                       label="Score Impact"
                       value={`+${task.estimated_score_impact ?? 0} pts`}
-                      colorClass="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900"
-                      icon={<BarChart2 className="h-3 w-3 text-emerald-500" />}
+                      colorClass="bg-[var(--surface-sunken)] border border-[var(--border)]"
+                      icon={<BarChart2 className="h-3 w-3 text-[var(--success)]" />}
                     />
                     <MetaStat
                       label={masteryTierLabel(task.mastery_target)}
@@ -507,13 +495,7 @@ export function TaskDrawer({
                       </div>
                       <div className="w-full bg-[var(--border)] rounded-full h-1.5 overflow-hidden">
                         <div
-                          className={cn(
-                            'h-full rounded-full transition-all',
-                            task.mastery_target <= 65 ? 'bg-sky-400' :
-                            task.mastery_target <= 75 ? 'bg-blue-500' :
-                            task.mastery_target <= 82 ? 'bg-indigo-500' :
-                            task.mastery_target <= 90 ? 'bg-violet-500' : 'bg-purple-600',
-                          )}
+                          className="h-full rounded-full bg-[var(--accent)] transition-all"
                           style={{ width: `${task.mastery_target}%` }}
                         />
                       </div>
@@ -602,7 +584,7 @@ function FilterRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-3 text-sm">
       <span className="text-[var(--muted-foreground)] flex-shrink-0">{label}</span>
-      <span className="font-medium text-violet-700 dark:text-violet-300 text-right">{value}</span>
+      <span className="font-medium text-[var(--accent-soft-foreground)] text-right">{value}</span>
     </div>
   )
 }

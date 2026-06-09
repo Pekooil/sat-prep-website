@@ -73,7 +73,7 @@ export function ProgressVisualization({ items }: ProgressVisualizationProps) {
           <div className="relative">
             <CircularProgress pct={overallPct} size={120} strokeWidth={10} />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-bold text-[var(--foreground)]">{overallPct}%</span>
+              <span className="sp-numeric text-2xl font-semibold text-[var(--foreground)]">{overallPct}%</span>
               <span className="text-[10px] text-[var(--muted-foreground)]">remaining</span>
             </div>
           </div>
@@ -104,13 +104,13 @@ export function ProgressVisualization({ items }: ProgressVisualizationProps) {
                   </span>
                 </div>
                 {/* Stacked bar */}
-                <div className="h-2.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex">
+                <div className="h-2.5 rounded-full bg-[var(--surface-sunken)] overflow-hidden flex">
                   <div
-                    className="h-full bg-violet-500 dark:bg-violet-600 transition-all duration-500"
+                    className="h-full bg-[var(--accent)] transition-all duration-500"
                     style={{ width: `${completedPct}%` }}
                   />
                   <div
-                    className="h-full bg-blue-400 dark:bg-blue-500 transition-all duration-500"
+                    className="h-full bg-[var(--text-muted)] transition-all duration-500"
                     style={{ width: `${assignedPct}%` }}
                   />
                   <div
@@ -119,8 +119,8 @@ export function ProgressVisualization({ items }: ProgressVisualizationProps) {
                   />
                 </div>
                 <div className="flex gap-3 mt-1.5 text-[10px] text-[var(--muted-foreground)]">
-                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-violet-500" /> Completed</span>
-                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-blue-400" /> Assigned</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[var(--accent)]" /> Completed</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[var(--text-muted)]" /> Assigned</span>
                   <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded-sm ${barColor}`} /> Remaining</span>
                 </div>
               </div>

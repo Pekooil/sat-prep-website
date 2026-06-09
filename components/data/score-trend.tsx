@@ -15,19 +15,20 @@ interface ScoreTrendProps {
 }
 
 const TIP_STYLE = {
-  backgroundColor: 'var(--card)',
-  border: '1px solid var(--border)',
-  borderRadius: '10px',
+  backgroundColor: 'var(--popover)',
+  border: '1px solid var(--border-strong)',
+  borderRadius: '8px',
   fontSize: '12px',
-  boxShadow: '0 4px 12px -2px rgba(15,23,42,0.12), 0 2px 6px -2px rgba(15,23,42,0.08)',
+  boxShadow: 'var(--shadow-lg)',
   padding: '8px 12px',
+  color: 'var(--foreground)',
 }
 
 const TEST_MARKERS: Record<string, string> = {
-  diagnostic:  '#94a3b8',
-  practice:    '#6366f1',
-  official:    '#f59e0b',
-  full_length: '#10b981',
+  diagnostic:  'var(--text-muted)',
+  practice:    'var(--accent)',
+  official:    'var(--warning)',
+  full_length: 'var(--success)',
 }
 
 export function ScoreTrend({ scores, targetScore }: ScoreTrendProps) {
@@ -38,8 +39,8 @@ export function ScoreTrend({ scores, targetScore }: ScoreTrendProps) {
           <CardTitle className="text-base">Score Progression</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col items-center justify-center py-14">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-900/20 mb-3">
-            <Target className="h-5 w-5 text-indigo-500" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-sunken)] mb-3">
+            <Target className="h-5 w-5 text-[var(--text-muted)]" strokeWidth={1.75} />
           </div>
           <p className="font-medium text-sm">No scores logged</p>
           <p className="text-xs text-[var(--muted-foreground)] mt-1 text-center">
@@ -86,8 +87,8 @@ export function ScoreTrend({ scores, targetScore }: ScoreTrendProps) {
           <ComposedChart data={data} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
             <defs>
               <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#6366f1" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                <stop offset="5%"  stopColor="var(--accent)" stopOpacity={0.16} />
+                <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -115,9 +116,9 @@ export function ScoreTrend({ scores, targetScore }: ScoreTrendProps) {
             {targetScore && (
               <ReferenceLine
                 y={targetScore}
-                stroke="#22c55e"
+                stroke="var(--success)"
                 strokeDasharray="6 3"
-                label={{ value: `Target ${targetScore}`, fontSize: 10, fill: '#22c55e', position: 'insideTopRight' }}
+                label={{ value: `Target ${targetScore}`, fontSize: 10, fill: 'var(--success)', position: 'insideTopRight' }}
               />
             )}
             <Area
@@ -130,14 +131,14 @@ export function ScoreTrend({ scores, targetScore }: ScoreTrendProps) {
             <Line
               type="monotone"
               dataKey="Total"
-              stroke="#6366f1"
+              stroke="var(--accent)"
               strokeWidth={2.5}
-              dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }}
+              dot={{ r: 4, fill: 'var(--accent)', strokeWidth: 0 }}
               activeDot={{ r: 6 }}
             />
-            <Line type="monotone" dataKey="Math"  stroke="#3b82f6" strokeWidth={1.5}
+            <Line type="monotone" dataKey="Math"  stroke="var(--text-body)" strokeWidth={1.5}
               dot={{ r: 3 }} strokeDasharray="5 4" />
-            <Line type="monotone" dataKey="R & W" stroke="#ec4899" strokeWidth={1.5}
+            <Line type="monotone" dataKey="R & W" stroke="var(--text-muted)" strokeWidth={1.5}
               dot={{ r: 3 }} strokeDasharray="5 4" />
           </ComposedChart>
         </ResponsiveContainer>

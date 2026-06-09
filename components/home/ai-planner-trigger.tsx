@@ -42,9 +42,9 @@ const DEFAULT_SCHEDULE: DaySchedule = {
 const DAY_TYPE_ORDER: DayType[] = ['study', 'review', 'rest']
 
 const DAY_TYPE_CONFIG: Record<DayType, { label: string; bg: string; text: string; border: string }> = {
-  study:  { label: 'Study',  bg: 'bg-violet-100 dark:bg-violet-900/40',   text: 'text-violet-700 dark:text-violet-300',   border: 'border-violet-300 dark:border-violet-700' },
-  review: { label: 'Review', bg: 'bg-amber-100 dark:bg-amber-900/40', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-300 dark:border-amber-700' },
-  rest:   { label: 'Rest',   bg: 'bg-slate-100 dark:bg-slate-800',    text: 'text-slate-500 dark:text-slate-400', border: 'border-slate-300 dark:border-slate-600' },
+  study:  { label: 'Study',  bg: 'bg-[var(--accent-soft)]',    text: 'text-[var(--accent-soft-foreground)]', border: 'border-transparent' },
+  review: { label: 'Review', bg: 'bg-[var(--surface-sunken)]', text: 'text-[var(--text-body)]',              border: 'border-[var(--border)]' },
+  rest:   { label: 'Rest',   bg: 'bg-transparent',             text: 'text-[var(--text-muted)]',             border: 'border-[var(--border)]' },
 }
 
 // ─── Day picker ───────────────────────────────────────────────────────────────
@@ -143,10 +143,10 @@ export function AIPlannerTrigger({ profile }: AIPlannerTriggerProps) {
   }
 
   return (
-    <Card className="h-full flex flex-col border-violet-200 dark:border-violet-800 bg-gradient-to-b from-violet-50/50 to-white dark:from-violet-950/20 dark:to-[var(--card)]">
+    <Card className="h-full flex flex-col">
       <CardHeader className="pb-3 shrink-0">
         <CardTitle className="text-base flex items-center gap-2">
-          <RefreshCw className="h-4 w-4 text-violet-500" />
+          <RefreshCw className="h-4 w-4 text-[var(--accent)]" strokeWidth={1.75} />
           AI Adaptive Replanner
         </CardTitle>
         <p className="text-xs text-[var(--muted-foreground)]">
@@ -218,7 +218,7 @@ export function AIPlannerTrigger({ profile }: AIPlannerTriggerProps) {
             <DaySchedulePicker schedule={schedule} onChange={setSchedule} />
 
             {/* Divider */}
-            <div className="border-t border-violet-100 dark:border-violet-900" />
+            <div className="border-t border-[var(--border)]" />
 
             {/* Generate button */}
             <Button type="submit" className="w-full h-10" disabled={loading}>

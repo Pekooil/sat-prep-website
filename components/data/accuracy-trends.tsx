@@ -56,12 +56,13 @@ function buildTrendData(sessions: QuestionSession[]) {
 }
 
 const TIP_STYLE = {
-  backgroundColor: 'var(--card)',
-  border: '1px solid var(--border)',
-  borderRadius: '10px',
+  backgroundColor: 'var(--popover)',
+  border: '1px solid var(--border-strong)',
+  borderRadius: '8px',
   fontSize: '12px',
-  boxShadow: '0 4px 12px -2px rgba(15,23,42,0.12), 0 2px 6px -2px rgba(15,23,42,0.08)',
+  boxShadow: 'var(--shadow-lg)',
   padding: '8px 12px',
+  color: 'var(--foreground)',
 }
 
 export function AccuracyTrends({ sessions }: AccuracyTrendsProps) {
@@ -74,8 +75,8 @@ export function AccuracyTrends({ sessions }: AccuracyTrendsProps) {
           <CardTitle className="text-base">Accuracy Trends</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col items-center justify-center py-14">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-900/20 mb-3">
-            <TrendingUp className="h-5 w-5 text-indigo-500" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-sunken)] mb-3">
+            <TrendingUp className="h-5 w-5 text-[var(--text-muted)]" strokeWidth={1.75} />
           </div>
           <p className="font-medium text-sm">No sessions yet</p>
           <p className="text-xs text-[var(--muted-foreground)] mt-1 text-center">
@@ -116,15 +117,15 @@ export function AccuracyTrends({ sessions }: AccuracyTrendsProps) {
             <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
             <ReferenceLine
               y={90}
-              stroke="#22c55e"
+              stroke="var(--success)"
               strokeDasharray="4 3"
-              label={{ value: '90% goal', fontSize: 10, fill: '#22c55e', position: 'insideTopRight' }}
+              label={{ value: '90% goal', fontSize: 10, fill: 'var(--success)', position: 'insideTopRight' }}
             />
-            <Line type="monotone" dataKey="Overall" stroke="#6366f1" strokeWidth={2.5}
+            <Line type="monotone" dataKey="Overall" stroke="var(--accent)" strokeWidth={2.5}
               dot={false} activeDot={{ r: 5 }} connectNulls />
-            <Line type="monotone" dataKey="Math" stroke="#3b82f6" strokeWidth={1.5}
+            <Line type="monotone" dataKey="Math" stroke="var(--text-body)" strokeWidth={1.5}
               dot={false} strokeDasharray="5 4" connectNulls />
-            <Line type="monotone" dataKey="R & W" stroke="#ec4899" strokeWidth={1.5}
+            <Line type="monotone" dataKey="R & W" stroke="var(--text-muted)" strokeWidth={1.5}
               dot={false} strokeDasharray="5 4" connectNulls />
           </LineChart>
         </ResponsiveContainer>

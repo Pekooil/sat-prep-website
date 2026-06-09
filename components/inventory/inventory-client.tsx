@@ -43,7 +43,7 @@ export function InventoryClient({ items: initial, lastUpdated }: InventoryClient
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-slate-100 dark:bg-slate-800/80">
+        <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="admin">Admin</TabsTrigger>

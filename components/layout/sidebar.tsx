@@ -87,10 +87,7 @@ export function Sidebar({ user }: SidebarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex w-full items-center gap-3 rounded-[var(--radius-sm)] p-2 text-left transition-colors hover:bg-[var(--surface-sunken)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_var(--ring)] cursor-pointer">
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-                style={{ background: 'var(--gradient-avatar)' }}
-              >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-sm font-semibold text-[var(--primary-foreground)]">
                 {user?.full_name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? 'S'}
               </div>
               <div className="min-w-0 flex-1">

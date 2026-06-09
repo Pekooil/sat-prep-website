@@ -74,7 +74,7 @@ export function PredictedScoreWidget({
               Predicted Score
             </p>
             <div className="flex items-end gap-2">
-              <p className="text-4xl font-bold font-mono tabular-nums">{latest.predicted_score}</p>
+              <p className="text-4xl font-semibold font-mono tabular-nums text-[var(--text-heading)]">{latest.predicted_score}</p>
               {TrendIcon && delta !== null && (
                 <div className={cn('flex items-center gap-0.5 mb-1', trendColor)}>
                   <TrendIcon className="h-4 w-4" />
@@ -96,7 +96,7 @@ export function PredictedScoreWidget({
             <p className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
               Confidence Interval
             </p>
-            <p className="text-2xl font-bold font-mono tabular-nums">{latest.confidence_low}–{latest.confidence_high}</p>
+            <p className="text-2xl font-semibold font-mono tabular-nums text-[var(--text-heading)]">{latest.confidence_low}–{latest.confidence_high}</p>
             <p className="text-xs text-[var(--muted-foreground)] mt-1">
               Based on {latest.session_count ?? 0} sessions
             </p>
@@ -114,7 +114,7 @@ export function PredictedScoreWidget({
             </p>
             {gap !== null ? (
               <>
-                <p className={cn('text-2xl font-bold font-mono tabular-nums', gap <= 0 ? 'text-emerald-600' : '')}>
+                <p className={cn('text-2xl font-semibold font-mono tabular-nums', gap <= 0 ? 'text-[var(--success)]' : 'text-[var(--text-heading)]')}>
                   {gap <= 0 ? 'On Track!' : `${gap} pts`}
                 </p>
                 <p className="text-xs text-[var(--muted-foreground)] mt-1">
@@ -154,27 +154,29 @@ export function PredictedScoreWidget({
                   />
                   <Tooltip
                     contentStyle={{
-                      background: 'var(--card)',
-                      border: '1px solid var(--border)',
+                      background: 'var(--popover)',
+                      border: '1px solid var(--border-strong)',
                       borderRadius: 8,
                       fontSize: 12,
+                      boxShadow: 'var(--shadow-lg)',
+                      color: 'var(--foreground)',
                     }}
                     formatter={(value) => [value, 'Predicted']}
                   />
                   {targetScore && (
                     <ReferenceLine
                       y={targetScore}
-                      stroke="#6366f1"
+                      stroke="var(--success)"
                       strokeDasharray="4 4"
-                      label={{ value: 'Target', position: 'right', fontSize: 10, fill: '#6366f1' }}
+                      label={{ value: 'Target', position: 'right', fontSize: 10, fill: 'var(--success)' }}
                     />
                   )}
                   <Line
                     type="monotone"
                     dataKey="score"
-                    stroke="#7c3aed"
+                    stroke="var(--accent)"
                     strokeWidth={2}
-                    dot={{ r: 3, fill: '#7c3aed' }}
+                    dot={{ r: 3, fill: 'var(--accent)' }}
                     activeDot={{ r: 5 }}
                   />
                 </LineChart>

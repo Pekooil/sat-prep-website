@@ -18,10 +18,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // Premium CTA = high-contrast NEUTRAL (near-black on light, near-white on dark)
         default:
-          'bg-violet-600 text-white shadow-[var(--shadow-xs)] hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400 dark:text-white',
+          'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[var(--shadow-xs)] hover:bg-[var(--primary-hover)]',
+        // Accent-filled — reserved; use only when the chromatic accent is the point
+        accent:
+          'bg-[var(--accent)] text-white shadow-[var(--shadow-xs)] hover:bg-[var(--accent-hover)]',
         destructive:
-          'bg-red-500 text-white shadow-[var(--shadow-xs)] hover:bg-red-600',
+          'bg-[var(--red-600)] text-white shadow-[var(--shadow-xs)] hover:bg-[color-mix(in_srgb,var(--red-600),#000_12%)]',
         outline:
           'border-[var(--border-strong)] bg-[var(--surface-raised)] text-[var(--text-body)] shadow-[var(--shadow-xs)] hover:bg-[var(--surface-sunken)] hover:text-[var(--text-heading)]',
         secondary:

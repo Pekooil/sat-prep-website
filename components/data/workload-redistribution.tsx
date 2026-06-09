@@ -27,12 +27,13 @@ type DomainPriority = {
 }
 
 const TIP_STYLE = {
-  backgroundColor: 'var(--card)',
-  border: '1px solid var(--border)',
-  borderRadius: '10px',
+  backgroundColor: 'var(--popover)',
+  border: '1px solid var(--border-strong)',
+  borderRadius: '8px',
   fontSize: '12px',
-  boxShadow: '0 4px 12px -2px rgba(15,23,42,0.12), 0 2px 6px -2px rgba(15,23,42,0.08)',
+  boxShadow: 'var(--shadow-lg)',
   padding: '8px 12px',
+  color: 'var(--foreground)',
 }
 
 interface ReplanAuditLogProps { replans: ReplanAuditLog[] }
@@ -45,8 +46,8 @@ export function WorkloadRedistribution({ replans }: ReplanAuditLogProps) {
           <CardTitle className="text-base">Workload Distribution</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col items-center justify-center py-14">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mb-3">
-            <Network className="h-5 w-5 text-[var(--muted-foreground)]" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-sunken)] mb-3">
+            <Network className="h-5 w-5 text-[var(--text-muted)]" strokeWidth={1.75} />
           </div>
           <p className="font-medium text-sm">No replan data</p>
           <p className="text-xs text-[var(--muted-foreground)] mt-1 text-center">
@@ -121,8 +122,8 @@ export function WorkloadRedistribution({ replans }: ReplanAuditLogProps) {
             <Radar
               name="Current"
               dataKey="Current"
-              stroke="#6366f1"
-              fill="#6366f1"
+              stroke="var(--accent)"
+              fill="var(--accent)"
               fillOpacity={0.2}
               strokeWidth={2}
             />
@@ -130,8 +131,8 @@ export function WorkloadRedistribution({ replans }: ReplanAuditLogProps) {
               <Radar
                 name="Previous"
                 dataKey="Previous"
-                stroke="#94a3b8"
-                fill="#94a3b8"
+                stroke="var(--text-muted)"
+                fill="var(--text-muted)"
                 fillOpacity={0.1}
                 strokeWidth={1.5}
                 strokeDasharray="4 3"

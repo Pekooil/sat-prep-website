@@ -10,11 +10,11 @@ interface Config {
 }
 
 export const MISTAKE_CONFIG: Record<MistakeTypeKey, Config> = {
-  concept:  { label: 'Concept Gap',    icon: BookOpen,   classes: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800' },
-  careless: { label: 'Careless Error', icon: Zap,        classes: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800' },
-  time:     { label: 'Timing Issue',   icon: Clock,      classes: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800' },
-  strategy: { label: 'Strategy Error', icon: Target,     classes: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800' },
-  other:    { label: 'Other',          icon: HelpCircle, classes: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800' },
+  concept:  { label: 'Concept Gap',    icon: BookOpen,   classes: 'bg-red-500/10 text-red-700 border-red-500/20 dark:text-red-300' },
+  careless: { label: 'Careless Error', icon: Zap,        classes: 'bg-amber-500/10 text-amber-700 border-amber-500/20 dark:text-amber-300' },
+  time:     { label: 'Timing Issue',   icon: Clock,      classes: 'bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-300' },
+  strategy: { label: 'Strategy Error', icon: Target,     classes: 'bg-orange-500/10 text-orange-700 border-orange-500/20 dark:text-orange-300' },
+  other:    { label: 'Other',          icon: HelpCircle, classes: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-300' },
 }
 
 interface MistakeTypeBadgeProps {

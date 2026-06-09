@@ -15,11 +15,11 @@ export const CATEGORY_COLORS: Record<string, CategoryColor> = {
     leftBar: 'border-l-blue-500',
   },
   'Advanced Math': {
-    bg: 'bg-violet-50 dark:bg-violet-950/30',
-    border: 'border-violet-200 dark:border-violet-800',
-    text: 'text-violet-700 dark:text-violet-300',
-    dot: 'bg-violet-500',
-    leftBar: 'border-l-violet-500',
+    bg: 'bg-indigo-50 dark:bg-indigo-950/30',
+    border: 'border-indigo-200 dark:border-indigo-800',
+    text: 'text-indigo-700 dark:text-indigo-300',
+    dot: 'bg-indigo-500',
+    leftBar: 'border-l-indigo-500',
   },
   'Problem-Solving and Data Analysis': {
     bg: 'bg-orange-50 dark:bg-orange-950/30',
