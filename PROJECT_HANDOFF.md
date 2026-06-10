@@ -6,11 +6,33 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-10 (Session 15 — Review Day: Single Review Session + Error Log Dialog)
+2026-06-10 (Session 16 — Inventory-aware question assignment in the planner)
 
 ---
 
 ## What Was Done This Session
+
+### Session 16 — Inventory-Aware Question Assignment
+
+**Goal:** Make plan generation respect the Question Bank inventory: never over-assign a skill, substitute another skill when one runs out, fill ≥80% of study time, keep both subjects on every study day, and stop + prompt when the whole bank is scheduled.
+
+#### Plan Generation (`lib/study-plan-engine/plan-store.service.ts`)
+- Replaced the old `applyInventoryCap()` (which assigned 1 question when a skill was exhausted) with a full assignment pipeline:
+  - **80% time floor** — every study block targets at least `ceil(blockMinutes × 0.80 / 1.25)` questions before capping (applies even with no inventory configured).
+  - **Inventory cap** — no `domain|skill|difficulty` is assigned more than its `available_count`; tracked via a cumulative `used` map.
+  - **Cross-skill substitution** — when the planned skill can't fill the floor, `pickSlot()` substitutes another skill in the **same subject** by adaptive-planner priority (`buildSlotsBySubject()` sorts inventory slots by `priorityScore`). Substitutes rebuild title/description/filters/difficulty/metadata via `substituteBlock()`.
+  - **Bank-complete** — when both subjects are exhausted, remaining study days become `bankCompleteToTask()` Review & Practice sessions and one `type:'system'` notification is written.
+- `save()` now returns `inventoryExhausted` + `nearlyExhaustedSkills`.
+- Added optional `inventoryExhausted?` / `nearlyExhaustedSkills?` to `StudyPlanEngineResult` (`lib/study-plan-engine/types.ts`).
+
+#### Verification
+- `npx tsc --noEmit` clean (strict mode), `npx eslint` clean on changed files.
+- Not browser-verified: logic is server-side and requires auth + a seeded `question_inventory` + plan generation. To verify in-app: seed inventory on `/inventory`, generate a plan, and inspect `/calendar` (capped counts, substituted skills, Review & Practice days, "Question Bank fully scheduled" notification).
+
+#### Copyright compliance
+- No change to what is stored: tasks still carry only domain/skill label strings, difficulty, and integer question counts. No SAT content introduced. COPYRIGHT_COMPLIANCE.md remains accurate.
+
+---
 
 ### Session 15 — Review Day Overhaul: Single Review Session + Inline Error Log
 

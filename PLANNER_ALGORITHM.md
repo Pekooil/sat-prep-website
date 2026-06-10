@@ -126,12 +126,33 @@ questionCount = round(halfBase × ramp)   per block
 
 For a 60-minute day: `halfMinutes = 30`, `halfBase = 21`, giving each block ≈ 17–25 questions depending on the week.
 
-### Step 6 — Persistence (plan-store.service.ts)
+**80% study-time floor:** every study block is bumped up to at least the number of questions that fills 80% of its study time before any inventory capping:
+```
+minQuestions = ceil(blockMinutes × 0.80 / 1.25)
+target       = max(rampedQuestionCount, minQuestions)
+```
+This guarantees questions occupy ≥80% of the student's desired study time even in early (low-ramp) weeks. The floor applies whether or not inventory limits are configured.
+
+### Step 6 — Persistence + Inventory Assignment (plan-store.service.ts)
 
 1. Deactivate all existing active plans for the user
 2. Insert one `study_plans` row
-3. Batch-insert `calendar_tasks` rows (one per block, rest days skipped)
-4. Each task carries: `priority_score` (1–100), `mastery_target` (90), `estimated_score_impact`, `replanning_weight`, `replan_locked: false`
+3. Load `question_inventory` limits (keyed `domain|||skill|||difficulty`) and assign each study block against them (see below)
+4. Batch-insert `calendar_tasks` rows (one per block, rest days skipped)
+5. Each task carries: `priority_score` (1–100), `mastery_target` (90), `estimated_score_impact`, `replanning_weight`, `replan_locked: false`
+
+#### Inventory-aware question assignment
+
+The plan never assigns a skill category more questions than its `available_count`. For each study block, in chronological order, with a cumulative `used` map per skill key:
+
+- **Case A — no inventory row for the planned skill:** pass through uncapped (admin has not constrained it); the 80% floor still applies.
+- **Case B — planned skill has ≥ `minQuestions` remaining:** keep it; assign `min(target, remaining)`; decrement inventory.
+- **Case C — planned skill is out / below the floor:** **substitute** another skill in the **same subject**, chosen by adaptive-planner priority (weakest / highest-leverage domain first; the requested difficulty is preferred). If no slot in the subject can meet `minQuestions`, the slot with the most remaining is used (best-effort time fill). The block's title, description, `cbFilters`, difficulty, and replanner metadata are rebuilt for the substitute domain.
+- A subject is **exhausted** only when no slot in it has any questions left. Once a subject is exhausted, that subject's block is dropped for the rest of the plan (the other subject continues — Math and R&W are both assigned every study day for as long as each has inventory).
+
+#### Bank-complete behavior
+
+When **both** subjects are exhausted, no further questions are assigned. Every remaining study day becomes a **Review & Practice** task (`category: 'Review Session'`, no QB filter, replanner-skipped) directing the student to their Error Log and Bluebook practice tests, and a single `notifications` row (`type: 'system'`) is written telling them the Question Bank is fully scheduled. `save()` returns `inventoryExhausted: boolean` and `nearlyExhaustedSkills: string[]` (keys with <20% left).
 
 **Review day task shape:**
 Review days produce **one** `calendar_tasks` row (not one per domain):

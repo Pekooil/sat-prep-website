@@ -295,7 +295,7 @@ Global admin-managed catalog of College Board Question Bank available question c
 - `completed` = sum of `questions_attempted` from user's `question_sessions` matching domain+skill
 - `remaining` = `available_count − assigned`
 
-**Planner integration:** `PlanStoreService.save()` loads inventory before inserting tasks and calls `applyInventoryCap()` to reduce question counts when cumulative allocations would exceed `available_count`.
+**Planner integration:** `PlanStoreService.save()` loads inventory before inserting tasks and calls `assignStudyBlock()` per block — it caps counts to remaining `available_count`, substitutes another skill in the same subject (by adaptive-planner priority) when the planned one runs out, keeps every block at ≥80% study time, and converts study days to Review & Practice sessions (plus a notification) once the whole bank is scheduled. See `PLANNER_ALGORITHM.md` → Step 6.
 
 ---
 

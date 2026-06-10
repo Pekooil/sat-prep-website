@@ -164,6 +164,10 @@ export interface StudyPlanEngineResult {
   restDays: number
   totalTasksCreated: number
   phases: PhaseSummary[]
+  /** True when the Question Bank ran out before the test date and remaining study days became Review & Practice sessions. */
+  inventoryExhausted?: boolean
+  /** Inventory keys (`domain|||skill|||difficulty`) with <20% of their questions left after planning. */
+  nearlyExhaustedSkills?: string[]
 }
 
 export interface PhaseSummary {
