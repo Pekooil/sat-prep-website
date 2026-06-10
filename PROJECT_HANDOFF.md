@@ -6,11 +6,47 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-08 (Session 13 — UI/UX Rebuild, Foundation)
+2026-06-10 (Session 15 — Review Day: Single Review Session + Error Log Dialog)
 
 ---
 
 ## What Was Done This Session
+
+### Session 15 — Review Day Overhaul: Single Review Session + Inline Error Log
+
+**Goal:** Replace the multiple domain-specific blocks on review days with a single "Review Session" task that shows active error log mistakes and lets users edit/master them inline on the calendar.
+
+#### Plan Generation (`lib/study-plan-engine/plan-store.service.ts`)
+- Replaced the per-domain `reviewBlockToTask()` loop with a single `reviewSessionToTask()` per review day
+- New task: `category: 'Review Session'`, `subject: 'both'`, `title: 'Review Session'`
+- No QB filters (`college_board_filters: null`), no skill label
+- Duration = `day.totalDurationMinutes` (full review allocation), priority 50, replanning weight 0.5
+- Removed the now-unused `applyInventoryCapReview()` private method and `ReviewBlock` import
+
+#### Colors (`components/calendar/task-colors.ts`)
+- Added `'Review Session'` entry with identical slate colors to `'Full Practice Test'`
+- Legend in calendar updated: "Practice Test" → "Practice Test / Review"
+
+#### Adaptive Replanner (`lib/adaptive-replanner/index.ts`)
+- No code change needed — replanner already skips tasks whose `category` doesn't match a domain label, so `'Review Session'` tasks are silently skipped (same as the `Full Practice Test` path but via the `if (!rd) continue` guard)
+
+#### New Component (`components/calendar/review-session-dialog.tsx`)
+- Slide-over drawer (same layout pattern as `TaskDrawer`) opens when user clicks a Review Session task
+- Fetches active error logs client-side: `mastered = false`, `archived = false`, ordered by `created_at` desc
+- Displays count of active mistakes and a `ReviewErrorCard` per entry
+- Each card: mastered toggle (circle → marks mastered, removes from list), Pencil edit button (opens `EditErrorDialog`), expand/collapse for full detail (what I did, correct approach, my explanation, mark mastered button)
+- Empty state: "No active mistakes" with `BookOpenCheck` icon
+- Loading skeleton while fetching
+- Footer: "Mark Session Complete" button (calls `onMarkComplete` + closes drawer); shows "Session completed" badge if already done
+
+#### Calendar Client (`components/calendar/calendar-client.tsx`)
+- Added `reviewSessionTask` state
+- `openDrawer()` now routes `category === 'Review Session'` tasks to `ReviewSessionDialog` instead of `TaskDrawer`
+- `ReviewSessionDialog` rendered alongside other dialogs
+
+**TypeScript:** `npx tsc --noEmit` → 0 errors.
+
+---
 
 ### Session 13 — Premium UI/UX Rebuild: Foundation (Phases 0–2)
 

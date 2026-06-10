@@ -70,6 +70,13 @@ export const CATEGORY_COLORS: Record<string, CategoryColor> = {
     dot: 'bg-slate-500',
     leftBar: 'border-l-slate-500',
   },
+  'Review Session': {
+    bg: 'bg-slate-50 dark:bg-slate-900/50',
+    border: 'border-slate-300 dark:border-slate-600',
+    text: 'text-slate-700 dark:text-slate-300',
+    dot: 'bg-slate-500',
+    leftBar: 'border-l-slate-500',
+  },
 }
 
 const DEFAULT_COLOR: CategoryColor = {

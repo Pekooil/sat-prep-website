@@ -18,7 +18,6 @@ import type {
   PhaseSummary,
   PracticeTestBlock,
   RankedDomain,
-  ReviewBlock,
   StudyBlock,
   StudyPlanEngineInput,
   StudyPlanEngineResult,
@@ -59,32 +58,27 @@ function studyBlockToTask(
   }
 }
 
-function reviewBlockToTask(
+function reviewSessionToTask(
   day: DaySchedule,
-  block: ReviewBlock,
   userId: string,
   planId: string,
 ): TaskInsertRow {
   return {
     user_id:       userId,
     study_plan_id: planId,
-    title:         `Review — ${block.domainLabel} · ${block.questionCount}q`,
-    description:   block.description,
+    title:         'Review Session',
+    description:   'Work through your active error log mistakes. For each open mistake: review what went wrong, update your notes, and mark it mastered when you understand it. This session replaces additional question sets — focus entirely on your error log.',
     task_date:     day.date,
-    duration_minutes: block.durationMinutes,
-    subject:       block.subject,
-    category:      block.domainLabel,
+    duration_minutes: day.totalDurationMinutes || 60,
+    subject:       'both',
+    category:      'Review Session',
     is_completed:  false,
     replan_locked: false,
-    priority_score:         block.priorityScore,
-    mastery_target:         block.masteryTarget,
-    estimated_score_impact: block.estimatedScoreImpact,
-    replanning_weight:      block.replanningWeight,
-    college_board_filters: {
-      domain:     block.cbFilters.domain,
-      skill:      block.cbFilters.skill,
-      difficulty: block.cbFilters.difficulty,
-    },
+    priority_score:         50,
+    mastery_target:         0,
+    estimated_score_impact: 0,
+    replanning_weight:      0.5,
+    college_board_filters:  null,
   }
 }
 
@@ -208,15 +202,17 @@ export class PlanStoreService {
     for (const day of schedule) {
       if (day.dayType === 'rest' || day.blocks.length === 0) continue
 
+      if (day.dayType === 'review') {
+        // One unified Review Session task per review day — no domain-specific blocks
+        tasks.push(reviewSessionToTask(day, input.userId, planId))
+        continue
+      }
+
       for (const block of day.blocks) {
         if (this.isStudyBlock(block, day.dayType)) {
           const studyBlock = block as StudyBlock
           const cappedBlock = this.applyInventoryCap(studyBlock, inventoryLimits, inventoryUsed, nearlyExhausted)
           tasks.push(studyBlockToTask(day, cappedBlock, input.userId, planId))
-        } else if (day.dayType === 'review') {
-          const reviewBlock = block as ReviewBlock
-          const cappedBlock = this.applyInventoryCapReview(reviewBlock, inventoryLimits, inventoryUsed)
-          tasks.push(reviewBlockToTask(day, cappedBlock, input.userId, planId))
         } else if (day.dayType === 'practice_test') {
           tasks.push(practiceTestToTask(day, block as PracticeTestBlock, input.userId, planId))
         }
@@ -304,25 +300,6 @@ export class PlanStoreService {
       nearlyExhausted.push(key)
     }
 
-    return capped === block.questionCount ? block : { ...block, questionCount: capped }
-  }
-
-  /** Lighter version for review blocks — caps but doesn't flag nearly-exhausted */
-  private applyInventoryCapReview(
-    block: ReviewBlock,
-    limits: Map<string, number>,
-    used: Map<string, number>,
-  ): ReviewBlock {
-    const key = `${block.cbFilters.domain}|||${block.cbFilters.skill}|||${block.cbFilters.difficulty}`
-    const available = limits.get(key)
-    if (available === undefined) return block
-
-    const soFar    = used.get(key) ?? 0
-    const remaining = Math.max(0, available - soFar)
-    if (remaining <= 0) { used.set(key, soFar + 1); return { ...block, questionCount: 1 } }
-
-    const capped = Math.min(block.questionCount, remaining)
-    used.set(key, soFar + capped)
     return capped === block.questionCount ? block : { ...block, questionCount: capped }
   }
 

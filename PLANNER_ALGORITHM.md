@@ -133,6 +133,17 @@ For a 60-minute day: `halfMinutes = 30`, `halfBase = 21`, giving each block ≈ 
 3. Batch-insert `calendar_tasks` rows (one per block, rest days skipped)
 4. Each task carries: `priority_score` (1–100), `mastery_target` (90), `estimated_score_impact`, `replanning_weight`, `replan_locked: false`
 
+**Review day task shape:**
+Review days produce **one** `calendar_tasks` row (not one per domain):
+- `category: 'Review Session'`
+- `subject: 'both'`
+- `title: 'Review Session'`
+- `college_board_filters: null` (no QB filter — this session is error-log based)
+- `priority_score: 50`, `mastery_target: 0`, `replanning_weight: 0.5`
+- `duration_minutes`: total review duration for the day
+
+The Adaptive Replanner skips `'Review Session'` tasks (no matching domain in `rankedByLabel`).
+
 ---
 
 ## Adaptive Replanner

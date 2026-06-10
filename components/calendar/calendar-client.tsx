@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { useCalendarTasksRange } from '@/hooks/use-calendar-tasks-range'
 import { TaskFormDialog } from './task-form-dialog'
 import { TaskDrawer } from './task-drawer'
+import { ReviewSessionDialog } from './review-session-dialog'
 import { SessionWorkflowDialog } from './session-workflow-dialog'
 import { PracticeTestScoreDialog } from './practice-test-score-dialog'
 import { rescheduleCalendarTask, toggleTaskComplete } from '@/actions/calendar'
@@ -64,7 +65,7 @@ const LEGEND_ITEMS = [
   { dot: 'bg-rose-500',   label: 'Craft & Structure' },
   { dot: 'bg-amber-500',  label: 'Expression' },
   { dot: 'bg-cyan-500',   label: 'Standard English' },
-  { dot: 'bg-slate-500',  label: 'Practice Test' },
+  { dot: 'bg-slate-500',  label: 'Practice Test / Review' },
 ]
 
 // ─── Compact task chip (month view) ──────────────────────────────────────────
@@ -576,6 +577,7 @@ export function CalendarClient() {
   // Dialogs / drawer
   const [drawerTask, setDrawerTask]                     = React.useState<CalendarTask | null>(null)
   const [drawerOpen, setDrawerOpen]                     = React.useState(false)
+  const [reviewSessionTask, setReviewSessionTask]       = React.useState<CalendarTask | null>(null)
   const [sessionWorkflowTask, setSessionWorkflowTask]   = React.useState<CalendarTask | null>(null)
   const [practiceScoreTask, setPracticeScoreTask]       = React.useState<CalendarTask | null>(null)
   const [addOpen, setAddOpen]                           = React.useState(false)
@@ -622,6 +624,10 @@ export function CalendarClient() {
 
   // ── Task interaction ──
   function openDrawer(task: CalendarTask) {
+    if (task.category === 'Review Session') {
+      setReviewSessionTask(task)
+      return
+    }
     setDrawerTask(task)
     setDrawerOpen(true)
   }
@@ -775,6 +781,14 @@ export function CalendarClient() {
         onOpenChange={setDrawerOpen}
         onStartSession={handleStartSession}
         onMarkComplete={handleMarkComplete}
+      />
+
+      {/* ── Review Session Dialog ── */}
+      <ReviewSessionDialog
+        task={reviewSessionTask}
+        open={!!reviewSessionTask}
+        onOpenChange={open => { if (!open) setReviewSessionTask(null) }}
+        onMarkComplete={task => { handleMarkComplete(task); setReviewSessionTask(null) }}
       />
 
       {/* ── Session Workflow Dialog ── */}
