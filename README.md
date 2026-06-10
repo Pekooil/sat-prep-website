@@ -4,16 +4,19 @@ A free SAT study planner for the official College Board Question Bank with custo
 
 ## Demonstration
 
-Home Page  
+### Home Page  
 
 <img width="1920" height="956" alt="Screenshot 2026-06-10 at 1 00 46 AM" src="https://github.com/user-attachments/assets/56413a7e-e6d7-492a-b093-2b1d01792587" />
-Calendar View  
+
+### Calendar View  
 
 <img width="1920" height="957" alt="Screenshot 2026-06-10 at 1 01 09 AM" src="https://github.com/user-attachments/assets/0af9fca6-9cb5-4d40-82bf-12428211974a" />
-Adaptive Planner  
+
+### Adaptive Planner  
 
 <img width="1920" height="958" alt="Screenshot 2026-06-10 at 1 02 30 AM" src="https://github.com/user-attachments/assets/5a6a30c3-9be2-49d9-af62-7f0ec1985e13" />
-Error Log  
+
+### Error Log  
 
 <img width="1920" height="958" alt="Screenshot 2026-06-10 at 1 05 30 AM" src="https://github.com/user-attachments/assets/2354f7e8-5efc-4f32-8855-5ae6008731b9" />
 
@@ -48,6 +51,16 @@ Students repeat the following step to drill weak areas with College Board's Ques
 ## Design Inspiration
 
 Vercel, Linear, Notion, and Superhuman - referenced in the designing process for navigation bar and overall aesthetic.
+
+## AI Usage
+
+### Development Process
+SaturnPath is developed with the assistance and acceleration of Claude's Opus 4.8 and Sonnet 4.6 for code generation and debugging.
+However, the primary design and workflow decisions were made by human and not by AI.
+
+### In-App "AI" Features
+Although SaturnPath contains the "AI Adaptive Replanner" feature, there is no LLM or external AI API called.  
+The "AI Adaptive Replanner" runs on pre-written Typescript Algorithms.
 
 ## Acknowledgement
 
