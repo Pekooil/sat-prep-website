@@ -1,6 +1,6 @@
 # SAT Study Planner AI — Complete Handoff
 
-**Last updated:** 2026-06-07 (Session 10)
+**Last updated:** 2026-06-10 (Session 16)
 **Project root:** `/Users/darcywang/sat-prep-website`
 **Stack:** Next.js 16.2.7 (App Router), React 19, TypeScript 5 strict, Tailwind CSS v4, Supabase
 **No external AI API** — all planning logic is deterministic TypeScript.
@@ -166,6 +166,8 @@ actions/
   error-logs.ts           createErrorLog, updateErrorLog, archiveErrorLog, markErrorMastered, deleteErrorLog
   notification-preferences.ts  saveNotificationPreferences(), sendTestReminder()
   onboarding.ts           saveOnboarding → seeds question_sessions + score_history + engine + replanner
+  question-inventory.ts   getInventoryWithStats(), createInventoryItem(), updateInventoryItem(),
+                          deleteInventoryItem(), bulkImportInventory(), getInventoryLimits()
   question-sessions.ts    createQuestionSession(data, missedAnalysis?) → runs replanner, returns SessionMetrics + ReplannerResult
   score-history.ts        addScoreEntry → updates current_score (even partial); triggers replanner for non-diagnostic
   study-plan.ts           generatePlanFromProfile(), generatePlanFromForm({..., daySchedule?})
@@ -186,12 +188,16 @@ app/
 
 lib/
   study-plan-engine/
-    types.ts              StudyPlanEngineInput (includes daySchedule?: Record<number,'study'|'review'|'rest'>)
+    types.ts              StudyPlanEngineInput (includes daySchedule?: Record<number,'study'|'review'|'rest'>);
+                          StudyPlanEngineResult (optional inventoryExhausted + nearlyExhaustedSkills)
     domain-catalog.ts     8 SAT domains with CB QB labels, skills, point weights
-    scoring.service.ts    rankDomains() — ranks by accuracy gap × point leverage
+    scoring.service.ts    rankDomains(), dailyQuestionTarget(), masteryTargetForDomain()
     difficulty.service.ts phase assignment (foundation/skill/advanced/strategy) + difficulty + skill focus
     scheduler.service.ts  buildSchedule() — uses daySchedule when provided; domain rotation via studyDayGlobalIdx counter
-    plan-store.service.ts PlanStoreService.save() — writes study_plans + calendar_tasks
+    plan-store.service.ts PlanStoreService.save() — inventory-aware assignment pipeline:
+                          loadInventoryLimits() → buildSlotsBySubject() → assignStudyBlock() per block
+                          (per-skill cap, ≥80% time floor, pickSlot() substitution, substituteBlock()).
+                          Bank exhaustion → bankCompleteToTask() + system notification.
     index.ts              StudyPlanEngine class — orchestrator
   adaptive-replanner/
     index.ts              runAdaptiveReplanner() — full v2 pipeline
@@ -214,13 +220,24 @@ components/
   calendar/
     calendar-client.tsx        Month/week/agenda orchestrator + drag-and-drop.
                                Past cells muted, today cell violet tint, week view today-column border.
+                               Routes 'Review Session' category to ReviewSessionDialog.
     task-drawer.tsx            Slide-over: QB filters, ClipboardList icon label, instructions, replanner stats, session buttons.
+    review-session-dialog.tsx  Slide-over for 'Review Session' tasks: lists active (unmastered, unarchived)
+                               error logs; per-entry mastered toggle + EditErrorDialog; Mark Session Complete footer.
     session-workflow-dialog.tsx  6-phase UX (idle→active→review→results→missed_analysis→plan_updated).
     practice-test-score-dialog.tsx  Do NOT modify.
     task-form-dialog.tsx       Manual task creation.
-    task-colors.ts             Domain color map.
+    task-colors.ts             Domain color map + 'Review Session' (slate) entry.
     day-tasks-panel.tsx        LEGACY — never rendered. Safe to delete.
     log-session-dialog.tsx     LEGACY — superseded by SessionWorkflowDialog. Safe to delete.
+  inventory/
+    inventory-client.tsx       Tab orchestrator (Overview / Inventory / Admin).
+    summary-cards.tsx          4 stat cards: Available / Assigned / Completed / Remaining.
+    progress-visualization.tsx SVG circular progress + section stacked bars.
+    inventory-table.tsx        Sortable, filterable, paginated table with Remaining color badges.
+    inventory-charts.tsx       Recharts: by-section bar, by-difficulty bar, most-depleted horizontal bar.
+    inventory-admin.tsx        CRUD editor + bulk JSON/CSV import (file upload + paste).
+    empty-state.tsx            Empty state with Import + Create buttons.
   data/
     data-client.tsx            Dashboard orchestrator (imports TopicMasteryCards + PredictedScoreWidget from ai-coach/).
     accuracy-trends.tsx, score-trend.tsx, topic-mastery-heatmap.tsx, topic-mastery-trends.tsx,
@@ -532,3 +549,9 @@ Both are required. Set in `.env.local` for local dev; Supabase dashboard for pro
 | 8 | Adaptive Replanner v2: topic_mastery, plan_versions, score_predictions, adaptive_recommendations; deleted /ai-coach route; removed TopicRankings |
 | 9 | Session workflow overhaul: missed_analysis phase, auto error log creation, plan_updated screen, timer |
 | 10 | UI/UX overhaul: design tokens, Lucide icons throughout (all emoji removed), dark mode palette, calendar visual states, chart tooltip polish. Deleted /info page + components. |
+| 11 | Question Inventory page (`/inventory`): `question_inventory` table, CRUD + bulk import actions, stat cards, charts, admin editor, planner integration (inventory cap on plan generation) |
+| 12 | Removed `'Systems of equations'` from Advanced Math domain in `domain-catalog.ts`, `constants.ts`, `lib/sat-planner.ts` |
+| 13 | Premium UI/UX rebuild (foundation only): design tokens (`@theme` ramps, surface-elevation, shadow scale), refined UI primitives, new sidebar + topbar layout shell. Branch `ui-rebuild-premium`. No functional changes. |
+| 14 | Dual-block study days, inline review errors, practice test rescheduling, test date marker |
+| 15 | Review Day overhaul: single `'Review Session'` task per review day (replaces per-domain blocks); new `ReviewSessionDialog` component with inline error-log mastered toggle + edit |
+| 16 | Inventory-aware question assignment: replaced `applyInventoryCap()` with full `assignStudyBlock()` pipeline — per-skill inventory cap, ≥80% time floor, cross-skill substitution by adaptive priority, bank-complete tasks + notification; `StudyPlanEngineResult` gains optional `inventoryExhausted` + `nearlyExhaustedSkills` fields |

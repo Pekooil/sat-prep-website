@@ -10,7 +10,10 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60,
   },
 
-  // ── Security & caching headers ──────────────────────────────────────────
+  // ── Security headers ────────────────────────────────────────────────────
+  // Note: do NOT set a custom Cache-Control on /_next/static — Next.js already
+  // serves those assets as `public, max-age=31536000, immutable`. A manual
+  // override triggers a build warning and can break dev asset behavior.
   async headers() {
     return [
       {
@@ -22,12 +25,6 @@ const nextConfig: NextConfig = {
           { key: 'X-Frame-Options',           value: 'DENY' },
           { key: 'Referrer-Policy',           value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy',        value: 'camera=(), microphone=(), geolocation=()' },
-        ],
-      },
-      {
-        source: '/_next/static/(.*)',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
     ]

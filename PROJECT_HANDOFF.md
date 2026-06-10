@@ -161,7 +161,7 @@ The **Algebra** category's `'Systems of linear equations'` skill was left untouc
 
 ---
 
-## What Was Done Last Session
+## Earlier Sessions
 
 ### Session 10 — UI/UX Overhaul + Info Page Deletion
 
@@ -219,7 +219,7 @@ Every UI emoji was replaced. No emoji remain in rendered component JSX. Toast st
 ### Infrastructure
 - Next.js 16.2.7 App Router at `/Users/darcywang/sat-prep-website`
 - Supabase auth + database (`lib/supabase/client.ts`, `lib/supabase/server.ts`)
-- `middleware.ts` guards all dashboard routes
+- `proxy.ts` guards all dashboard routes (Next.js 16 renamed Middleware → Proxy)
 - Full Postgres schema in `supabase/schema.sql` with RLS on all tables
 - Hand-written TypeScript types in `types/database.ts` + `types/index.ts`
 
@@ -238,6 +238,7 @@ Every UI emoji was replaced. No emoji remain in rendered component JSX. Toast st
 - Writes one `study_plans` row + per-day `calendar_tasks` rows with QB filters and replanner metadata
 - Supports `daySchedule` override (any DOW can be study/review/rest)
 - Domain rotation uses running `studyDayGlobalIdx` counter (not day-of-week)
+- **Inventory-aware assignment** (`plan-store.service.ts`): loads `question_inventory` at plan-generation time; enforces per-`(domain, skill, difficulty)` caps via cumulative tracking; floors each block at ≥80% of study time; substitutes another skill in the same subject (by adaptive priority) when the planned skill runs low; converts remaining study days to `'Review Session'` Review & Practice tasks once the full bank is exhausted; writes a `type:'system'` notification; returns `inventoryExhausted` + `nearlyExhaustedSkills` to the caller
 
 ### Adaptive Replanner (`lib/adaptive-replanner/`)
 - Entry point: `runAdaptiveReplanner(supabase, userId, triggeredBy, triggerId?)`
@@ -252,12 +253,27 @@ Every UI emoji was replaced. No emoji remain in rendered component JSX. Toast st
 - **Visual states:** past cells muted, today cell violet tint, future task dot indicators
 - **Task Drawer** — QB filters (ClipboardList icon label), step-by-step QB instructions, expected time, adaptive-planner stats
 - Footer actions: "Log Session" → `SessionWorkflowDialog`, "Enter Score" → `PracticeTestScoreDialog`
+- **Review Session routing** — clicking a `'Review Session'` task opens `ReviewSessionDialog` (not `TaskDrawer`)
+
+### Review Session Dialog (`components/calendar/review-session-dialog.tsx`)
+- Slide-over for Saturday review days; fetches active (unmastered, unarchived) error log entries
+- Per-entry: inline mastered toggle (removes from list immediately), Pencil → `EditErrorDialog`, expand/collapse detail
+- Empty state with `BookOpenCheck` icon; loading skeleton; "Mark Session Complete" footer button
 
 ### Session Workflow (`SessionWorkflowDialog`)
 - **6-phase UX:** idle → active → review → results → missed_analysis → plan_updated
 - Countdown timer (71s/q R&W, 95s/q Math), per-question A/B/C/D entry, correct-answer review
 - **Missed-analysis phase:** per-wrong-answer selects for subtopic + mistake type; auto-creates `error_log` rows
 - **Plan Updated phase:** improvement %, topic mastery bar, replanner domain changes, predicted score
+
+### Question Inventory (`/inventory`)
+- Admin-managed catalog (`question_inventory` table) of CB QB available question counts per `(section, domain, skill, difficulty)`
+- Summary stat cards: Available / Assigned / Completed / Remaining
+- SVG circular progress + section stacked progress bars
+- Sortable/filterable/paginated table with color-coded Remaining badges
+- Recharts: by-section bar, by-difficulty bar, most-depleted horizontal bar
+- CRUD editor + bulk JSON/CSV import (file-upload + paste)
+- `actions/question-inventory.ts` — `getInventoryWithStats()`, CRUD, `bulkImportInventory()`, `getInventoryLimits()`
 
 ### Error Log (`/error-log`)
 - Full-text search, multi-field filters, sort, Active/Archived tabs
@@ -294,6 +310,7 @@ Full SQL in `AI_HANDOFF.md` and `supabase/schema.sql`.
 | Block 1 | `calendar_tasks` replanner columns + `replan_audit_logs` |
 | Block 2 | `error_logs` extended columns |
 | Block 3 | `topic_mastery`, `plan_versions`, `score_predictions`, `adaptive_recommendations` |
+| Block 6 | `question_inventory` table (29 seed rows covering all 8 domains × skills × difficulties) |
 
 If you see `Could not find column X in schema cache`: run migrations, then reload schema cache via Supabase Dashboard → Database → Reload Schema Cache.
 
@@ -335,16 +352,19 @@ None known. TypeScript is clean (`npx tsc --noEmit` passes with zero errors).
 ### Option A — "Replan Now" button
 Add a manual replanning trigger. `triggerManualReplan()` is ready in `actions/adaptive-replanner.ts`. Add a button to the calendar header (`calendar-client.tsx`) or home page. Show a toast with `tasksUpdated` + `predictedScore` on success.
 
-### Option B — Notifications live unread count
+### Option B — Surface `inventoryExhausted` to the UI
+`StudyPlanEngine.generate()` now returns `inventoryExhausted: boolean` and `nearlyExhaustedSkills: string[]`. Consider showing a warning banner when the Home page triggers plan generation and `inventoryExhausted` is true, or when the plan meta contains tasks with `category: 'Review & Practice — Question Bank Complete'`. The system notification is already written, but a proactive visual prompt would be more discoverable.
+
+### Option C — Notifications live unread count
 Wire the bell icon to show a red dot or count badge. Subscribe to the `notifications` table via `supabase.channel(...)` + `on('postgres_changes', ...)` in `notifications-dropdown.tsx`, or poll on mount. The dropdown UI is already built.
 
-### Option C — QB Tutorial screenshots
+### Option D — QB Tutorial screenshots
 Capture real screenshots of each QB step and save to `public/tutorial/step-{1–7}.png`. Replace `ScreenshotPlaceholder` in `components/tutorial/tutorial-client.tsx`.
 
-### Option D — Delete dead code
-Remove the 8 files listed in Dead Code above. No other files import them (verified by absence of any import statement referencing them in the current codebase).
+### Option E — Delete dead code
+Remove the 8 files listed in Dead Code above. No other files import them.
 
-### Option E — Error Log analytics on /data
+### Option F — Error Log analytics on /data
 Surface the error log data in the Data page: mistake-type breakdown chart, domain weakness heatmap, confidence trend line. Components already exist (`MistakeFrequency`) — extend with date-filtered variants.
 
 ---
