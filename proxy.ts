@@ -75,8 +75,29 @@ export async function proxy(request: NextRequest) {
   return response
 }
 
+/**
+ * Matcher note: the previous single negative-lookahead regex
+ *   /((?!_next/static|_next/image|favicon.ico|api/|.*\.ext$).*)
+ * is not extractable by Turbopack's static analyser, so the
+ * middleware-manifest ends up empty and the proxy never runs.
+ *
+ * The explicit list below covers every route that needs session
+ * refresh or auth guards while skipping _next internals, the API
+ * routes (which use the service-role client directly), and static
+ * assets. Turbopack handles simple path patterns without issues.
+ */
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/',
+    '/home/:path*',
+    '/calendar/:path*',
+    '/data/:path*',
+    '/error-log/:path*',
+    '/settings/:path*',
+    '/info/:path*',
+    '/tutorial/:path*',
+    '/onboarding/:path*',
+    '/login',
+    '/signup',
   ],
 }
