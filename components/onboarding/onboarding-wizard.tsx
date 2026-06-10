@@ -9,7 +9,7 @@ import { Step1Basics } from './step-1-basics'
 import { Step2Performance } from './step-2-performance'
 import { Step3Analysis } from './step-3-analysis'
 import { Step4Recommendations } from './step-4-recommendations'
-import { getOnboardingRecommendations, saveOnboarding, signUpAndSaveOnboarding } from '@/actions/onboarding'
+import { getOnboardingRecommendations, saveOnboarding, signUpAndSaveOnboarding, guestOnboarding } from '@/actions/onboarding'
 // ─── Step 5 types + component (inlined to avoid separate-file hot-reload issues) ─
 import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
@@ -255,7 +255,8 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
   const [aiRecs, setAiRecs] = React.useState<AIOnboardingRec | null>(null)
   const [aiLoading, setAiLoading] = React.useState(false)
   const [aiError, setAiError] = React.useState<string | null>(null)
-  const [saving, setSaving] = React.useState(false)
+  const [saving, setSaving]   = React.useState(false)
+  const [guestSaving, setGuestSaving] = React.useState(false)
   const [direction, setDirection] = React.useState<'forward' | 'back'>('forward')
   const [needsConfirmation, setNeedsConfirmation] = React.useState(false)
 
@@ -298,6 +299,20 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
   function handleBack() {
     setDirection('back')
     setStep(s => Math.max(1, s - 1))
+  }
+
+  async function handleGuest() {
+    const computed = analysis ?? computeAnalysis(step1Data, step2Data)
+    setGuestSaving(true)
+    const result = await guestOnboarding(step1Data, step2Data, computed, aiRecs)
+    setGuestSaving(false)
+    if (result.error) {
+      toast({ title: 'Error', description: result.error, variant: 'destructive' })
+      return
+    }
+    toast({ title: 'Welcome, guest!', description: 'Your plan is ready. Create an account anytime to save it permanently.' })
+    router.push('/home')
+    router.refresh()
   }
 
   async function handleRetryAI() {
@@ -490,7 +505,7 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
           )}
         </div>
 
-        {/* Skip option */}
+        {/* Skip step 2 */}
         {step === 2 && (
           <p className="text-center mt-3 text-xs text-slate-400">
             No practice data yet?{' '}
@@ -499,6 +514,20 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
               onClick={handleNext}
             >
               Skip this step
+            </button>
+          </p>
+        )}
+
+        {/* Continue as guest on step 5 */}
+        {step === 5 && !isAuthenticated && (
+          <p className="text-center mt-3 text-xs text-slate-400">
+            Just exploring?{' '}
+            <button
+              className="text-violet-600 dark:text-violet-400 hover:underline font-medium disabled:opacity-50"
+              onClick={handleGuest}
+              disabled={guestSaving || saving}
+            >
+              {guestSaving ? 'Setting up…' : 'Continue as guest'}
             </button>
           </p>
         )}

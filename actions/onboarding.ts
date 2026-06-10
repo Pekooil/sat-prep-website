@@ -192,7 +192,10 @@ export async function signUpAndSaveOnboarding(
   const { data, error: signUpError } = await supabase.auth.signUp({
     email: credentials.email,
     password: credentials.password,
-    options: { data: { full_name: credentials.fullName } },
+    options: {
+      data: { full_name: credentials.fullName },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')}/auth/confirm`,
+    },
   })
   if (signUpError) return { error: signUpError.message }
   if (!data.session) return { needsConfirmation: true }
@@ -303,3 +306,19 @@ export async function signUpAndSaveOnboarding(
   return {}
 }
 
+
+// ─── Guest Onboarding (anonymous sign-in + save) ──────────────────────────────
+
+export async function guestOnboarding(
+  step1: OnboardingStep1Data,
+  step2: OnboardingStep2Data,
+  analysis: OnboardingAnalysis,
+  recs: AIOnboardingRec | null,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  const { error: anonError } = await supabase.auth.signInAnonymously()
+  if (anonError) return { error: anonError.message }
+
+  return saveOnboarding(step1, step2, analysis, recs)
+}

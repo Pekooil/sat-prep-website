@@ -18,6 +18,12 @@ export async function signIn(formData: FormData) {
   redirect('/home')
 }
 
+function getAppUrl(): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  return 'http://localhost:3000'
+}
+
 export async function signUp(formData: FormData) {
   'use server'
   const email    = formData.get('email')     as string
@@ -28,7 +34,10 @@ export async function signUp(formData: FormData) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: {
+      data: { full_name: fullName },
+      emailRedirectTo: `${getAppUrl()}/auth/confirm`,
+    },
   })
 
   if (error) {
@@ -49,4 +58,21 @@ export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()
   redirect('/login')
+}
+
+export async function upgradeGuestAccount(formData: FormData) {
+  'use server'
+  const email    = formData.get('email')    as string
+  const password = formData.get('password') as string
+  const fullName = formData.get('full_name') as string
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.updateUser({
+    email,
+    password,
+    data: { full_name: fullName },
+  })
+
+  if (error) return { error: error.message }
+  return { needsConfirmation: true }
 }
