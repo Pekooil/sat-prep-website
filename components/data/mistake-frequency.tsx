@@ -21,11 +21,11 @@ interface MistakeFrequencyProps {
 }
 
 const TYPE_META: Record<string, { label: string; color: string }> = {
-  concept:  { label: 'Concept Gap',      color: 'var(--accent)' },
-  careless: { label: 'Careless Error',   color: 'var(--accent)' },
-  time:     { label: 'Timing Issue',     color: 'var(--accent)' },
-  strategy: { label: 'Strategy Error',   color: 'var(--accent)' },
-  other:    { label: 'Other',            color: 'var(--accent)' },
+  concept:  { label: 'Concept Gap',      color: '#ef4444' },
+  careless: { label: 'Careless Error',   color: '#f59e0b' },
+  time:     { label: 'Timing Issue',     color: '#3b82f6' },
+  strategy: { label: 'Strategy Error',   color: '#f97316' },
+  other:    { label: 'Other',            color: '#10b981' },
 }
 
 const TIP_STYLE = {
