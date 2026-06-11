@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { signIn } from '@/actions/auth'
+import { guestPreview } from '@/actions/onboarding'
 
 function isRedirectError(err: unknown): boolean {
   return (
@@ -20,6 +21,7 @@ function isRedirectError(err: unknown): boolean {
 
 export default function LoginPage() {
   const [pending, setPending] = React.useState(false)
+  const [guestPending, setGuestPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [notice, setNotice] = React.useState<string | null>(null)
 
@@ -52,6 +54,27 @@ export default function LoginPage() {
       if (isRedirectError(err)) throw err
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setPending(false)
+    }
+  }
+
+  async function handleGuest() {
+    setGuestPending(true)
+    setError(null)
+    setNotice(null)
+    try {
+      const result = await guestPreview()
+      if (result?.error) {
+        setError(result.error)
+        setGuestPending(false)
+        return
+      }
+      // Hard navigation so the new anonymous session cookie is applied before
+      // the dashboard (and its proxy session check) loads.
+      window.location.assign('/home')
+    } catch (err) {
+      if (isRedirectError(err)) throw err
+      setError(err instanceof Error ? err.message : 'Could not start the guest preview.')
+      setGuestPending(false)
     }
   }
 
@@ -102,7 +125,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <Button type="submit" className="w-full h-11 text-sm font-semibold" disabled={pending}>
+        <Button type="submit" className="w-full h-11 text-sm font-semibold" disabled={pending || guestPending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {pending ? 'Signing in…' : 'Sign in'}
         </Button>
@@ -124,6 +147,20 @@ export default function LoginPage() {
           Create one free
         </Link>
       </p>
+
+      <div className="space-y-1.5 text-center">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleGuest}
+          disabled={pending || guestPending}
+          className="h-11 w-full text-sm font-semibold"
+        >
+          {guestPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {guestPending ? 'Starting preview…' : 'Preview the dashboard as a guest'}
+        </Button>
+        <p className="text-xs text-[var(--text-muted)]">No account needed — nothing is saved.</p>
+      </div>
     </div>
   )
 }

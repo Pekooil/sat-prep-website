@@ -444,6 +444,12 @@ ciWidth: <5 sessions→±100, 5–19→±70, 20–49→±50, 50+→±30
 - `app/(auth)/login/page.tsx` shows a green "Your email is confirmed. Sign in to continue." banner on `?confirmed=1`, and surfaces `?error=...` as a red banner.
 - Net effect: clicking the confirmation link lands on the **login landing page**, never the onboarding wizard.
 
+### Guest preview (Session 18)
+- `actions/onboarding.ts guestPreview()` — `signInAnonymously()` → upserts a demo profile (`full_name: 'Guest'`, scores 1050→1350, test date +84d, `has_completed_onboarding: true`) → seeds a sample plan via `StudyPlanEngine` (all 8 domains seeded weak) + a baseline `score_history` row. No question_sessions / notification / replanner (lighter than full onboarding). The anonymous user is disposable; nothing personal is collected.
+- Entry points: a **"Preview the dashboard as a guest"** button on both `app/(auth)/signup/page.tsx` and `app/(auth)/login/page.tsx` (the login page is the real entry — `/signup` isn't linked in-app). On success the handler does `window.location.assign('/home')`.
+- The dashboard already handles anonymous users: `app/(dashboard)/home/page.tsx` renders `<GuestUpgradeBanner>` when `user.is_anonymous`; that banner converts the guest via `upgradeGuestAccount()`.
+- **Requires** Supabase → Authentication → Sign In/Providers → **"Allow anonymous sign-ins" enabled** (it currently is). Unlike `guestOnboarding` (the wizard's gated step-5 path), `guestPreview` is **not** gated by `ENABLE_GUEST_ONBOARDING`. Abuse note: anonymous auth is a spam/cost vector — add Supabase Auth CAPTCHA/Turnstile + an anon-user cleanup job before heavy traffic.
+
 ### To disable email confirmation (development)
 Supabase Dashboard → Authentication → Settings → uncheck "Enable email confirmations"
 

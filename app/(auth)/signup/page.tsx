@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { signUp } from '@/actions/auth'
+import { guestPreview } from '@/actions/onboarding'
 
 function isRedirectError(err: unknown): boolean {
   return (
@@ -19,9 +20,30 @@ function isRedirectError(err: unknown): boolean {
 }
 
 export default function SignupPage() {
-  const [pending,   setPending]   = React.useState(false)
-  const [error,     setError]     = React.useState<string | null>(null)
-  const [confirmed, setConfirmed] = React.useState(false)
+  const [pending,      setPending]      = React.useState(false)
+  const [guestPending, setGuestPending] = React.useState(false)
+  const [error,        setError]        = React.useState<string | null>(null)
+  const [confirmed,    setConfirmed]    = React.useState(false)
+
+  async function handleGuest() {
+    setGuestPending(true)
+    setError(null)
+    try {
+      const result = await guestPreview()
+      if (result?.error) {
+        setError(result.error)
+        setGuestPending(false)
+        return
+      }
+      // Hard navigation so the new anonymous session cookie is applied before
+      // the dashboard (and its proxy session check) loads.
+      window.location.assign('/home')
+    } catch (err) {
+      if (isRedirectError(err)) throw err
+      setError(err instanceof Error ? err.message : 'Could not start the guest preview.')
+      setGuestPending(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -135,7 +157,7 @@ export default function SignupPage() {
           </div>
         )}
 
-        <Button type="submit" className="h-11 w-full text-sm font-semibold" disabled={pending}>
+        <Button type="submit" className="h-11 w-full text-sm font-semibold" disabled={pending || guestPending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {pending ? 'Creating account…' : 'Create free account'}
         </Button>
@@ -147,6 +169,30 @@ export default function SignupPage() {
           <Link href="/privacy" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>
         </p>
       </form>
+
+      {/* Guest preview */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-[var(--border)]" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-[var(--surface-base)] px-3 text-[var(--text-muted)]">or</span>
+        </div>
+      </div>
+
+      <div className="space-y-1.5 text-center">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleGuest}
+          disabled={pending || guestPending}
+          className="h-11 w-full text-sm font-semibold"
+        >
+          {guestPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {guestPending ? 'Starting preview…' : 'Preview the dashboard as a guest'}
+        </Button>
+        <p className="text-xs text-[var(--text-muted)]">No account needed — nothing is saved.</p>
+      </div>
 
       <p className="text-center text-sm text-[var(--text-muted)]">
         Already have an account?{' '}

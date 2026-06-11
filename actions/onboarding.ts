@@ -353,3 +353,95 @@ export async function guestOnboarding(
 
   return saveOnboarding(step1, step2, analysis, recs)
 }
+
+
+// ─── Guest Preview (anonymous session + disposable demo plan) ──────────────────
+
+/**
+ * Starts an anonymous session and seeds a sample study plan so a visitor can
+ * explore the real dashboard without creating an account. Nothing personal is
+ * collected: the throwaway anonymous user holds only demo data, and the
+ * `GuestUpgradeBanner` on the dashboard makes clear it isn't saved across
+ * devices. Requires "Allow anonymous sign-ins" to be enabled in Supabase.
+ *
+ * NOTE (abuse): like any anonymous-auth entry point this is a spam/cost vector.
+ * Put Supabase Auth CAPTCHA / Turnstile in front and run a periodic
+ * anonymous-user cleanup job before opening it to significant traffic.
+ */
+export async function guestPreview(): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  const { data, error: anonError } = await supabase.auth.signInAnonymously()
+  if (anonError) {
+    return {
+      error:
+        'Guest preview is currently unavailable. (Anonymous sign-ins must be enabled in Supabase.)',
+    }
+  }
+  const user = data.user
+  if (!user) return { error: 'Could not start a guest session. Please try again.' }
+
+  const today = new Date().toISOString().split('T')[0]
+  const testDate = new Date(Date.now() + 84 * 86_400_000).toISOString().split('T')[0]
+
+  // Demo profile so the dashboard shows real numbers; mark onboarding complete
+  // so the dashboard layout doesn't redirect the guest into the setup wizard.
+  const { error: profileErr } = await supabase
+    .from('users')
+    .upsert(
+      {
+        id: user.id,
+        full_name: 'Guest',
+        current_score: 1050,
+        target_score: 1350,
+        test_date: testDate,
+        study_hours_per_week: 7,
+        daily_study_minutes: 60,
+        has_completed_onboarding: true,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' },
+    )
+  if (profileErr) return { error: profileErr.message }
+
+  // Seed a sample study plan so the calendar + home dashboard are populated.
+  // Every domain is seeded as a weak area (40%) so the engine builds a full plan.
+  const DEMO_DOMAIN_KEYS = [
+    'informationIdeas', 'craftStructure', 'expressionIdeas', 'standardEnglish',
+    'algebra', 'advancedMath', 'problemSolving', 'geometry',
+  ]
+  const topicPerformance: TopicPerformance[] = DEMO_DOMAIN_KEYS.map(domainKey => ({
+    domainKey,
+    attempted: 10,
+    correct: 4,
+    accuracy: 40,
+  }))
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const engine = new StudyPlanEngine(supabase as any)
+  const planResult = await engine.generate({
+    userId: user.id,
+    currentScore: 1050,
+    targetScore: 1350,
+    testDate,
+    dailyStudyMinutes: 60,
+    topicPerformance,
+  })
+  if (planResult.error) return { error: planResult.error }
+
+  // Baseline score so the score cards/trend have a starting point (non-fatal).
+  const mathEstimate = Math.round(1050 * 0.5)
+  await supabase.from('score_history').insert({
+    user_id: user.id,
+    test_type: 'diagnostic',
+    test_date: today,
+    math_score: mathEstimate,
+    reading_writing_score: 1050 - mathEstimate,
+    notes: 'Guest preview baseline',
+  })
+
+  revalidatePath('/home')
+  revalidatePath('/calendar')
+  revalidatePath('/data')
+  return {}
+}
