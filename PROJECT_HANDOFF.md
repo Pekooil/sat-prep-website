@@ -6,11 +6,34 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-10 (Session 16 — Inventory-aware question assignment in the planner)
+2026-06-11 (Session 18 — Signup + email-confirmation fix)
 
 ---
 
 ## What Was Done This Session
+
+### Session 18 — Signup + Email-Confirmation Fix
+
+**Trigger:** App review feedback — *"I tried signing up and it seemed to not work (the signup link didn't do anything), probably because of a missing environment variable,"* plus a request that the Supabase confirmation link land on the **login** page, not onboarding.
+
+**Root causes**
+1. Supabase clients used `process.env.NEXT_PUBLIC_SUPABASE_URL!` / `..._ANON_KEY!` (bare non-null assertions). A missing/empty value let the Supabase SDK throw deep inside the signup server action; the page handlers did not catch it, so the button hung on "Saving…/Signing in…" and *nothing visibly happened*.
+2. `app/auth/confirm/page.tsx` redirected to `/home` after confirmation. For a brand-new (not-yet-onboarded) user the dashboard layout then bounced them to `/onboarding`; when no session was detected it was a dead-end ("the link may have expired").
+
+**Root cause found:** the pulled `.vercel/.env.production.local` has `NEXT_PUBLIC_APP_URL=""` (empty). `signUpAndSaveOnboarding()` built `emailRedirectTo` with `process.env.NEXT_PUBLIC_APP_URL ?? …`, and `"" ?? fallback` is `""`, so the confirmation redirect became the relative `"/auth/confirm"` (no origin) — i.e. the broken "signup link." This is almost certainly the env var the reviewer hit.
+
+**Changes**
+- **`lib/app-url.ts` (new)** — `getAppUrl()` returns the absolute origin, preferring `NEXT_PUBLIC_APP_URL` → `VERCEL_URL` → localhost, **treating empty strings as unset** (`.trim()` truthiness, not `??`). Used by `actions/auth.ts` and `actions/onboarding.ts` for `emailRedirectTo`.
+- **`lib/supabase/env.ts` (new)** — `getSupabaseUrl()` / `getSupabaseAnonKey()` validate the public Supabase env vars and throw a clear, actionable message naming the missing variable. Wired into `lib/supabase/server.ts`, `lib/supabase/client.ts`, `proxy.ts`.
+- **Error surfacing** — `login`, `signup`, and the onboarding wizard now wrap their server-action call in `try/catch` (re-throwing `NEXT_REDIRECT`); a thrown error shows an inline message/toast instead of hanging the button.
+- **Confirmation redirect** — `app/auth/confirm/page.tsx` clears any transient session and redirects to `/login?confirmed=1` (handles `error`/`error_description` from query **or** hash). `app/(auth)/login/page.tsx` renders a green "Your email is confirmed. Sign in to continue." banner (and a red banner for `?error=`).
+- **Eager signup persistence** — `signUpAndSaveOnboarding()` now persists profile + question_sessions + study plan + score_history + notification via the **service-role admin client** when email confirmation is pending (no session ⇒ RLS would block writes), upserting `has_completed_onboarding: true`. So once the user confirms and signs in, they go **straight to the dashboard** — no second onboarding. (`SUPABASE_SERVICE_ROLE_KEY` must be set, which it is.)
+
+**Verified:** `npx tsc --noEmit` clean; `npx eslint` clean (only pre-existing `recs` unused warnings); `next build` succeeds; in-browser `/auth/confirm` → `/login?confirmed=1` with banner, wizard renders, no console errors. The eager-persistence DB path is covered by build/typecheck/logic review (a full run requires creating a real account).
+
+**⚠️ Action items (production) — do these in the dashboards, then redeploy:**
+1. **Vercel → Settings → Environment Variables (Production):** set `NEXT_PUBLIC_APP_URL = https://sat-prep-website-gold.vercel.app` (it is currently empty — this is the core bug), and confirm `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` are present. **Redeploy** (env changes only take effect on a new build).
+2. **Supabase → Authentication → URL Configuration:** Site URL = `https://sat-prep-website-gold.vercel.app`; add `https://sat-prep-website-gold.vercel.app/**` (and `/auth/confirm`) to the Redirect URLs allow-list.
 
 ### Session 16 — Inventory-Aware Question Assignment
 

@@ -8,6 +8,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { signUp } from '@/actions/auth'
 
+function isRedirectError(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'digest' in err &&
+    typeof (err as { digest?: unknown }).digest === 'string' &&
+    (err as { digest: string }).digest.startsWith('NEXT_REDIRECT')
+  )
+}
+
 export default function SignupPage() {
   const [pending,   setPending]   = React.useState(false)
   const [error,     setError]     = React.useState<string | null>(null)
@@ -22,12 +32,19 @@ export default function SignupPage() {
     }
     setPending(true)
     setError(null)
-    const result = await signUp(fd)
-    if (result?.error) {
-      setError(result.error)
-      setPending(false)
-    } else if (result?.needsConfirmation) {
-      setConfirmed(true)
+    try {
+      const result = await signUp(fd)
+      if (result?.error) {
+        setError(result.error)
+        setPending(false)
+      } else if (result?.needsConfirmation) {
+        setConfirmed(true)
+        setPending(false)
+      }
+    } catch (err) {
+      // A successful sign-up (confirmation disabled) throws NEXT_REDIRECT.
+      if (isRedirectError(err)) throw err
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setPending(false)
     }
   }

@@ -330,41 +330,51 @@ export function OnboardingWizard({ isAuthenticated = false, allowGuest = false }
   async function handleComplete() {
     const computed = analysis ?? computeAnalysis(step1Data, step2Data)
 
-    if (isAuthenticated) {
-      // Already signed in — just save
-      setSaving(true)
-      const result = await saveOnboarding(step1Data, step2Data, computed, aiRecs)
-      setSaving(false)
-      if (result.error) {
-        toast({ title: 'Error saving data', description: result.error, variant: 'destructive' })
-        return
-      }
-    } else {
-      // Validate account fields first
+    // Validate account fields up front for the unauthenticated path.
+    if (!isAuthenticated) {
       const errs = validateStep5(step5Data)
       if (Object.keys(errs).length > 0) { setStep5Errors(errs); return }
       setStep5Errors({})
-
-      setSaving(true)
-      const result = await signUpAndSaveOnboarding(
-        { email: step5Data.email, password: step5Data.password, fullName: step5Data.fullName },
-        step1Data, step2Data, computed, aiRecs,
-      )
-      setSaving(false)
-
-      if (result.needsConfirmation) {
-        setNeedsConfirmation(true)
-        return
-      }
-      if (result.error) {
-        toast({ title: 'Error creating account', description: result.error, variant: 'destructive' })
-        return
-      }
     }
 
-    toast({ title: 'Setup complete!', description: 'Welcome to SaturnPath. Your plan is ready.' })
-    router.push('/home')
-    router.refresh()
+    setSaving(true)
+    try {
+      if (isAuthenticated) {
+        // Already signed in — just save
+        const result = await saveOnboarding(step1Data, step2Data, computed, aiRecs)
+        if (result.error) {
+          toast({ title: 'Error saving data', description: result.error, variant: 'destructive' })
+          return
+        }
+      } else {
+        const result = await signUpAndSaveOnboarding(
+          { email: step5Data.email, password: step5Data.password, fullName: step5Data.fullName },
+          step1Data, step2Data, computed, aiRecs,
+        )
+        if (result.needsConfirmation) {
+          setNeedsConfirmation(true)
+          return
+        }
+        if (result.error) {
+          toast({ title: 'Error creating account', description: result.error, variant: 'destructive' })
+          return
+        }
+      }
+
+      toast({ title: 'Setup complete!', description: 'Welcome to SaturnPath. Your plan is ready.' })
+      router.push('/home')
+      router.refresh()
+    } catch (err) {
+      // Surface unexpected server-action failures (e.g. a misconfigured
+      // environment) instead of leaving the button stuck on "Saving…".
+      toast({
+        title: 'Something went wrong',
+        description: err instanceof Error ? err.message : 'Please try again in a moment.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const isLastStep = isAuthenticated ? step === 4 : step === 5

@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getAppUrl } from '@/lib/app-url'
 import { generateRecommendations } from '@/lib/sat-planner'
 import { runAdaptiveReplanner } from '@/lib/adaptive-replanner'
 import { StudyPlanEngine } from '@/lib/study-plan-engine'
@@ -194,29 +196,44 @@ export async function signUpAndSaveOnboarding(
     password: credentials.password,
     options: {
       data: { full_name: credentials.fullName },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')}/auth/confirm`,
+      emailRedirectTo: `${getAppUrl()}/auth/confirm`,
     },
   })
   if (signUpError) return { error: signUpError.message }
-  if (!data.session) return { needsConfirmation: true }
+  if (!data.user) return { error: 'Account creation failed. Please try again.' }
 
-  const user = data.user!
+  // When email confirmation is enabled the new user has no session yet, so any
+  // write made as that user would be blocked by RLS. Persist their profile +
+  // plan with the service-role client (keyed to the new user id) so that once
+  // they confirm their email and sign in, onboarding is already complete and
+  // they land straight on the dashboard. When confirmation is off, the freshly
+  // authenticated session client is used instead.
+  const needsConfirmation = !data.session
+  const db = needsConfirmation ? createAdminClient() : supabase
+
+  const user = data.user
   const hoursPerWeek = Math.round((step1.dailyStudyMinutes * 7) / 60)
   const today = new Date().toISOString().split('T')[0]
 
-  // 2. Update user profile
-  const { error: profileErr } = await supabase
+  // 2. Create/update the user profile. Upsert (not update) so it succeeds even
+  // if the on_auth_user_created trigger has not yet materialised the row.
+  const { error: profileErr } = await db
     .from('users')
-    .update({
-      current_score: step1.currentScore,
-      target_score: step1.targetScore,
-      test_date: step1.testDate,
-      study_hours_per_week: hoursPerWeek,
-      daily_study_minutes: step1.dailyStudyMinutes,
-      has_completed_onboarding: true,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', user.id)
+    .upsert(
+      {
+        id: user.id,
+        email: credentials.email,
+        full_name: credentials.fullName,
+        current_score: step1.currentScore,
+        target_score: step1.targetScore,
+        test_date: step1.testDate,
+        study_hours_per_week: hoursPerWeek,
+        daily_study_minutes: step1.dailyStudyMinutes,
+        has_completed_onboarding: true,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' },
+    )
   if (profileErr) return { error: profileErr.message }
 
   // 3. Question sessions per domain
@@ -253,7 +270,7 @@ export async function signUpAndSaveOnboarding(
 
   if (sessions.length > 0) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: sessErr } = await (supabase.from('question_sessions') as any).insert(sessions)
+    const { error: sessErr } = await (db.from('question_sessions') as any).insert(sessions)
     if (sessErr) return { error: sessErr.message }
   }
 
@@ -266,7 +283,7 @@ export async function signUpAndSaveOnboarding(
   })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const engine = new StudyPlanEngine(supabase as any)
+  const engine = new StudyPlanEngine(db as any)
   const planResult = await engine.generate({
     userId: user.id,
     currentScore: step1.currentScore,
@@ -279,7 +296,7 @@ export async function signUpAndSaveOnboarding(
 
   // 5. Baseline score history
   const mathEstimate = Math.round(step1.currentScore * 0.5)
-  const { error: scoreErr } = await supabase.from('score_history').insert({
+  const { error: scoreErr } = await db.from('score_history').insert({
     user_id: user.id,
     test_type: 'diagnostic',
     test_date: today,
@@ -290,7 +307,7 @@ export async function signUpAndSaveOnboarding(
   if (scoreErr) return { error: scoreErr.message }
 
   // 6. Welcome notification (non-fatal)
-  await supabase.from('notifications').insert({
+  await db.from('notifications').insert({
     user_id: user.id,
     title: '🎉 Welcome to SaturnPath!',
     message: `Your study plan is ready. You have ${analysis.studyDays} days to reach ${step1.targetScore}. Let's get started!`,
@@ -298,7 +315,12 @@ export async function signUpAndSaveOnboarding(
     is_read: false,
   })
 
-  runAdaptiveReplanner(supabase, user.id, 'question_session').catch(() => { /* non-fatal */ })
+  // Seed the initial replanning pass (fire-and-forget — never blocks signup).
+  runAdaptiveReplanner(db, user.id, 'question_session').catch(() => { /* non-fatal */ })
+
+  // Email confirmation pending: the plan is already saved, so once the user
+  // confirms and signs in they land straight on the dashboard (no re-onboarding).
+  if (needsConfirmation) return { needsConfirmation: true }
 
   revalidatePath('/home')
   revalidatePath('/data')

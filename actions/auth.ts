@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getAppUrl } from '@/lib/app-url'
 
 export async function signIn(formData: FormData) {
   'use server'
@@ -16,12 +17,6 @@ export async function signIn(formData: FormData) {
   }
 
   redirect('/home')
-}
-
-function getAppUrl(): string {
-  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
-  return 'http://localhost:3000'
 }
 
 export async function signUp(formData: FormData) {

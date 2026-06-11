@@ -1,6 +1,6 @@
 # SAT Study Planner AI — Complete Handoff
 
-**Last updated:** 2026-06-10 (Session 17 — security hardening)
+**Last updated:** 2026-06-11 (Session 18 — signup/email-confirmation fix)
 **Project root:** `/Users/darcywang/sat-prep-website`
 **Stack:** Next.js 16.2.7 (App Router), React 19, TypeScript 5 strict, Tailwind CSS v4, Supabase
 **No external AI API** — all planning logic is deterministic TypeScript.
@@ -426,10 +426,23 @@ ciWidth: <5 sessions→±100, 5–19→±70, 20–49→±50, 50+→±30
 
 ## Auth
 
+### Env hardening (Session 18)
+- `lib/supabase/env.ts` — `getSupabaseUrl()` / `getSupabaseAnonKey()` validate `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` and throw a clear, actionable error if missing/empty. Used by `lib/supabase/server.ts`, `lib/supabase/client.ts`, and `proxy.ts` (replacing the unsafe `process.env.X!` non-null assertions). A misconfigured deployment now fails loudly instead of letting the Supabase SDK hang an auth call.
+- `lib/app-url.ts` — `getAppUrl()` returns the absolute origin for email/redirect links, preferring `NEXT_PUBLIC_APP_URL`, then `VERCEL_URL`, then localhost. **Treats empty strings as unset** (uses `.trim()` truthiness, not `??`). This fixes a production bug: `NEXT_PUBLIC_APP_URL` was `""` in prod, and `"" ?? fallback` is `""`, so `emailRedirectTo` became the relative `"/auth/confirm"` (no origin) and broke the confirmation link. Used by `actions/auth.ts` and `actions/onboarding.ts`.
+- All client-side auth handlers wrap their server-action call in `try/catch` (re-throwing `NEXT_REDIRECT`) so a thrown server error shows a message/toast instead of leaving the button stuck on "Saving…/Signing in…": `app/(auth)/login/page.tsx`, `app/(auth)/signup/page.tsx`, `components/onboarding/onboarding-wizard.tsx`.
+
 ### Signup flow
-- `actions/auth.ts signUp()` returns `{ needsConfirmation: true }` when `data.session === null`
-- `app/(auth)/signup/page.tsx` renders a "Check your email" success card in that case
-- If email confirmation is off in Supabase, the session exists immediately and the user is redirected to `/home`
+- Primary path is the onboarding wizard (login page "Create one free" → `/onboarding`); `signUpAndSaveOnboarding()` calls `supabase.auth.signUp()`. The standalone `/signup` page → `actions/auth.ts signUp()` is the secondary path.
+- **Eager persistence (Session 18):** `signUpAndSaveOnboarding()` no longer bails on `!data.session`. When confirmation is pending it persists the profile + question_sessions + study plan + score_history + notification using the **service-role admin client** (`createAdminClient()`), keyed to `data.user.id` (RLS would block writes with no session). The profile is **upserted** with `has_completed_onboarding: true`. Result: once the user confirms their email and signs in, onboarding is already done and they go **straight to the dashboard** (no re-onboarding). When confirmation is off, the authenticated session client is used as before. Returns `{ needsConfirmation: true }` after persistence.
+- The standalone `/signup` page has no onboarding data, so those users still complete onboarding after their first sign-in.
+- Both paths render a "Check your email" card when `data.session === null`. If confirmation is off, the session exists immediately and the user is redirected to `/home`.
+
+### Email confirmation landing (Session 18)
+- `signUp()` / `signUpAndSaveOnboarding()` set `emailRedirectTo: <appUrl>/auth/confirm`.
+- Supabase verifies the email at its own `/auth/v1/verify` endpoint **before** redirecting to `/auth/confirm`, so the account is already confirmed when the page loads.
+- `app/auth/confirm/page.tsx` (client) now: reads `error`/`error_description` from query **and** hash → if present, shows the error with a "Back to sign in" link; otherwise calls `supabase.auth.signOut()` (clears any transient session from the redirect so the proxy does not bounce the user onward to `/home`→`/onboarding`) and hard-navigates to `/login?confirmed=1`.
+- `app/(auth)/login/page.tsx` shows a green "Your email is confirmed. Sign in to continue." banner on `?confirmed=1`, and surfaces `?error=...` as a red banner.
+- Net effect: clicking the confirmation link lands on the **login landing page**, never the onboarding wizard.
 
 ### To disable email confirmation (development)
 Supabase Dashboard → Authentication → Settings → uncheck "Enable email confirmations"
@@ -533,12 +546,12 @@ Plain-text strings (toast titles) are also clean — no emoji.
 ```
 NEXT_PUBLIC_SUPABASE_URL=         # bare project URL, no /rest/v1/
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=        # server-only; cron + admin inventory writes
+SUPABASE_SERVICE_ROLE_KEY=        # server-only; cron + admin inventory writes + eager signup persistence
 ADMIN_EMAILS=                     # comma-separated; gates GLOBAL inventory writes. Unset = nobody can write.
 CRON_SECRET=                      # REQUIRED — /api/reminders/daily refuses to run if missing
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=
-NEXT_PUBLIC_APP_URL=
+NEXT_PUBLIC_APP_URL=              # REQUIRED in prod, must be NON-EMPTY (e.g. https://sat-prep-website-gold.vercel.app); used for the email confirmation redirect. Empty "" breaks the signup link.
 # ENABLE_GUEST_ONBOARDING=true    # OFF by default; anonymous accounts are a spam/cost vector
 ```
 
@@ -593,3 +606,4 @@ Still open (documented, not yet implemented): app-layer rate limiting / CAPTCHA 
 | 15 | Review Day overhaul: single `'Review Session'` task per review day (replaces per-domain blocks); new `ReviewSessionDialog` component with inline error-log mastered toggle + edit |
 | 16 | Inventory-aware question assignment: replaced `applyInventoryCap()` with full `assignStudyBlock()` pipeline — per-skill inventory cap, ≥80% time floor, cross-skill substitution by adaptive priority, bank-complete tasks + notification; `StudyPlanEngineResult` gains optional `inventoryExhausted` + `nearlyExhaustedSkills` fields |
 | 17 | **Launch-readiness security audit + fixes.** C1: global `question_inventory` writes locked to admins (`lib/auth/is-admin.ts` + service-role client; RLS now SELECT-only). H1: `/api/reminders/daily` auth now fails CLOSED (requires `CRON_SECRET`, timing-safe). H2: anonymous `guestOnboarding` gated behind `ENABLE_GUEST_ONBOARDING` (off). H3: added `/privacy` + `/terms` (`app/(legal)/`), fixed signup link (was dead `/info`). M1: CSP header (`next.config.ts`, dev-only `unsafe-eval`). M2: `handle_new_user` `SET search_path`. Cleanup: removed deprecated `X-XSS-Protection`, stale `/info` from `proxy.ts`/`robots.ts`. New env: `ADMIN_EMAILS`, `ENABLE_GUEST_ONBOARDING`. |
+| 18 | **Signup + email-confirmation fix** (review feedback: "signup link did nothing, probably a missing env var"). Added `lib/supabase/env.ts` with validated `getSupabaseUrl()`/`getSupabaseAnonKey()` (clear error instead of a silent hang on missing `NEXT_PUBLIC_SUPABASE_*`); wired into server/client/proxy. Added `lib/app-url.ts getAppUrl()` (empty-string-safe origin) — fixes prod `NEXT_PUBLIC_APP_URL=""` producing a relative `emailRedirectTo`; used by `actions/auth.ts` + `actions/onboarding.ts`. Wrapped login/signup/onboarding-wizard server-action calls in `try/catch` (re-throwing `NEXT_REDIRECT`) so failures surface instead of hanging the button. Reworked `app/auth/confirm/page.tsx`: clears any transient session and redirects to `/login?confirmed=1` (was `/home`, which bounced new users into `/onboarding`); login page shows a confirmed/error banner. **Eager signup persistence:** `signUpAndSaveOnboarding()` now writes profile+plan via the service-role admin client when confirmation is pending (upsert `has_completed_onboarding: true`), so a confirmed user lands straight on the dashboard instead of re-onboarding. |
