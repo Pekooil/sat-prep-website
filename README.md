@@ -23,8 +23,8 @@ A free SAT study planner for the official College Board Question Bank with custo
 
 ## Motivation
 
-While studying for the June SAT in only two weeks, I used the College Board Question Bank for the main prep tool, but it was highly unorganized.  
-I had to design my own study plan with no guidance, type my answers on Google Docs, time myself, calculate my results of each practice session, log every mistake manually in an error log, and keep track of the questions available left in the question bank.  
+While studying for the June SAT in only two weeks, I used the College Board Question Bank for the main prep tool, but it was poorly organized.  
+I had to design my own study plan with no guidance, type my answers on Google Docs, time myself, calculate my results of each practice session, log every mistake manually in an error log, and keep track of the questions available left in the question bank, just to list a few difficulties.    
   
 SaturnPath aims to solve all these problems with personalized plans, interface for entering answers with timer, automated error logs, and organized question bank inventory.  
 Most importantly, SaturnPath adapts to the student's learning curve and update future practice plans based on their improvements.  
@@ -45,7 +45,7 @@ Students repeat the following step to drill weak areas with College Board's Ques
 - Students input their current SAT score, target score, and their weak areas.
 - SaturnPath generates a customized plan based on the student's data and assign different practice sessions for every day.
 - The student follows the planner and complete practice sessions. Based on their results, SaturnPath would adapt and adjust future workloads and target topics.
-- All questions missed are automatically stored in the Error Log. This allows students to review their mistakes throughly.
+- All questions missed are automatically stored in the Error Log. This allows students to review their mistakes without manually logging their mistakes.
 - SaturnPath keeps track of questions left in the question bank to make sure it's not exhausted before the student's test date.
 
 ## Design Inspiration
