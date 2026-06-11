@@ -315,6 +315,15 @@ export async function guestOnboarding(
   analysis: OnboardingAnalysis,
   recs: AIOnboardingRec | null,
 ): Promise<{ error?: string }> {
+  // Anonymous sign-in is a spam / cost-amplification vector: each call creates a
+  // permanent auth user AND runs the full plan engine + adaptive replanner
+  // (100+ row writes). With no rate limiting or CAPTCHA in front, leave this
+  // OFF by default. Re-enable only once abuse protection (Supabase Auth CAPTCHA /
+  // Cloudflare Turnstile) and an anonymous-user cleanup job are in place.
+  if (process.env.ENABLE_GUEST_ONBOARDING !== 'true') {
+    return { error: 'Guest access is disabled. Please create a free account to save your plan.' }
+  }
+
   const supabase = await createClient()
 
   const { error: anonError } = await supabase.auth.signInAnonymously()

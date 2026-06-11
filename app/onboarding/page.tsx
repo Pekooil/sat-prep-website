@@ -19,6 +19,8 @@ export default async function OnboardingPage() {
     }
   }
 
-  // Allow unauthenticated users — account creation is step 5 of the wizard
-  return <OnboardingWizard isAuthenticated={!!user} />
+  // Allow unauthenticated users — account creation is step 5 of the wizard.
+  // The anonymous "Continue as guest" path is gated behind ENABLE_GUEST_ONBOARDING.
+  const allowGuest = process.env.ENABLE_GUEST_ONBOARDING === 'true'
+  return <OnboardingWizard isAuthenticated={!!user} allowGuest={allowGuest} />
 }

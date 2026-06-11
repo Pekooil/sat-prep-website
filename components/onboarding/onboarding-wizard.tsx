@@ -236,9 +236,11 @@ function validateStep5(data: Step5AccountData) {
 
 interface OnboardingWizardProps {
   isAuthenticated?: boolean
+  /** Whether the "Continue as guest" (anonymous) path is offered. Server-gated. */
+  allowGuest?: boolean
 }
 
-export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardProps) {
+export function OnboardingWizard({ isAuthenticated = false, allowGuest = false }: OnboardingWizardProps) {
   const router = useRouter()
   const { toast } = useToast()
 
@@ -518,8 +520,8 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
           </p>
         )}
 
-        {/* Continue as guest on step 5 */}
-        {step === 5 && !isAuthenticated && (
+        {/* Continue as guest on step 5 — only when server-enabled */}
+        {step === 5 && !isAuthenticated && allowGuest && (
           <p className="text-center mt-3 text-xs text-slate-400">
             Just exploring?{' '}
             <button

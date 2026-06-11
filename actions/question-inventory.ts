@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/auth/is-admin'
 import type { QuestionInventory } from '@/types'
 
 // ─── Enriched type ────────────────────────────────────────────────────────────
@@ -107,9 +109,10 @@ export async function createInventoryItem(data: {
   difficulty: 'easy' | 'medium' | 'hard'
   available_count: number
 }): Promise<{ data?: QuestionInventory; error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Unauthorized' }
+  // Inventory is global shared state — only admins may mutate it.
+  const denied = await assertAdmin()
+  if (denied) return { error: denied }
+  const supabase = createAdminClient()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: item, error } = await (supabase as any)
@@ -133,9 +136,9 @@ export async function updateInventoryItem(
     available_count?: number
   },
 ): Promise<{ data?: QuestionInventory; error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Unauthorized' }
+  const denied = await assertAdmin()
+  if (denied) return { error: denied }
+  const supabase = createAdminClient()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: item, error } = await (supabase as any)
@@ -151,9 +154,9 @@ export async function updateInventoryItem(
 }
 
 export async function deleteInventoryItem(id: string): Promise<{ error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Unauthorized' }
+  const denied = await assertAdmin()
+  if (denied) return { error: denied }
+  const supabase = createAdminClient()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
@@ -175,9 +178,9 @@ export async function bulkImportInventory(
     available_count: number
   }>,
 ): Promise<{ imported: number; errors: string[] }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { imported: 0, errors: ['Unauthorized'] }
+  const denied = await assertAdmin()
+  if (denied) return { imported: 0, errors: [denied] }
+  const supabase = createAdminClient()
 
   const VALID_SECTIONS = ['Reading and Writing', 'Math']
   const VALID_DIFFS = ['easy', 'medium', 'hard']

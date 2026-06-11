@@ -25,10 +25,27 @@
  *   CRON_SECRET                — any random string
  */
 
+import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildReminderEmail, type ReminderTask } from '@/lib/email/reminder-template'
+
+// This route uses the Supabase service-role key and Node crypto — pin to the
+// Node.js runtime and allow up to the platform max for the per-user fan-out loop.
+export const runtime = 'nodejs'
+export const maxDuration = 300
+
+/** Constant-time bearer-token comparison that is safe against length leaks. */
+function isAuthorized(header: string | null, secret: string): boolean {
+  if (!header) return false
+  const expected = `Bearer ${secret}`
+  const a = Buffer.from(header)
+  const b = Buffer.from(expected)
+  // timingSafeEqual throws on length mismatch — guard first (length is not secret).
+  if (a.length !== b.length) return false
+  return timingSafeEqual(a, b)
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -66,13 +83,16 @@ function localDate(timezone: string, base: Date = new Date()): string {
 // ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
-  // ── Auth guard ──────────────────────────────────────────────────────────────
+  // ── Auth guard (fail CLOSED) ────────────────────────────────────────────────
+  // This endpoint runs with the service-role key (bypasses RLS) and sends mass
+  // email. If the secret is not configured we must refuse — never run unguarded.
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret) {
-    const auth = request.headers.get('authorization')
-    if (auth !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  if (!cronSecret) {
+    console.error('[reminders/daily] CRON_SECRET is not set — refusing to run.')
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+  }
+  if (!isAuthorized(request.headers.get('authorization'), cronSecret)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const appUrl     = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
@@ -246,11 +266,7 @@ export async function POST(request: Request) {
   })
 }
 
-// Health-check / manual trigger test
+// Minimal liveness check — does not disclose schedule or configuration.
 export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    message: 'Daily reminders endpoint is live. POST with Authorization header to trigger.',
-    schedule: '0 13 * * * UTC (= 8 AM US Eastern)',
-  })
+  return NextResponse.json({ ok: true })
 }

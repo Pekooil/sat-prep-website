@@ -14,7 +14,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 // Routes that require a valid session
 const PROTECTED_PREFIXES = [
   '/home', '/calendar', '/data', '/error-log',
-  '/settings', '/info', '/tutorial', '/inventory',
+  '/settings', '/tutorial', '/inventory',
 ]
 
 // Routes only accessible when NOT logged in
@@ -68,7 +68,9 @@ export async function proxy(request: NextRequest) {
   // ── 3. Security headers ───────────────────────────────────────────────────
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options',         'DENY')
-  response.headers.set('X-XSS-Protection',        '1; mode=block')
+  // X-XSS-Protection intentionally omitted — deprecated and can introduce issues
+  // in legacy browsers; Content-Security-Policy (set in next.config.ts) is the
+  // modern replacement.
   response.headers.set('Referrer-Policy',         'strict-origin-when-cross-origin')
   response.headers.set('Permissions-Policy',      'camera=(), microphone=(), geolocation=()')
 
@@ -94,7 +96,6 @@ export const config = {
     '/data/:path*',
     '/error-log/:path*',
     '/settings/:path*',
-    '/info/:path*',
     '/tutorial/:path*',
     '/inventory/:path*',
     '/onboarding/:path*',

@@ -1,6 +1,6 @@
 # SAT Study Planner AI — Complete Handoff
 
-**Last updated:** 2026-06-10 (Session 16)
+**Last updated:** 2026-06-10 (Session 17 — security hardening)
 **Project root:** `/Users/darcywang/sat-prep-website`
 **Stack:** Next.js 16.2.7 (App Router), React 19, TypeScript 5 strict, Tailwind CSS v4, Supabase
 **No external AI API** — all planning logic is deterministic TypeScript.
@@ -531,11 +531,48 @@ Plain-text strings (toast titles) are also clean — no emoji.
 ## Environment Variables
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_URL=         # bare project URL, no /rest/v1/
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=        # server-only; cron + admin inventory writes
+ADMIN_EMAILS=                     # comma-separated; gates GLOBAL inventory writes. Unset = nobody can write.
+CRON_SECRET=                      # REQUIRED — /api/reminders/daily refuses to run if missing
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
+NEXT_PUBLIC_APP_URL=
+# ENABLE_GUEST_ONBOARDING=true    # OFF by default; anonymous accounts are a spam/cost vector
 ```
 
-Both are required. Set in `.env.local` for local dev; Supabase dashboard for production.
+Set in `.env.local` for local dev; Vercel/Supabase dashboards for production. See `.env.local.example`.
+
+> ⚠️ **Do NOT keep a stray `OPENAI_API_KEY`** in `.env.local` — the app has zero OpenAI usage. If one exists, delete and rotate it.
+
+---
+
+## Security Hardening (Session 17) — REQUIRED manual steps before launch
+
+Code fixes are committed, but two things must be done in the live environment:
+
+1. **Apply the RLS migration in the Supabase SQL Editor** (defense-in-depth for the inventory fix; `schema.sql` is reference-only):
+   ```sql
+   -- Inventory: authenticated may READ only; writes go through service-role + admin gate
+   DROP POLICY IF EXISTS "Authenticated users can insert question inventory" ON question_inventory;
+   DROP POLICY IF EXISTS "Authenticated users can update question inventory" ON question_inventory;
+   DROP POLICY IF EXISTS "Authenticated users can delete question inventory" ON question_inventory;
+   -- (SELECT policy stays as-is)
+
+   -- Harden the SECURITY DEFINER signup trigger against search_path hijack
+   CREATE OR REPLACE FUNCTION handle_new_user()
+   RETURNS TRIGGER AS $$
+   BEGIN
+     INSERT INTO public.users (id, email, full_name)
+     VALUES (NEW.id, NEW.email, COALESCE(NEW.raw_user_meta_data->>'full_name',''));
+     RETURN NEW;
+   END;
+   $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+   ```
+2. **Set `ADMIN_EMAILS` + `CRON_SECRET`** in Vercel prod env. Without `ADMIN_EMAILS`, the `/inventory` admin editor will (correctly) reject all writes. Without `CRON_SECRET`, the reminders endpoint returns 500 (fails closed).
+
+Still open (documented, not yet implemented): app-layer rate limiting / CAPTCHA on auth (M7), cron per-user N+1 + 300s timeout risk at ~10k users (M4), unbounded `select('*')` on `/data` (M6), anonymous-user cleanup job (L6). Legal pages (`/privacy`, `/terms`) are baselines — **have counsel review before public launch**, and replace the placeholder contact emails.
 
 ---
 
@@ -555,3 +592,4 @@ Both are required. Set in `.env.local` for local dev; Supabase dashboard for pro
 | 14 | Dual-block study days, inline review errors, practice test rescheduling, test date marker |
 | 15 | Review Day overhaul: single `'Review Session'` task per review day (replaces per-domain blocks); new `ReviewSessionDialog` component with inline error-log mastered toggle + edit |
 | 16 | Inventory-aware question assignment: replaced `applyInventoryCap()` with full `assignStudyBlock()` pipeline — per-skill inventory cap, ≥80% time floor, cross-skill substitution by adaptive priority, bank-complete tasks + notification; `StudyPlanEngineResult` gains optional `inventoryExhausted` + `nearlyExhaustedSkills` fields |
+| 17 | **Launch-readiness security audit + fixes.** C1: global `question_inventory` writes locked to admins (`lib/auth/is-admin.ts` + service-role client; RLS now SELECT-only). H1: `/api/reminders/daily` auth now fails CLOSED (requires `CRON_SECRET`, timing-safe). H2: anonymous `guestOnboarding` gated behind `ENABLE_GUEST_ONBOARDING` (off). H3: added `/privacy` + `/terms` (`app/(legal)/`), fixed signup link (was dead `/info`). M1: CSP header (`next.config.ts`, dev-only `unsafe-eval`). M2: `handle_new_user` `SET search_path`. Cleanup: removed deprecated `X-XSS-Protection`, stale `/info` from `proxy.ts`/`robots.ts`. New env: `ADMIN_EMAILS`, `ENABLE_GUEST_ONBOARDING`. |

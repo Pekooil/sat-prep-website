@@ -7,8 +7,8 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         // Dashboard is private — block all crawlers from authenticated pages
-        disallow: ['/home', '/calendar', '/data', '/error-log', '/settings', '/onboarding', '/api/'],
-        allow: ['/', '/login', '/signup', '/info'],
+        disallow: ['/home', '/calendar', '/data', '/error-log', '/settings', '/inventory', '/tutorial', '/onboarding', '/api/'],
+        allow: ['/', '/login', '/signup', '/privacy', '/terms'],
       },
     ],
     sitemap: `${appUrl}/sitemap.xml`,

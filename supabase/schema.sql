@@ -163,10 +163,13 @@ CREATE INDEX IF NOT EXISTS idx_score_history_user_date ON score_history(user_id,
 CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read);
 
 -- Auto-create user profile on signup
+-- SECURITY DEFINER runs with the function owner's privileges. Pinning
+-- search_path prevents a malicious object in another schema from shadowing
+-- `users` / `INSERT` and hijacking the elevated execution context.
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO users (id, email, full_name)
+  INSERT INTO public.users (id, email, full_name)
   VALUES (
     NEW.id,
     NEW.email,
@@ -174,7 +177,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
@@ -408,14 +411,18 @@ CREATE TABLE IF NOT EXISTS question_inventory (
 );
 ALTER TABLE question_inventory ENABLE ROW LEVEL SECURITY;
 
+-- Inventory is GLOBAL shared state (no user_id). Authenticated users may only
+-- READ it. Writes are performed exclusively by the service-role client (which
+-- bypasses RLS) behind an admin allowlist gate in actions/question-inventory.ts
+-- (assertAdmin → ADMIN_EMAILS). This prevents any logged-in student — or an
+-- anonymous guest — from deleting/poisoning the catalog for all users.
+-- Drop any legacy permissive write policies if upgrading an existing database.
+DROP POLICY IF EXISTS "Authenticated users can insert question inventory" ON question_inventory;
+DROP POLICY IF EXISTS "Authenticated users can update question inventory" ON question_inventory;
+DROP POLICY IF EXISTS "Authenticated users can delete question inventory" ON question_inventory;
+DROP POLICY IF EXISTS "Authenticated users can read question inventory"   ON question_inventory;
 CREATE POLICY "Authenticated users can read question inventory"
   ON question_inventory FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can insert question inventory"
-  ON question_inventory FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can update question inventory"
-  ON question_inventory FOR UPDATE USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can delete question inventory"
-  ON question_inventory FOR DELETE USING (auth.role() = 'authenticated');
 
 CREATE INDEX IF NOT EXISTS idx_question_inventory_section_domain
   ON question_inventory(section, domain, difficulty);
