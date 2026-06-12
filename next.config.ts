@@ -63,11 +63,9 @@ const nextConfig: NextConfig = {
   },
 
   // ── Redirects ───────────────────────────────────────────────────────────
-  async redirects() {
-    return [
-      { source: '/', destination: '/home', permanent: false },
-    ]
-  },
+  // NOTE: `/` is intentionally NOT redirected here. The root route renders the
+  // public marketing landing page for logged-out visitors; app/page.tsx itself
+  // redirects authenticated users to /home (see RootPage).
 }
 
 export default nextConfig

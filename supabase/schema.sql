@@ -461,3 +461,24 @@ INSERT INTO question_inventory (section, domain, skill, difficulty, available_co
   ('Reading and Writing', 'Standard English Conventions', 'Boundaries',                'easy',   80),
   ('Reading and Writing', 'Standard English Conventions', 'Form, structure, and sense', 'medium', 72)
 ON CONFLICT (section, domain, skill, difficulty) DO NOTHING;
+
+-- ============================================================================
+-- Waitlist (marketing landing page) — isolated from all app/user tables.
+-- Stores pre-launch email sign-ups captured by the public "/" landing page.
+-- No public SELECT: rows are readable only via the service role / dashboard.
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS waitlist_signups (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email       TEXT NOT NULL UNIQUE,
+  source      TEXT DEFAULT 'landing',
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE waitlist_signups ENABLE ROW LEVEL SECURITY;
+
+-- Public sign-up: anonymous + authenticated may INSERT only. No public SELECT/UPDATE/DELETE.
+DROP POLICY IF EXISTS "Anyone can join the waitlist" ON waitlist_signups;
+CREATE POLICY "Anyone can join the waitlist"
+  ON waitlist_signups FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (true);

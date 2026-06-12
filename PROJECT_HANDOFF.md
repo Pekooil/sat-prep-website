@@ -6,11 +6,28 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-11 (Session 18 — Signup + email-confirmation fix)
+2026-06-12 (Session 19 — Marketing landing page + wishlist capture)
 
 ---
 
 ## What Was Done This Session
+
+### Session 19 — Marketing Landing Page + Wishlist Capture
+
+**Goal:** Replace the root `/`→`/login` redirect with a polished, public marketing landing page for SaturnPath that introduces the product and captures pre-launch interest via a Join Wishlist email form. No real app features are wired up — the only backend touch is a new, isolated waitlist table.
+
+**Changes**
+- **`components/marketing/landing-page.tsx` (new)** — client component rendering the full landing page using the existing "Quiet Monochrome" tokens and `components/ui` primitives (`Button`, `Input`, `Label`) + `SaturnPathLogo`. Sections: sticky top bar (logo · Join Wishlist · discreet Sign in → `/login`), hero (headline, subhead, primary wishlist email form, brand Saturn SVG, "Launching in a few weeks" eyebrow), three core-feature cards (Adaptive planning / Automated error log / Completely free), a copyright-safe "Plan → Practice with CB Question Bank → Log & adapt" strip, a closing wishlist CTA ("Launching in a few weeks — be first in line. No spam."), and a footer (logo · © · Sign in). The top-bar Join Wishlist button smooth-scrolls to and focuses the hero email input (instant when `prefers-reduced-motion`). Fully responsive, dark (default) + light, accessible (real `<label>`s, focus rings, `aria-invalid`/`aria-describedby` on error). A shared `WaitlistForm` handles pending / success / inline-error states (mirrors the login page's form-state pattern).
+- **`app/page.tsx`** — keeps the server-side Supabase `getUser()` check and still `redirect('/home')` for authenticated users; logged-out visitors now render `<LandingPage />` instead of being bounced to `/login`.
+- **`next.config.ts`** — **removed** the hard `async redirects()` rule `{ source: '/', destination: '/home' }`. That rule fired *before* the page/proxy and was sending every visitor to `/home` (then proxy bounced logged-out users to `/login`), so `/` never reached the new page. The root redirect for authenticated users now lives only in `app/page.tsx`.
+- **`actions/waitlist.ts` (new)** — `joinWaitlist(formData)` `'use server'` action: validates email shape server-side, inserts `{ email, source: 'landing' }` into `waitlist_signups`, maps unique-violation (`23505`) to a friendly `{ success: true }` ("you're already on the list"), returns `{ success }` / `{ error }`. Requires no auth and triggers no planner/replanner/app logic.
+- **`supabase/schema.sql`** — appended the isolated `waitlist_signups` table (idempotent `CREATE TABLE IF NOT EXISTS`, `gen_random_uuid()` PK, `UNIQUE` email, `source DEFAULT 'landing'`, `created_at`), RLS enabled, single **INSERT-only** policy for `anon` + `authenticated`. **No public SELECT** — emails are readable only via the service role / dashboard.
+- **`types/database.ts`** — hand-added the `waitlist_signups` Row/Insert/Update types to `Database['public']['Tables']` (keeps strict mode happy).
+- **Docs** — updated `PROJECT_CONTEXT.md` (Pages table, Completed features, Key Directories), `DATABASE_SCHEMA.md` (overview, full table section, RLS summary). `COPYRIGHT_COMPLIANCE.md` re-verified: the page stores/displays no SAT questions, passages, or answer choices; it references the free CB Question Bank workflow by name only.
+
+**Verified:** `npx tsc --noEmit` clean; `npx eslint` on changed files clean; `next build` succeeds (`/` is `ƒ` server-rendered on demand). In-browser (dev): logged-out `/` returns **200** and renders the full landing page; `/login` returns **200**; mobile (375px) stacks correctly; both dark (default) and light palettes render on-brand (primary CTA = high-contrast neutral fill, not the accent); no console errors.
+
+**⚠️ Action item (production):** the `waitlist_signups` migration was **NOT** applied to the hosted Supabase project from this session (the automated migration was blocked pending explicit approval). Apply it before the form can accept sign-ups — run the `waitlist_signups` block from `supabase/schema.sql` in the Supabase SQL editor (or approve the MCP migration). Until then, `joinWaitlist` will return the generic error message. Duplicate-email handling was validated by code review against the `23505` path.
 
 ### Session 18 — Signup + Email-Confirmation Fix
 

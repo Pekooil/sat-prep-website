@@ -599,6 +599,25 @@ export interface Database {
         }
         Relationships: []
       }
+      waitlist_signups: {
+        Row: {
+          id: string
+          email: string
+          source: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          source?: string | null
+          created_at?: string
+        }
+        Update: {
+          email?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

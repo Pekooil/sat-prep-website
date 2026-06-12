@@ -20,6 +20,7 @@ All tables have Row Level Security enabled. Every policy uses `auth.uid()` so qu
 | `notifications` | In-app alerts (reminders, achievements, system messages) |
 | `replan_audit_logs` | Immutable record of every adaptive replanning run |
 | `question_inventory` | Global catalog of CB QB available question counts per category (admin-managed, no user_id) |
+| `waitlist_signups` | Pre-launch email sign-ups from the public `/` landing page (isolated; no user_id, no FK to app tables) |
 
 ---
 
@@ -299,6 +300,32 @@ Global admin-managed catalog of College Board Question Bank available question c
 
 ---
 
+## waitlist_signups
+
+Isolated table backing the public marketing landing page (`/`). Captures pre-launch
+interest emails. Has **no `user_id`, no foreign keys, and no connection to any app
+table or app logic** — the replanner, planner, and onboarding never touch it.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `uuid` | PK, `gen_random_uuid()` |
+| `email` | `text` | NOT NULL, **UNIQUE** — duplicate inserts are treated as a friendly success by `actions/waitlist.ts` |
+| `source` | `text` | DEFAULT `'landing'` — where the sign-up originated |
+| `created_at` | `timestamptz` | auto |
+
+**RLS:** Enabled. A single policy `"Anyone can join the waitlist"` grants **INSERT only**
+to `anon` + `authenticated` (`WITH CHECK (true)`). There is **no SELECT/UPDATE/DELETE
+policy** — rows are readable only via the service role / Supabase dashboard, so collected
+emails are never exposed to anonymous visitors.
+
+**Writer:** `actions/waitlist.ts` → `joinWaitlist(formData)` (a `'use server'` action). It
+validates the email shape, inserts `{ email, source: 'landing' }`, maps unique-violation
+(`23505`) to `{ success: true }`, requires no auth, and triggers no app logic.
+
+**No SAT content** is ever stored here — only an email and a source string.
+
+---
+
 ## Postgres Trigger
 
 ```sql
@@ -329,5 +356,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 | `score_history` | `auth.uid() = user_id` |
 | `notifications` | `auth.uid() = user_id` |
 | `replan_audit_logs` | `auth.uid() = user_id` |
+| `question_inventory` | `auth.role() = 'authenticated'` |
+| `waitlist_signups` | INSERT-only for `anon` + `authenticated` (`WITH CHECK (true)`); no SELECT/UPDATE/DELETE |
 
-All policies are `FOR ALL` (SELECT, INSERT, UPDATE, DELETE).
+All user-data policies are `FOR ALL` (SELECT, INSERT, UPDATE, DELETE). The
+`waitlist_signups` table is the exception: it is **INSERT-only** by design.
