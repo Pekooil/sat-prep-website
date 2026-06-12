@@ -10,7 +10,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://sat-planner.vercel.app'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.trim() || 'https://sat-prep-website-gold.vercel.app'
 const APP_NAME = 'SaturnPath'
 const APP_DESCRIPTION =
   'Personalized, data-driven SAT preparation. Smart weekly study plans, progress analytics, error tracking, and AI-powered adaptive replanning — all in one place.'

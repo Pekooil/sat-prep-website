@@ -38,7 +38,7 @@ Make it impressive and demonstrative — take inspiration from high-quality SaaS
    - **Automated error log** — your mistakes are captured and turned into targeted review, so you stop missing the same things twice.
    - **Completely free for everyone** — full access, no paywall, no tiers.
 4. **Secondary "how it works" / demo strip (optional but encouraged)** — a brief, visual 3-step explanation (plan → practice with College Board Question Bank → log results & adapt). Keep it copyright-safe: reference the official free CB Question Bank workflow, never embed or mock real SAT questions.
-5. **Closing CTA** — repeat the Join Wishlist form with a short reassurance line ("Launching on 7/17/2026 — be first in line. No spam.").
+5. **Closing CTA** — repeat the Join Wishlist form with a short reassurance line ("Launching in a few weeks — be first in line. No spam.").
 6. **Footer** — logo, copyright, and the discreet sign-in link.
 
 All marketing copy is yours to write — keep it confident and concise. Do **not** link any button to onboarding, the planner, or dashboard routes. The only working interaction is the wishlist form.
