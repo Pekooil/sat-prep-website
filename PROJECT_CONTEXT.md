@@ -33,7 +33,7 @@ The project lives at **`/Users/darcywang/sat-prep-website`**, not at `~/Desktop/
 
 | Route | Description |
 |---|---|
-| `/` | **Public marketing landing page** — hero + Join Wishlist form, three feature blocks, "how it works" strip, closing CTA, footer. Logged-in users are redirected to `/home` by `app/page.tsx`; logged-out users see the landing page. Renders `components/marketing/landing-page.tsx`. The wishlist email form is the only live backend interaction. |
+| `/` | **Public marketing landing page** — hero + Join Wishlist form, count-up stats strip, four feature showcase sections (adaptive planner / interactive sessions + pacing clock / automated error log / Question Bank manager) each with an illustrative in-code product mock, "how it works" strip, closing CTA, footer. Scroll-reveal animations throughout, a header scroll-progress bar, and a Saturn visual that rotates as the user scrolls. Logged-in users are redirected to `/home` by `app/page.tsx`; logged-out users see the landing page. Renders `components/marketing/landing-page.tsx`. The wishlist email form is the only live backend interaction. |
 | `/login` | Email/password sign-in |
 | `/signup` | Account creation |
 | `/onboarding` | 4-step setup wizard (redirects away once completed) |
@@ -55,7 +55,7 @@ All dashboard routes are protected by `proxy.ts` (Next.js 16's renamed Middlewar
 
 ### ✅ Completed
 
-- **Marketing landing page** (`/`) — public, logged-out landing page that replaces the old `/`→`/login` redirect. Built with the "Quiet Monochrome" design tokens and `components/ui` primitives: sticky top bar (logo + Join Wishlist + discreet Sign in), hero with the primary wishlist email form and a brand Saturn visual, three core-feature cards (Adaptive planning / Automated error log / Completely free), a copyright-safe "plan → practice with CB Question Bank → log & adapt" strip, a closing wishlist CTA, and a footer. Fully responsive, dark (default) + light, honors reduced motion. Wires up nothing in the app — the **only** live action is the wishlist email capture (`actions/waitlist.ts` → `waitlist_signups`). `app/page.tsx` keeps the server-side `getUser()` check and still redirects authenticated users to `/home`. The old `/`→`/home` rule in `next.config.ts` was removed so `/` reaches the page
+- **Marketing landing page** (`/`) — public, logged-out landing page that replaces the old `/`→`/login` redirect. Built with the "Quiet Monochrome" design tokens and `components/ui` primitives: sticky top bar (logo + Features anchor + Join Wishlist + discreet Sign in) with a scroll-progress bar, hero with the primary wishlist email form and a brand Saturn visual that **rotates as the user scrolls** (rAF-throttled, idle float animation, tiny ring moon for visible rotation), a 4-stat count-up strip (8 domains / 2 subjects / 0 repeats / 100% free), **four feature showcase sections** — adaptive planner, interactive sessions + SAT pacing clock, automated error log, Question Bank coverage manager — each pairing copy + bullets with an illustrative in-code product mock in a browser-chrome frame (copyright-safe: skeleton bars stand in for question content, only public CB domain/skill labels and A/B/C/D letters appear, each captioned "no SAT content is ever shown or stored"), a copyright-safe "plan → practice with CB Question Bank → log & adapt" strip, a closing wishlist CTA, and a footer. IntersectionObserver-driven directional scroll-reveal animations (`.lp-reveal` primitives in `globals.css`) with full `prefers-reduced-motion` + no-JS fallbacks (content defaults to visible). Fully responsive, dark (default) + light. Wires up nothing in the app — the **only** live action is the wishlist email capture (`actions/waitlist.ts` → `waitlist_signups`). `app/page.tsx` keeps the server-side `getUser()` check and still redirects authenticated users to `/home`. The old `/`→`/home` rule in `next.config.ts` was removed so `/` reaches the page
 - **Authentication** — sign up, sign in, sign out via Supabase Auth; `proxy.ts` protects all dashboard routes
 - **Onboarding wizard** — 4 steps: basics, domain performance entry, diagnostic analysis, deterministic recommendations; saves user profile, diagnostic test, question sessions, baseline score, welcome notification; triggers initial replanning pass on completion
 - **Study Plan Engine** — deterministic day-by-day schedule generator (`lib/study-plan-engine/`); each study day produces **two** `calendar_tasks` rows — one R&W domain + one Math domain — each using half the daily study minutes at 90% question-time efficiency; **review days produce one `'Review Session'` task** (no domain blocks); produces one `study_plans` row total with full replanner metadata; **inventory-aware assignment** enforces per-skill question caps, ≥80% time floor, cross-skill substitution by adaptive priority, and bank-complete notifications
@@ -123,7 +123,9 @@ app/                       Next.js App Router pages
 components/
   marketing/
     landing-page.tsx               Public landing page (client component): hero + wishlist
-                                   form, feature cards, how-it-works, closing CTA, footer
+                                   form, scroll-rotating Saturn, count-up stats, four feature
+                                   showcase sections with illustrative product mocks,
+                                   scroll-reveal animations, how-it-works, closing CTA, footer
   calendar/
     calendar-client.tsx            Orchestrator: month/week/agenda views, drag-and-drop,
                                    drawer + dialog state management; routes 'Review Session'

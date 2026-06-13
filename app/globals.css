@@ -499,6 +499,55 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
 }
 
+/* ============================================================
+   Landing page (marketing) — scroll-reveal + showcase motion
+   ============================================================ */
+
+/* Scroll-triggered reveal. JS adds .lp-visible when the element enters
+   the viewport; --lp-delay staggers siblings. */
+.lp-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 700ms var(--ease-out),
+    transform 700ms var(--ease-out);
+  transition-delay: var(--lp-delay, 0ms);
+  will-change: opacity, transform;
+}
+.lp-reveal-left  { transform: translateX(-44px); }
+.lp-reveal-right { transform: translateX(44px); }
+.lp-reveal-scale { transform: translateY(16px) scale(0.95); }
+.lp-reveal.lp-visible { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Content must never be hidden when motion is off (or JS fails). */
+  .lp-reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* Gentle idle float for the hero Saturn */
+@keyframes lp-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+.lp-float { animation: lp-float 7s ease-in-out infinite; }
+
+/* Pacing-clock ring sweep (circumference of r=42 circle ≈ 264) */
+@keyframes lp-clock-sweep {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -264; }
+}
+.lp-clock-ring {
+  stroke-dasharray: 66 198; /* quarter arc + gap */
+  animation: lp-clock-sweep 14s linear infinite;
+}
+
+/* Soft attention pulse for live dots/badges in the mocks */
+@keyframes lp-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+.lp-pulse { animation: lp-pulse 2.4s ease-in-out infinite; }
+
 @media print {
   .no-print { display: none !important; }
   nav, aside, header { display: none !important; }
