@@ -13,10 +13,13 @@ import {
   ClipboardList,
   Database,
   Flag,
+  LineChart,
   Loader2,
   NotebookPen,
   RefreshCw,
+  Target,
   Timer,
+  TrendingUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -393,7 +396,7 @@ const WaitlistForm = React.forwardRef<
 })
 
 /* ════════════════════════════════════════════════════════════════════════
-   Product mocks — illustrative "screenshots" of the four headline features.
+   Product mocks — illustrative "screenshots" of the five headline features.
    Built in-code so they stay on-brand and copyright-safe: skeleton bars
    stand in for question content; only public CB domain/skill labels and
    the student's own A/B/C/D choices appear (per COPYRIGHT_COMPLIANCE.md).
@@ -716,7 +719,133 @@ function ErrorLogMock() {
   )
 }
 
-/* ── Mock 4 · Question Bank coverage manager ── */
+/* ── Mock 4 · Score projection + weak-area analytics ── */
+function AnalyticsMock() {
+  const weak = [
+    {
+      domain: 'Geometry & Trigonometry',
+      score: 38,
+      tier: 'Needs Work',
+      barClass: 'bg-rose-500',
+      tierClass: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+    },
+    {
+      domain: 'Advanced Math',
+      score: 54,
+      tier: 'Developing',
+      barClass: 'bg-amber-500',
+      tierClass: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    },
+    {
+      domain: 'Expression of Ideas',
+      score: 63,
+      tier: 'Developing',
+      barClass: 'bg-amber-500',
+      tierClass: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    },
+  ]
+  return (
+    <MockFrame title="SaturnPath — Data · Score Projection">
+      {/* Predicted score + projection toward target */}
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+        <div className="flex-1">
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
+            Predicted score
+          </p>
+          <div className="mt-1 flex items-end gap-2.5">
+            <span className="sp-numeric text-4xl font-semibold leading-none text-[var(--text-heading)]">
+              1340
+            </span>
+            <span className="mb-1 inline-flex items-center gap-0.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+              <TrendingUp className="h-4 w-4" />
+              +20
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-[var(--text-muted)]">
+            Range 1290–1390 · based on 22 sessions
+          </p>
+          <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+            <Target className="h-3 w-3" />
+            On pace for your 1400 target
+          </span>
+        </div>
+
+        {/* Mini projection rising toward the dashed target line */}
+        <div className="flex shrink-0 flex-col items-center gap-1.5 sm:w-40">
+          <svg viewBox="0 0 150 84" className="h-20 w-full" aria-hidden="true">
+            <line
+              x1="0" y1="14" x2="150" y2="14"
+              strokeWidth="1" strokeDasharray="4 4"
+              className="stroke-emerald-500/70"
+            />
+            <polyline
+              points="4,72 30,64 56,52 82,46 108,32 134,20"
+              fill="none" stroke="var(--accent)" strokeWidth="2.5"
+              strokeLinecap="round" strokeLinejoin="round"
+            />
+            <circle cx="134" cy="20" r="3.5" fill="var(--accent)" />
+          </svg>
+          <p className="text-center text-[10px] leading-snug text-[var(--text-muted)]">
+            Projected toward<br />your 1400 target
+          </p>
+        </div>
+      </div>
+
+      {/* Weakest areas, surfaced first */}
+      <div className="mt-5">
+        <div className="mb-2.5 flex items-center justify-between">
+          <p className="text-xs font-semibold text-[var(--text-heading)]">
+            Weakest areas — fix these first
+          </p>
+          <span className="text-[11px] text-[var(--text-muted)]">8 domains tracked</span>
+        </div>
+        <div className="space-y-2.5">
+          {weak.map(({ domain, score, tier, barClass, tierClass }) => (
+            <div key={domain} className="flex items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <span className="truncate text-xs font-semibold text-[var(--text-heading)]">
+                    {domain}
+                  </span>
+                  <span
+                    className={cn(
+                      'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                      tierClass
+                    )}
+                  >
+                    {tier}
+                  </span>
+                </div>
+                <div
+                  className="h-1.5 overflow-hidden rounded-full"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--text-muted) 16%, transparent)' }}
+                >
+                  <div
+                    className={cn('h-full rounded-full', barClass)}
+                    style={{ width: `${score}%` }}
+                  />
+                </div>
+              </div>
+              <span className="sp-numeric w-9 shrink-0 text-right text-xs font-semibold text-[var(--text-heading)]">
+                {score}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-base)] px-3 py-2.5">
+        <LineChart className="h-4 w-4 shrink-0 text-[var(--accent-soft-foreground)]" />
+        <p className="text-xs text-[var(--text-body)]">
+          Recalculated after every session — your projection, pace, and weak-area ranking update the
+          moment you log results.
+        </p>
+      </div>
+    </MockFrame>
+  )
+}
+
+/* ── Mock 5 · Question Bank coverage manager ── */
 function BankMock() {
   const rows = [
     { domain: 'Algebra', done: 132, total: 154 },
@@ -806,6 +935,18 @@ const SHOWCASE = [
       'Resurfaced in weekly review sessions until you mark them mastered',
     ],
     Mock: ErrorLogMock,
+  },
+  {
+    icon: LineChart,
+    eyebrow: 'Score analytics',
+    title: 'Know your score before test day.',
+    body: 'Every practice session feeds a live analytics page that re-projects your SAT score, complete with a confidence range. It confirms your pace is still on track for test day and surfaces the exact domains holding your score back — so you always know what to fix next.',
+    bullets: [
+      'Re-projects your SAT score after every session — with a range that tightens as you log more',
+      'Confirms at a glance whether your pace still clears your target by test day',
+      'Ranks all 8 domains weakest-first, so you always know what to fix next',
+    ],
+    Mock: AnalyticsMock,
   },
   {
     icon: Database,
@@ -1088,7 +1229,7 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
                 Everything moves with you.
               </h2>
               <p className="mt-4 text-lg text-[var(--text-muted)]">
-                Four systems working together so every study hour lands exactly where
+                Five systems working together so every study hour lands exactly where
                 it moves your score most.
               </p>
             </Reveal>
