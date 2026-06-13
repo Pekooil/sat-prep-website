@@ -6,11 +6,28 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-12 (Session 19 — Marketing landing page + wishlist capture)
+2026-06-13 (Session 20 — Landing page feature showcase + scroll animations)
 
 ---
 
 ## What Was Done This Session
+
+### Session 20 — Landing Page Feature Showcase + Scroll Animations
+
+**Goal:** Make the `/` landing page premium and demonstrative: add visual "screenshots" of the four headline features, impressive scroll animations, and a Saturn visual that turns as the user scrolls. (Branch `claude/landing-page-features-animations-id4qy1`.)
+
+**Changes**
+- **`components/marketing/landing-page.tsx` (rebuilt)**
+  - **Four feature showcase sections** (alternating copy/visual layout): ① Adaptive planner — day-by-day schedule that rebuilds from performance, "no two schedules are the same"; ② Interactive sessions — one-tap A/B/C/D answer entry + adaptive pacing clock simulating real SAT timing (71s R&W / 95s Math); ③ Automated error log — every mistake recorded from every session for deep, targeted review; ④ Question Bank manager — manages the large CB Question Bank so every question is practiced once and never repeated. Each section pairs a headline + 3 bullets with an **illustrative in-code product mock** ("screenshot" placeholder) in a browser-chrome `MockFrame`: a week-calendar replanning mock, a session UI with an animated SVG pacing-clock ring, an error-log list with mistake-type badges, and a coverage dashboard with per-domain progress bars + "0 repeats" badge.
+  - **Copyright safety in the mocks:** question content is represented by gray skeleton bars only; only public CB domain/skill labels and the student's own A/B/C/D letters appear; every mock is `aria-hidden` and captioned "Illustrative preview — no SAT content is ever shown or stored."
+  - **Scroll animations:** `Reveal` component (IntersectionObserver, directional up/left/right/scale variants, `--lp-delay` stagger), `CountUp` hero stats (8 domains / 2 subjects / 0 repeats / 100% free), a header **scroll-progress bar**, and the hero **Saturn now rotates as the user scrolls** (single passive scroll listener, rAF-throttled, direct style writes — no re-renders; a small moon was added to the ring so rotation reads clearly; gentle `lp-float` idle animation on top).
+  - **Reduced motion / no-JS:** `.lp-reveal` falls back to fully visible under `prefers-reduced-motion` (CSS, not JS), count-up jumps straight to the final value, and the Saturn scroll rotation is skipped. Content is never hidden if JS fails to run the observers.
+  - Header gains a "Features" anchor link (`#features`, `scroll-mt-16`). The closing CTA mentions "completely free" (the old third feature card's message lives on in the stats strip + CTA). Hero, wishlist forms, how-it-works strip, and footer are otherwise preserved.
+- **`app/globals.css`** — new "Landing page" section: `.lp-reveal` (+ `-left/-right/-scale`, `.lp-visible`), `lp-float`, `lp-clock-sweep` (pacing-ring), `lp-pulse` keyframes, all guarded by a `prefers-reduced-motion` block that forces reveals visible.
+- No backend, routing, or schema changes — the wishlist form remains the only live interaction.
+
+**Verified:** `npx tsc --noEmit` clean; `npx eslint` clean on changed files; `next build` succeeds (`/` still `ƒ` dynamic). Rendered in headless Chromium against the dev server (dummy Supabase envs): hero, all four showcase sections, how-it-works, CTA, and footer render in dark + light; Saturn transform measured before/after scroll (identity → ~86° rotation) confirming the scroll-rotation works; mobile 375px stacks correctly (clock reflows below answers, planner chips truncate legibly); only console errors were the dummy-Supabase TLS failures, expected outside prod.
+
 
 ### Session 19 — Marketing Landing Page + Wishlist Capture
 

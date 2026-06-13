@@ -4,22 +4,134 @@ import * as React from 'react'
 import Link from 'next/link'
 import {
   ArrowRight,
+  ArrowUp,
+  BookOpenCheck,
   CalendarRange,
-  ClipboardList,
-  Gift,
+  Check,
   CheckCircle2,
+  ClipboardList,
+  Database,
+  Flag,
   Loader2,
   NotebookPen,
-  BookOpenCheck,
   RefreshCw,
+  Timer,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SaturnPathLogo } from '@/components/layout/saturn-path-logo'
 import { joinWaitlist } from '@/actions/waitlist'
+import { cn } from '@/lib/utils'
 
-/* ── Brand Saturn illustration (adapted from the auth panel for cohesion) ── */
+/* ════════════════════════════════════════════════════════════════════════
+   Scroll-animation primitives
+   ════════════════════════════════════════════════════════════════════════ */
+
+/** Reveals children when they enter the viewport. Direction + stagger via props.
+    Reduced motion / no-JS fall back to fully visible (see globals.css). */
+function Reveal({
+  children,
+  variant = 'up',
+  delay = 0,
+  className,
+}: {
+  children: React.ReactNode
+  variant?: 'up' | 'left' | 'right' | 'scale'
+  delay?: number
+  className?: string
+}) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = React.useState(false)
+
+  React.useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true)
+          io.disconnect()
+        }
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -48px 0px' }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        'lp-reveal',
+        variant === 'left' && 'lp-reveal-left',
+        variant === 'right' && 'lp-reveal-right',
+        variant === 'scale' && 'lp-reveal-scale',
+        visible && 'lp-visible',
+        className
+      )}
+      style={{ '--lp-delay': `${delay}ms` } as React.CSSProperties}
+    >
+      {children}
+    </div>
+  )
+}
+
+/** Animated integer count-up that starts when scrolled into view. */
+function CountUp({
+  value,
+  suffix = '',
+  duration = 1100,
+}: {
+  value: number
+  suffix?: string
+  duration?: number
+}) {
+  const ref = React.useRef<HTMLSpanElement>(null)
+  const [display, setDisplay] = React.useState(0)
+
+  React.useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    let raf = 0
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        io.disconnect()
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          setDisplay(value)
+          return
+        }
+        const start = performance.now()
+        const tick = (now: number) => {
+          const p = Math.min((now - start) / duration, 1)
+          const eased = 1 - Math.pow(1 - p, 3)
+          setDisplay(Math.round(value * eased))
+          if (p < 1) raf = requestAnimationFrame(tick)
+        }
+        raf = requestAnimationFrame(tick)
+      },
+      { threshold: 0.5 }
+    )
+    io.observe(el)
+    return () => {
+      io.disconnect()
+      cancelAnimationFrame(raf)
+    }
+  }, [value, duration])
+
+  return (
+    <span ref={ref} className="sp-numeric">
+      {display}
+      {suffix}
+    </span>
+  )
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Brand Saturn illustration (adapted from the auth panel for cohesion)
+   ════════════════════════════════════════════════════════════════════════ */
 function SaturnIllustration({ className = '' }: { className?: string }) {
   return (
     <svg
@@ -55,11 +167,15 @@ function SaturnIllustration({ className = '' }: { className?: string }) {
         fill="none" stroke="currentColor" strokeWidth="22"
         clipPath="url(#lp-ring-front)" opacity="0.9"
       />
+      {/* Tiny moon riding the ring — visibly orbits as the scroll rotation turns */}
+      <circle cx="296" cy="172" r="9" opacity="0.85" />
     </svg>
   )
 }
 
-/* ── Wishlist email capture — the only live interaction on the page ── */
+/* ════════════════════════════════════════════════════════════════════════
+   Wishlist email capture — the only live interaction on the page
+   ════════════════════════════════════════════════════════════════════════ */
 const WaitlistForm = React.forwardRef<
   HTMLInputElement,
   { id: string; layout?: 'inline' | 'stacked' }
@@ -150,23 +266,440 @@ const WaitlistForm = React.forwardRef<
   )
 })
 
-/* ── Feature + step content ── */
-const FEATURES = [
+/* ════════════════════════════════════════════════════════════════════════
+   Product mocks — illustrative "screenshots" of the four headline features.
+   Built in-code so they stay on-brand and copyright-safe: skeleton bars
+   stand in for question content; only public CB domain/skill labels and
+   the student's own A/B/C/D choices appear (per COPYRIGHT_COMPLIANCE.md).
+   ════════════════════════════════════════════════════════════════════════ */
+
+/** Browser-chrome frame that wraps each feature mock. */
+function MockFrame({
+  title,
+  children,
+  className,
+}: {
+  title: string
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <figure className={cn('m-0', className)}>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none select-none overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface-raised)] shadow-[var(--shadow-xl)]"
+      >
+        <div className="flex items-center gap-1.5 border-b border-[var(--border)] bg-[var(--surface-sunken)] px-4 py-2.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-[var(--border-strong)]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[var(--border-strong)]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[var(--border-strong)]" />
+          <span className="ml-2 truncate text-xs font-medium text-[var(--text-muted)]">
+            {title}
+          </span>
+        </div>
+        <div className="p-4 sm:p-5">{children}</div>
+      </div>
+      <figcaption className="mt-3 text-center text-xs text-[var(--text-muted)]">
+        Illustrative preview — no SAT content is ever shown or stored.
+      </figcaption>
+    </figure>
+  )
+}
+
+/** Gray skeleton line — stands in for content we never display. */
+function SkeletonLine({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn('h-2 rounded-full bg-[var(--surface-sunken)]', className)}
+      style={{ backgroundColor: 'color-mix(in srgb, var(--text-muted) 18%, transparent)' }}
+    />
+  )
+}
+
+/* ── Mock 1 · Adaptive day-by-day planner ── */
+function PlannerMock() {
+  const days: {
+    day: string
+    blocks: { label: string; q: string; dot: string; moved?: boolean }[]
+  }[] = [
+    {
+      day: 'Mon',
+      blocks: [
+        { label: 'Craft & Structure', q: '16q · Med', dot: 'var(--amber-500)' },
+        { label: 'Algebra', q: '18q · Med', dot: 'var(--blue-500)' },
+      ],
+    },
+    {
+      day: 'Tue',
+      blocks: [
+        { label: 'Information & Ideas', q: '14q · Med', dot: 'var(--teal-500)' },
+        { label: 'Advanced Math', q: '17q · Hard', dot: 'var(--indigo-500)' },
+      ],
+    },
+    {
+      day: 'Wed',
+      blocks: [
+        { label: 'Expression of Ideas', q: '15q · Med', dot: 'var(--rose-500)' },
+        { label: 'Geometry & Trig', q: '20q · Easy', dot: 'var(--cyan-500)', moved: true },
+      ],
+    },
+    {
+      day: 'Thu',
+      blocks: [
+        { label: 'Craft & Structure', q: '16q · Med', dot: 'var(--amber-500)' },
+        { label: 'Problem Solving', q: '12q · Med', dot: 'var(--green-500)' },
+      ],
+    },
+    {
+      day: 'Fri',
+      blocks: [
+        { label: 'Standard English', q: '14q · Hard', dot: 'var(--orange-500)' },
+        { label: 'Algebra', q: '18q · Hard', dot: 'var(--blue-500)' },
+      ],
+    },
+  ]
+
+  return (
+    <MockFrame title="SaturnPath — Calendar · Week 4">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-sm font-semibold text-[var(--text-heading)]">Your week, rebuilt around last night&apos;s session</p>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[var(--accent-soft-foreground)]">
+          <RefreshCw className="h-3 w-3" />
+          Replanned 2h ago
+        </span>
+      </div>
+      <div className="grid grid-cols-5 gap-2">
+        {days.map(({ day, blocks }) => (
+          <div key={day} className="space-y-2">
+            <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              {day}
+            </p>
+            {blocks.map((b) => (
+              <div
+                key={b.label + b.q}
+                className={cn(
+                  'rounded-[var(--radius-sm)] border px-2 py-2',
+                  b.moved
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                    : 'border-[var(--border)] bg-[var(--surface-base)]'
+                )}
+              >
+                <span className="flex items-center gap-1">
+                  <span
+                    className="h-1.5 w-1.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: b.dot }}
+                  />
+                  <span className="truncate text-[10px] font-semibold leading-tight text-[var(--text-heading)]">
+                    {b.label}
+                  </span>
+                </span>
+                <span className="mt-1 block text-[10px] text-[var(--text-muted)]">{b.q}</span>
+                {b.moved && (
+                  <span className="mt-1 inline-flex items-center gap-0.5 text-[10px] font-semibold text-[var(--accent-soft-foreground)]">
+                    <ArrowUp className="h-2.5 w-2.5" />
+                    Moved up
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 flex items-center gap-2.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-base)] px-3 py-2.5">
+        <span className="lp-pulse h-2 w-2 shrink-0 rounded-full bg-[var(--accent)]" />
+        <p className="text-xs text-[var(--text-body)]">
+          <span className="font-semibold text-[var(--text-heading)]">Plan updated</span>
+          {' '}— Geometry &amp; Trig accuracy dipped to 54%, so tomorrow starts there.
+        </p>
+      </div>
+    </MockFrame>
+  )
+}
+
+/* ── Mock 2 · Interactive session + pacing clock ── */
+function SessionMock() {
+  const choices = [
+    { letter: 'A', selected: false },
+    { letter: 'B', selected: true },
+    { letter: 'C', selected: false },
+    { letter: 'D', selected: false },
+  ]
+  return (
+    <MockFrame title="SaturnPath — Practice Session · Math">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-[var(--text-heading)]">Question 7 of 18</p>
+            <span className="rounded-full border border-[var(--border)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--text-muted)]">
+              Advanced Math · Hard
+            </span>
+          </div>
+          {/* The question itself lives on the College Board site — never here. */}
+          <div className="mt-4 space-y-2.5">
+            <SkeletonLine className="w-full" />
+            <SkeletonLine className="w-11/12" />
+            <SkeletonLine className="w-3/5" />
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-2.5">
+            {choices.map(({ letter, selected }) => (
+              <div
+                key={letter}
+                className={cn(
+                  'flex items-center gap-2.5 rounded-[var(--radius)] border px-3.5 py-2.5',
+                  selected
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                    : 'border-[var(--border)] bg-[var(--surface-base)]'
+                )}
+              >
+                <span
+                  className={cn(
+                    'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
+                    selected
+                      ? 'bg-[var(--accent)] text-white'
+                      : 'border border-[var(--border-strong)] text-[var(--text-muted)]'
+                  )}
+                >
+                  {letter}
+                </span>
+                {selected ? (
+                  <Check className="h-4 w-4 text-[var(--accent-soft-foreground)]" />
+                ) : (
+                  <SkeletonLine className="w-12" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Adaptive pacing clock */}
+        <div className="flex shrink-0 flex-col items-center gap-2 sm:w-40">
+          <div className="relative h-28 w-28">
+            <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+              <circle
+                cx="50" cy="50" r="42" fill="none"
+                stroke="color-mix(in srgb, var(--text-muted) 20%, transparent)"
+                strokeWidth="7"
+              />
+              <circle
+                cx="50" cy="50" r="42" fill="none"
+                stroke="var(--accent)" strokeWidth="7" strokeLinecap="round"
+                className="lp-clock-ring"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="sp-numeric text-xl font-semibold text-[var(--text-heading)]">
+                17:25
+              </span>
+              <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+                remaining
+              </span>
+            </div>
+          </div>
+          <p className="text-center text-[11px] leading-snug text-[var(--text-muted)]">
+            95s / question pacing —<br />real Digital SAT Math timing
+          </p>
+        </div>
+      </div>
+    </MockFrame>
+  )
+}
+
+/* ── Mock 3 · Automated error log ── */
+function ErrorLogMock() {
+  const rows = [
+    {
+      domain: 'Craft and Structure',
+      skill: 'Words in Context',
+      type: 'Concept gap',
+      typeClass: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+      session: 'Session 14',
+      mastered: false,
+    },
+    {
+      domain: 'Algebra',
+      skill: 'Linear equations',
+      type: 'Careless error',
+      typeClass: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+      session: 'Session 14',
+      mastered: false,
+    },
+    {
+      domain: 'Geometry & Trigonometry',
+      skill: 'Circles',
+      type: 'Timing issue',
+      typeClass: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+      session: 'Session 13',
+      mastered: false,
+    },
+    {
+      domain: 'Information and Ideas',
+      skill: 'Central Ideas',
+      type: 'Mastered',
+      typeClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+      session: 'Session 9',
+      mastered: true,
+    },
+  ]
+  return (
+    <MockFrame title="SaturnPath — Error Log">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-sm font-semibold text-[var(--text-heading)]">Error Log</p>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[var(--accent-soft-foreground)]">
+          <span className="lp-pulse h-1.5 w-1.5 rounded-full bg-current" />
+          3 captured from your last session
+        </span>
+      </div>
+      <div className="divide-y divide-[var(--border)] overflow-hidden rounded-[var(--radius)] border border-[var(--border)]">
+        {rows.map((r) => (
+          <div
+            key={r.domain + r.skill}
+            className={cn(
+              'flex items-center gap-3 bg-[var(--surface-base)] px-3.5 py-3',
+              r.mastered && 'opacity-70'
+            )}
+          >
+            {r.mastered ? (
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+            ) : (
+              <span className="h-4 w-4 shrink-0 rounded-full border-2 border-[var(--border-strong)]" />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-[var(--text-heading)]">
+                {r.domain}
+              </p>
+              <p className="truncate text-[11px] text-[var(--text-muted)]">{r.skill}</p>
+            </div>
+            <span
+              className={cn(
+                'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                r.typeClass
+              )}
+            >
+              {r.type}
+            </span>
+            <span className="hidden shrink-0 text-[11px] text-[var(--text-muted)] sm:block">
+              {r.session}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-xs text-[var(--text-muted)]">
+        Auto-recorded after every session — resurfaced in review sessions until you master it.
+      </p>
+    </MockFrame>
+  )
+}
+
+/* ── Mock 4 · Question Bank coverage manager ── */
+function BankMock() {
+  const rows = [
+    { domain: 'Algebra', done: 132, total: 154 },
+    { domain: 'Craft and Structure', done: 96, total: 168 },
+    { domain: 'Advanced Math', done: 71, total: 140 },
+    { domain: 'Expression of Ideas', done: 44, total: 112 },
+  ]
+  return (
+    <MockFrame title="SaturnPath — Question Bank Coverage">
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm font-semibold text-[var(--text-heading)]">
+          College Board Question Bank
+        </p>
+        <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+          0 repeats
+        </span>
+      </div>
+      <div className="space-y-3.5">
+        {rows.map(({ domain, done, total }) => (
+          <div key={domain}>
+            <div className="mb-1.5 flex items-baseline justify-between">
+              <span className="text-xs font-semibold text-[var(--text-heading)]">{domain}</span>
+              <span className="sp-numeric text-[11px] text-[var(--text-muted)]">
+                {done} / {total} practiced
+              </span>
+            </div>
+            <div
+              className="h-1.5 overflow-hidden rounded-full"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--text-muted) 16%, transparent)' }}
+            >
+              <div
+                className="h-full rounded-full bg-[var(--accent)]"
+                style={{ width: `${Math.round((done / total) * 100)}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 flex items-center gap-2.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-base)] px-3 py-2.5">
+        <Database className="h-4 w-4 shrink-0 text-[var(--accent-soft-foreground)]" />
+        <p className="text-xs text-[var(--text-body)]">
+          Every assigned question is tracked — when a category runs low, fresh material is
+          substituted automatically.
+        </p>
+      </div>
+    </MockFrame>
+  )
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Content
+   ════════════════════════════════════════════════════════════════════════ */
+
+const SHOWCASE = [
   {
     icon: CalendarRange,
-    title: 'Adaptive planning',
-    body: 'A study plan that reranks your weak domains as you practice and reshapes your day-by-day schedule automatically — so your time always goes where it moves the needle most.',
+    eyebrow: 'Adaptive planner',
+    title: 'A schedule that rebuilds itself around you.',
+    body: 'The planner adjusts your day-by-day schedule from your actual performance. Every plan is customized to your scores, your test date, and your weak spots — no two students ever get the same schedule.',
+    bullets: [
+      'Re-ranks all 8 SAT domains after every session you log',
+      'Tomorrow’s plan reshapes itself the moment your accuracy shifts',
+      'Personal by construction — no two schedules are the same',
+    ],
+    Mock: PlannerMock,
+  },
+  {
+    icon: Timer,
+    eyebrow: 'Interactive sessions',
+    title: 'Practice like it’s test day.',
+    body: 'A clean, interactive interface makes answer entry effortless, while the adaptive pacing clock simulates the actual SAT time limit — so the real clock never surprises you.',
+    bullets: [
+      'One-tap A / B / C / D answer entry, zero friction',
+      'Pacing clock tuned to real Digital SAT timing — 71s per R&W question, 95s per Math',
+      'Overtime tracking shows exactly where the clock beats you',
+    ],
+    Mock: SessionMock,
   },
   {
     icon: ClipboardList,
-    title: 'Automated error log',
-    body: 'Your mistakes are captured and turned into targeted review, so you stop missing the same things twice and watch your weak spots actually close.',
+    eyebrow: 'Automated error log',
+    title: 'Every mistake, remembered for you.',
+    body: 'An automated error log records every mistake from every session — tagged by domain, skill, and mistake type — and turns it into deep, targeted review so you never miss the same thing twice.',
+    bullets: [
+      'Mistakes captured automatically the moment a session ends',
+      'Tagged as concept gap, careless error, timing issue, or strategy error',
+      'Resurfaced in weekly review sessions until you mark them mastered',
+    ],
+    Mock: ErrorLogMock,
   },
   {
-    icon: Gift,
-    title: 'Completely free',
-    body: 'Full access for everyone. No paywall, no tiers, no credit card. The whole planner is free, today and at launch.',
+    icon: Database,
+    eyebrow: 'Question Bank manager',
+    title: 'The whole Question Bank, perfectly managed.',
+    body: 'SaturnPath manages the large official College Board Question Bank for you — tracking every category so all available questions get practiced and nothing you’ve already done is ever assigned again.',
+    bullets: [
+      'Tracks remaining questions across every domain, skill, and difficulty',
+      'Never schedules a question you’ve already practiced — zero repeats',
+      'Substitutes fresh categories automatically when one runs dry',
+    ],
+    Mock: BankMock,
   },
+] as const
+
+const STATS = [
+  { value: 8, suffix: '', label: 'SAT domains tracked & re-ranked' },
+  { value: 2, suffix: '', label: 'subjects practiced every study day' },
+  { value: 0, suffix: '', label: 'questions ever repeated' },
+  { value: 100, suffix: '%', label: 'free — no paywall, no tiers' },
 ] as const
 
 const STEPS = [
@@ -187,8 +720,13 @@ const STEPS = [
   },
 ] as const
 
+/* ════════════════════════════════════════════════════════════════════════
+   Page
+   ════════════════════════════════════════════════════════════════════════ */
 export function LandingPage() {
   const heroEmailRef = React.useRef<HTMLInputElement>(null)
+  const saturnRef = React.useRef<HTMLDivElement>(null)
+  const progressRef = React.useRef<HTMLDivElement>(null)
 
   const focusWishlist = React.useCallback(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -200,13 +738,58 @@ export function LandingPage() {
     window.setTimeout(() => heroEmailRef.current?.focus(), prefersReduced ? 0 : 320)
   }, [])
 
+  /* Scroll-linked effects: header progress bar + the Saturn turning as you
+     scroll downward. One passive listener, rAF-throttled, direct style
+     writes (no re-renders). */
+  React.useEffect(() => {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const doc = document.documentElement
+      const max = doc.scrollHeight - window.innerHeight
+      const y = window.scrollY
+      if (progressRef.current) {
+        progressRef.current.style.transform = `scaleX(${max > 0 ? Math.min(y / max, 1) : 0})`
+      }
+      if (!prefersReduced && saturnRef.current) {
+        saturnRef.current.style.transform = `rotate(${y * 0.12}deg)`
+      }
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-[var(--surface-base)] text-[var(--text-body)]">
       {/* ── Top bar ── */}
       <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface-base)_82%,transparent)] backdrop-blur-md">
+        {/* Scroll progress bar */}
+        <div className="absolute inset-x-0 top-0 h-0.5" aria-hidden="true">
+          <div
+            ref={progressRef}
+            className="h-full origin-left bg-[var(--accent)]"
+            style={{ transform: 'scaleX(0)' }}
+          />
+        </div>
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
           <SaturnPathLogo size="md" asLink={false} />
           <div className="flex items-center gap-2 sm:gap-3">
+            <a
+              href="#features"
+              className="hidden rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-heading)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] sm:block"
+            >
+              Features
+            </a>
             <Button
               type="button"
               size="sm"
@@ -235,68 +818,126 @@ export function LandingPage() {
             <div className="absolute left-1/2 top-[-6rem] h-72 w-72 -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.10] blur-[120px]" />
           </div>
 
-          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 pb-20 pt-16 sm:px-8 sm:pt-20 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8 lg:pb-28 lg:pt-24">
+          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 pb-16 pt-16 sm:px-8 sm:pt-20 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8 lg:pb-20 lg:pt-24">
             {/* Left — copy + primary conversion */}
             <div className="max-w-xl">
-              <span className="sp-eyebrow inline-flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                Launching on 7/17/2026
-              </span>
-              <h1 className="sp-display mt-4 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
-                Your personalized path to a higher SAT score.
-              </h1>
-              <p className="mt-5 text-lg leading-relaxed text-[var(--text-muted)]">
-                SaturnPath is a data-driven SAT prep planner that learns your weak
-                spots, schedules your practice day by day, and adapts the moment
-                you log a result.
-              </p>
-
-              <div className="mt-8 max-w-md">
-                <WaitlistForm id="hero-email" ref={heroEmailRef} />
-                <p className="mt-3 text-sm text-[var(--text-muted)]">
-                  Be first in line when we open. No spam — just one launch email.
+              <Reveal>
+                <span className="sp-eyebrow inline-flex items-center gap-2">
+                  <span className="lp-pulse h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                  Launching on 7/17/2026
+                </span>
+                <h1 className="sp-display mt-4 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
+                  Your personalized path to a higher SAT score.
+                </h1>
+                <p className="mt-5 text-lg leading-relaxed text-[var(--text-muted)]">
+                  SaturnPath is a data-driven SAT prep planner that learns your weak
+                  spots, schedules your practice day by day, and adapts the moment
+                  you log a result.
                 </p>
-              </div>
+              </Reveal>
+
+              <Reveal delay={150}>
+                <div className="mt-8 max-w-md">
+                  <WaitlistForm id="hero-email" ref={heroEmailRef} />
+                  <p className="mt-3 text-sm text-[var(--text-muted)]">
+                    Be first in line when we open. No spam — just one launch email.
+                  </p>
+                </div>
+              </Reveal>
             </div>
 
-            {/* Right — brand visual */}
+            {/* Right — brand visual that turns as you scroll downward */}
             <div className="flex justify-center lg:justify-end">
-              <div className="text-[var(--accent)] opacity-90 dark:text-[var(--accent-hover)]">
-                <SaturnIllustration className="h-56 w-56 sm:h-72 sm:w-72 lg:h-80 lg:w-80" />
-              </div>
+              <Reveal variant="scale" delay={200}>
+                <div className="lp-float text-[var(--accent)] opacity-90 dark:text-[var(--accent-hover)]">
+                  <div ref={saturnRef} style={{ willChange: 'transform' }}>
+                    <SaturnIllustration className="h-56 w-56 sm:h-72 sm:w-72 lg:h-80 lg:w-80" />
+                  </div>
+                </div>
+              </Reveal>
             </div>
+          </div>
+
+          {/* Stats strip */}
+          <div className="relative mx-auto max-w-6xl px-5 pb-16 sm:px-8 lg:pb-20">
+            <Reveal>
+              <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--border)] shadow-[var(--shadow-xs)] lg:grid-cols-4">
+                {STATS.map(({ value, suffix, label }) => (
+                  <div
+                    key={label}
+                    className="flex flex-col gap-1 bg-[var(--surface-raised)] px-6 py-5"
+                  >
+                    <dt className="order-2 text-sm text-[var(--text-muted)]">{label}</dt>
+                    <dd className="order-1 text-3xl font-semibold tracking-[var(--tracking-tight)] text-[var(--text-heading)]">
+                      <CountUp value={value} suffix={suffix} />
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </Reveal>
           </div>
         </section>
 
-        {/* ── Core features ── */}
-        <section className="border-t border-[var(--border)] bg-[var(--surface-base)]">
+        {/* ── Feature showcase ── */}
+        <section id="features" className="border-t border-[var(--border)] bg-[var(--surface-base)] scroll-mt-16">
           <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-24">
-            <div className="max-w-2xl">
-              <h2 className="sp-display text-3xl sm:text-4xl">
+            <Reveal className="max-w-2xl">
+              <span className="sp-eyebrow">What&apos;s inside</span>
+              <h2 className="sp-display mt-3 text-3xl sm:text-4xl">
                 Everything moves with you.
               </h2>
               <p className="mt-4 text-lg text-[var(--text-muted)]">
-                Three things working together to make every study hour count.
+                Four systems working together so every study hour lands exactly where
+                it moves your score most.
               </p>
-            </div>
+            </Reveal>
 
-            <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map(({ icon: Icon, title, body }) => (
-                <div
-                  key={title}
-                  className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-[var(--shadow-xs)]"
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-[var(--radius)] bg-[var(--accent-soft)]">
-                    <Icon className="h-5 w-5 text-[var(--accent-soft-foreground)]" />
+            <div className="mt-16 space-y-24 lg:mt-20 lg:space-y-32">
+              {SHOWCASE.map(({ icon: Icon, eyebrow, title, body, bullets, Mock }, i) => {
+                const flip = i % 2 === 1
+                return (
+                  <div
+                    key={eyebrow}
+                    className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16"
+                  >
+                    <Reveal
+                      variant={flip ? 'right' : 'left'}
+                      className={flip ? 'lg:order-2' : undefined}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-[var(--radius)] bg-[var(--accent-soft)]">
+                          <Icon className="h-5 w-5 text-[var(--accent-soft-foreground)]" />
+                        </div>
+                        <span className="sp-eyebrow text-[var(--accent-soft-foreground)]">
+                          0{i + 1} · {eyebrow}
+                        </span>
+                      </div>
+                      <h3 className="sp-display mt-5 text-2xl sm:text-3xl">{title}</h3>
+                      <p className="mt-4 text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
+                        {body}
+                      </p>
+                      <ul className="mt-6 space-y-3">
+                        {bullets.map((b) => (
+                          <li key={b} className="flex items-start gap-2.5">
+                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent-soft-foreground)]" />
+                            <span className="text-sm leading-relaxed text-[var(--text-body)]">
+                              {b}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </Reveal>
+
+                    <Reveal
+                      variant={flip ? 'left' : 'right'}
+                      delay={120}
+                      className={flip ? 'lg:order-1' : undefined}
+                    >
+                      <Mock />
+                    </Reveal>
                   </div>
-                  <h3 className="mt-5 text-lg font-semibold tracking-[var(--tracking-tight)] text-[var(--text-heading)]">
-                    {title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
-                    {body}
-                  </p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </section>
@@ -304,7 +945,7 @@ export function LandingPage() {
         {/* ── How it works ── */}
         <section className="border-t border-[var(--border)]">
           <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-24">
-            <div className="max-w-2xl">
+            <Reveal className="max-w-2xl">
               <span className="sp-eyebrow">How it works</span>
               <h2 className="sp-display mt-3 text-3xl sm:text-4xl">
                 Plan, practice, adapt — on repeat.
@@ -314,27 +955,28 @@ export function LandingPage() {
                 with the official, free College Board Question Bank — we never host
                 or display any SAT questions.
               </p>
-            </div>
+            </Reveal>
 
             <ol className="mt-12 grid gap-5 sm:grid-cols-3">
               {STEPS.map(({ icon: Icon, title, body }, i) => (
-                <li
-                  key={title}
-                  className="relative rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-[var(--shadow-xs)]"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="sp-numeric text-sm font-semibold text-[var(--accent-soft-foreground)]">
-                      0{i + 1}
-                    </span>
-                    <span className="h-px flex-1 bg-[var(--border)]" />
-                    <Icon className="h-5 w-5 text-[var(--text-muted)]" />
-                  </div>
-                  <h3 className="mt-4 text-lg font-semibold tracking-[var(--tracking-tight)] text-[var(--text-heading)]">
-                    {title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
-                    {body}
-                  </p>
+                <li key={title}>
+                  <Reveal delay={i * 130} className="h-full">
+                    <div className="relative h-full rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-[var(--shadow-xs)]">
+                      <div className="flex items-center gap-3">
+                        <span className="sp-numeric text-sm font-semibold text-[var(--accent-soft-foreground)]">
+                          0{i + 1}
+                        </span>
+                        <span className="h-px flex-1 bg-[var(--border)]" />
+                        <Icon className="h-5 w-5 text-[var(--text-muted)]" />
+                      </div>
+                      <h3 className="mt-4 text-lg font-semibold tracking-[var(--tracking-tight)] text-[var(--text-heading)]">
+                        {title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
+                        {body}
+                      </p>
+                    </div>
+                  </Reveal>
                 </li>
               ))}
             </ol>
@@ -344,22 +986,28 @@ export function LandingPage() {
         {/* ── Closing CTA ── */}
         <section className="border-t border-[var(--border)]">
           <div className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-8 lg:py-28">
-            <div className="mx-auto mb-6 text-[var(--accent)] dark:text-[var(--accent-hover)]">
-              <SaturnIllustration className="mx-auto h-20 w-20 opacity-90" />
-            </div>
-            <h2 className="sp-display text-3xl sm:text-4xl">
-              Be first in line.
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-[var(--text-muted)]">
-              SaturnPath launches on 7/17/2026. Join the wishlist and we&apos;ll
-              email you the moment it&apos;s ready.
-            </p>
-            <div className="mx-auto mt-8 max-w-md">
-              <WaitlistForm id="cta-email" layout="inline" />
-              <p className="mt-3 text-sm text-[var(--text-muted)]">
-                Launching on 7/17/2026 — be first in line. No spam.
+            <Reveal variant="scale">
+              <div className="mx-auto mb-6 text-[var(--accent)] dark:text-[var(--accent-hover)]">
+                <SaturnIllustration className="lp-float mx-auto h-20 w-20 opacity-90" />
+              </div>
+              <h2 className="sp-display text-3xl sm:text-4xl">
+                Be first in line.
+              </h2>
+              <p className="mx-auto mt-4 max-w-xl text-lg text-[var(--text-muted)]">
+                SaturnPath launches on 7/17/2026 — completely free, no paywall, no
+                tiers. Join the wishlist and we&apos;ll email you the moment
+                it&apos;s ready.
               </p>
-            </div>
+            </Reveal>
+            <Reveal delay={150}>
+              <div className="mx-auto mt-8 max-w-md">
+                <WaitlistForm id="cta-email" layout="inline" />
+                <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)]">
+                  <Flag className="h-3.5 w-3.5" />
+                  Launching on 7/17/2026 — be first in line. No spam.
+                </p>
+              </div>
+            </Reveal>
           </div>
         </section>
       </main>
