@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/types/database'
 
 type WaitlistInsert = Database['public']['Tables']['waitlist_signups']['Insert']
@@ -45,4 +46,32 @@ export async function joinWaitlist(formData: FormData): Promise<JoinWaitlistResu
   }
 
   return { success: true }
+}
+
+export interface LandingStats {
+  userCount: number
+  questionCount: number
+}
+
+/**
+ * getLandingStats — public stats for the landing page stats strip.
+ * Uses the admin client (service role) so it can read both tables without
+ * requiring a user session. Safe to call from a server component.
+ */
+export async function getLandingStats(): Promise<LandingStats> {
+  try {
+    const admin = createAdminClient()
+    const [waitlistRes, inventoryRes] = await Promise.all([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (admin as any).from('waitlist_signups').select('id', { count: 'exact', head: true }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (admin as any).from('question_inventory').select('available_count'),
+    ])
+    const userCount = waitlistRes.count ?? 0
+    const questionCount = (inventoryRes.data as Array<{ available_count: number }> | null)
+      ?.reduce((sum: number, r: { available_count: number }) => sum + (r.available_count ?? 0), 0) ?? 0
+    return { userCount, questionCount }
+  } catch {
+    return { userCount: 0, questionCount: 0 }
+  }
 }

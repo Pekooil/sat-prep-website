@@ -6,11 +6,26 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-13 (Session 20 — Landing page feature showcase + scroll animations)
+2026-06-12 (Session 21 — Landing page ring-spin + feature timeline)
 
 ---
 
 ## What Was Done This Session
+
+### Session 21 — Landing Page Ring-Spin + Feature Timeline
+
+**Goal:** Make the `/` landing scroll experience genuinely stunning. Per the request: (1) spin the Saturn **ring** as the user scrolls instead of rotating the whole planet, transitioning smoothly into the feature section; (2) add a purple line down the **middle** of the feature section; (3) make features appear slowly as the user scrolls. Landing page only — no backend/routing/schema changes.
+
+**Changes — `components/marketing/landing-page.tsx`**
+- **Ring-only spin.** `SaturnIllustration` was rebuilt so the **planet body is fixed and only the ring turns.** The ring is drawn as dashed ellipses (fine ring segments + one bright orbiting "moon") wrapped in a `<g>`; because `stroke-dashoffset` is an *inherited* SVG property, animating it on that one group carries every segment and the moon around together, while the back/front clip halves keep the "passes behind, then in front of the planet" depth. The hero ring's offset is driven imperatively from scroll (`ringRef`); the closing-CTA ring uses a slow ambient CSS loop (`ringIdle` → `.lp-ring-idle`).
+- **Scroll handler rewrite.** The old single-listener that rotated the whole Saturn (`saturnRef.style.transform = rotate(...)`) is gone. With motion enabled, one rAF loop now drives: the header progress bar, the ring `stroke-dashoffset` (scroll term + a gentle ambient drift so it stays alive when idle), a soft hero parallax (`saturnParallaxRef`), the feature-timeline fill height, and the hero scroll-cue fade — all via direct style writes, **paused on `visibilitychange`** when the tab is hidden. With `prefers-reduced-motion`, it falls back to a rAF-throttled scroll listener that only updates the progress bar + timeline fill + cue (no ring spin, no parallax).
+- **Feature timeline (the purple line).** The four showcase rows are wrapped in `.lp-timeline`; a centered vertical `.lp-timeline-track` runs down the **gutter between the alternating columns on desktop** (and a left rail on mobile, with each row given `pl-12 lg:pl-0` so content clears it). A `.lp-timeline-fill` (violet gradient) grows downward from scroll progress, led by a glowing `.lp-timeline-comet` head; a new `TimelineNode` (IntersectionObserver, `rootMargin` shrunk to a thin mid-screen band) lights each station violet as it passes the viewport center.
+- **Slower, staggered reveals.** Fixed a latent bug: `.lp-reveal`'s transition was hardcoded `700ms` and ignored the `--lp-duration` the `Reveal` component sets — it now reads `var(--lp-duration, 700ms)`, so the `duration` prop actually works. Feature copy reveals at `950ms`, mocks at `1000ms`, and each bullet now reveals on its own staggered `Reveal`.
+- **Extra polish.** Wired up the previously-dead `WordsReveal` for a word-by-word masked rise on the hero headline (new `.lp-word*` CSS); added ambient orbiting accent dots around the hero Saturn (`.lp-orbit*`) and a "Scroll to explore" cue (`.lp-bounce`, fades out on scroll).
+
+**Changes — `app/globals.css`** — extended the Landing page section: `.lp-word-mask` / `.lp-word` (+ `lp-word-rise`), `lp-ring-spin` / `.lp-ring-idle`, `.lp-orbit*` (+ `lp-orbit-spin`), `.lp-bounce`, and the full `.lp-timeline*` set (track / fill / comet / node + `.lp-active`), with `left: 50%` centering at `lg`. The `prefers-reduced-motion` block now also stills the headline words, ring idle, orbit, and bounce loops. `.lp-reveal` transition now honors `--lp-duration`.
+
+**Verified:** `npx tsc --noEmit` clean; `npx eslint` clean on the changed file. Rendered against the dev server (Turbopack, port 3000): no console errors, `GET / 200`. Confirmed the ring's inline `stroke-dashoffset` advances frame-to-frame (ambient + scroll) while the planet stays put; the timeline fill grows with scroll and **all four nodes activate** when centered; the purple line is centered in the column gutter at `lg` (≥1024px) and a left rail on mobile (content clears it). Checked desktop (1280), tablet/stacked (800), and mobile (375) widths, plus dark (default) and light.
 
 ### Session 20 — Landing Page Feature Showcase + Scroll Animations
 

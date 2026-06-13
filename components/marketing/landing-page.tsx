@@ -9,6 +9,7 @@ import {
   CalendarRange,
   Check,
   CheckCircle2,
+  ChevronDown,
   ClipboardList,
   Database,
   Flag,
@@ -22,23 +23,29 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SaturnPathLogo } from '@/components/layout/saturn-path-logo'
 import { joinWaitlist } from '@/actions/waitlist'
+import type { LandingStats } from '@/actions/waitlist'
 import { cn } from '@/lib/utils'
 
 /* ════════════════════════════════════════════════════════════════════════
    Scroll-animation primitives
    ════════════════════════════════════════════════════════════════════════ */
 
-/** Reveals children when they enter the viewport. Direction + stagger via props.
-    Reduced motion / no-JS fall back to fully visible (see globals.css). */
+/** Reveals children when they enter the viewport. Direction, stagger, and
+    pace via props. Reduced motion / no-JS fall back to fully visible
+    (see globals.css). */
 function Reveal({
   children,
   variant = 'up',
   delay = 0,
+  duration = 700,
+  threshold = 0.15,
   className,
 }: {
   children: React.ReactNode
   variant?: 'up' | 'left' | 'right' | 'scale'
   delay?: number
+  duration?: number
+  threshold?: number
   className?: string
 }) {
   const ref = React.useRef<HTMLDivElement>(null)
@@ -54,11 +61,11 @@ function Reveal({
           io.disconnect()
         }
       },
-      { threshold: 0.15, rootMargin: '0px 0px -48px 0px' }
+      { threshold, rootMargin: '0px 0px -48px 0px' }
     )
     io.observe(el)
     return () => io.disconnect()
-  }, [])
+  }, [threshold])
 
   return (
     <div
@@ -71,10 +78,48 @@ function Reveal({
         visible && 'lp-visible',
         className
       )}
-      style={{ '--lp-delay': `${delay}ms` } as React.CSSProperties}
+      style={
+        {
+          '--lp-delay': `${delay}ms`,
+          '--lp-duration': `${duration}ms`,
+        } as React.CSSProperties
+      }
     >
       {children}
     </div>
+  )
+}
+
+/** Word-by-word masked rise-in for the hero headline. Pure CSS animation, so
+    it also runs without the IntersectionObservers; reduced motion falls back
+    to plain visible text (globals.css). */
+function WordsReveal({
+  text,
+  accentFrom,
+  className,
+}: {
+  text: string
+  accentFrom?: number
+  className?: string
+}) {
+  const words = text.split(' ')
+  return (
+    <span className={className}>
+      {words.map((word, i) => (
+        <span key={`${word}-${i}`} className="lp-word-mask">
+          <span
+            className={cn(
+              'lp-word',
+              accentFrom !== undefined && i >= accentFrom && 'text-[var(--accent)]'
+            )}
+            style={{ animationDelay: `${120 + i * 70}ms` }}
+          >
+            {word}
+            {i < words.length - 1 ? ' ' : ''}
+          </span>
+        </span>
+      ))}
+    </span>
   )
 }
 
@@ -131,8 +176,28 @@ function CountUp({
 
 /* ════════════════════════════════════════════════════════════════════════
    Brand Saturn illustration (adapted from the auth panel for cohesion)
+   ────────────────────────────────────────────────────────────────────────
+   The planet body stays still; only the RING turns. The ring is drawn as
+   dashed ellipses (fine segments + one bright moon), and `stroke-dashoffset`
+   — an inherited property — is animated on the wrapping <g>, so a single
+   write spins every segment and the moon around the planet at once while the
+   back/front clip halves preserve the "passes behind, then in front" depth.
+   `ringRef` lets the page drive that offset from scroll; `ringIdle` opts into
+   a slow ambient CSS spin (used on the closing CTA).
    ════════════════════════════════════════════════════════════════════════ */
-function SaturnIllustration({ className = '' }: { className?: string }) {
+function SaturnIllustration({
+  className = '',
+  ringRef,
+  ringIdle = false,
+}: {
+  className?: string
+  ringRef?: React.Ref<SVGGElement>
+  ringIdle?: boolean
+}) {
+  const uid = React.useId().replace(/:/g, '')
+  const back = `lpb-${uid}`
+  const front = `lpf-${uid}`
+  const glow = `lpg-${uid}`
   return (
     <svg
       viewBox="0 0 320 320"
@@ -141,35 +206,96 @@ function SaturnIllustration({ className = '' }: { className?: string }) {
       fill="currentColor"
     >
       <defs>
-        <clipPath id="lp-ring-back">
+        <clipPath id={back}>
           <rect x="0" y="160" width="320" height="160" />
         </clipPath>
-        <clipPath id="lp-ring-front">
+        <clipPath id={front}>
           <rect x="0" y="0" width="320" height="160" />
         </clipPath>
-        <filter id="lp-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="8" result="blur" />
+        <filter id={glow} x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="7" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
       </defs>
+
+      {/* Ring — static base band, back half (behind the planet) */}
       <ellipse
         cx="160" cy="160" rx="148" ry="38"
-        fill="none" stroke="currentColor" strokeWidth="22"
-        clipPath="url(#lp-ring-back)" opacity="0.5"
+        fill="none" stroke="currentColor" strokeWidth="20"
+        clipPath={`url(#${back})`} opacity="0.25"
       />
-      <circle cx="160" cy="160" r="90" filter="url(#lp-glow)" />
-      <ellipse cx="135" cy="135" rx="35" ry="22" fill="white" opacity="0.08" />
+
+      {/* Planet body — fixed; the ring does all the moving */}
+      <circle cx="160" cy="160" r="88" filter={`url(#${glow})`} />
+      <ellipse cx="133" cy="132" rx="34" ry="22" fill="#ffffff" opacity="0.10" />
+      <ellipse cx="188" cy="190" rx="40" ry="26" fill="#000000" opacity="0.10" />
+
+      {/* Ring — static base band, front half (in front of the planet) */}
       <ellipse
         cx="160" cy="160" rx="148" ry="38"
-        fill="none" stroke="currentColor" strokeWidth="22"
-        clipPath="url(#lp-ring-front)" opacity="0.9"
+        fill="none" stroke="currentColor" strokeWidth="20"
+        clipPath={`url(#${front})`} opacity="0.70"
       />
-      {/* Tiny moon riding the ring — visibly orbits as the scroll rotation turns */}
-      <circle cx="296" cy="172" r="9" opacity="0.85" />
+
+      {/* Turning ring detail. One animated stroke-dashoffset on this group is
+          inherited by every child, so all of it orbits together. */}
+      <g ref={ringRef} className={ringIdle ? 'lp-ring-idle' : undefined}>
+        {/* fine ring segments — back half */}
+        <ellipse
+          cx="160" cy="160" rx="148" ry="38"
+          fill="none" stroke="currentColor" strokeWidth="20"
+          strokeDasharray="3.5 23.03" clipPath={`url(#${back})`} opacity="0.28"
+        />
+        {/* the moon, dimmed while it rides behind the planet */}
+        <ellipse
+          cx="160" cy="160" rx="148" ry="38"
+          fill="none" stroke="currentColor" strokeWidth="14" strokeLinecap="round"
+          strokeDasharray="0.7 636" clipPath={`url(#${back})`} opacity="0.4"
+        />
+        {/* fine ring segments — front half */}
+        <ellipse
+          cx="160" cy="160" rx="148" ry="38"
+          fill="none" stroke="currentColor" strokeWidth="20"
+          strokeDasharray="3.5 23.03" clipPath={`url(#${front})`} opacity="0.6"
+        />
+        {/* the moon, bright as it swings in front of the planet */}
+        <ellipse
+          cx="160" cy="160" rx="148" ry="38"
+          fill="none" stroke="currentColor" strokeWidth="16" strokeLinecap="round"
+          strokeDasharray="0.7 636" clipPath={`url(#${front})`} opacity="1"
+        />
+      </g>
     </svg>
+  )
+}
+
+/** A station on the feature timeline. Lights up once it reaches the viewport
+    center (rootMargin shrinks the root to a thin mid-screen band). Reduced
+    motion / no-JS leave it in its quiet default state. */
+function TimelineNode() {
+  const ref = React.useRef<HTMLSpanElement>(null)
+  const [active, setActive] = React.useState(false)
+
+  React.useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([entry]) => setActive(entry.isIntersecting),
+      { rootMargin: '-46% 0px -46% 0px' }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
+  return (
+    <span
+      ref={ref}
+      aria-hidden="true"
+      className={cn('lp-timeline-node', active && 'lp-active')}
+    />
   )
 }
 
@@ -695,12 +821,7 @@ const SHOWCASE = [
   },
 ] as const
 
-const STATS = [
-  { value: 8, suffix: '', label: 'SAT domains tracked & re-ranked' },
-  { value: 2, suffix: '', label: 'subjects practiced every study day' },
-  { value: 0, suffix: '', label: 'questions ever repeated' },
-  { value: 100, suffix: '%', label: 'free — no paywall, no tiers' },
-] as const
+// STATS are built dynamically from server-fetched counts (see LandingPage props).
 
 const STEPS = [
   {
@@ -723,10 +844,21 @@ const STEPS = [
 /* ════════════════════════════════════════════════════════════════════════
    Page
    ════════════════════════════════════════════════════════════════════════ */
-export function LandingPage() {
+export function LandingPage({ stats }: { stats: LandingStats }) {
+  const STATS = [
+    { value: stats.userCount,    suffix: '+', label: 'students practicing with SaturnPath' },
+    { value: stats.questionCount, suffix: '+', label: 'questions from College Board Question Bank' },
+    { value: 29,                 suffix: '',  label: 'different skills for practice' },
+    { value: 100,                suffix: '%', label: 'free — no paywall, no tiers' },
+  ]
+
   const heroEmailRef = React.useRef<HTMLInputElement>(null)
-  const saturnRef = React.useRef<HTMLDivElement>(null)
   const progressRef = React.useRef<HTMLDivElement>(null)
+  const ringRef = React.useRef<SVGGElement>(null)
+  const saturnParallaxRef = React.useRef<HTMLDivElement>(null)
+  const scrollCueRef = React.useRef<HTMLDivElement>(null)
+  const timelineRef = React.useRef<HTMLDivElement>(null)
+  const spineFillRef = React.useRef<HTMLDivElement>(null)
 
   const focusWishlist = React.useCallback(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -738,34 +870,80 @@ export function LandingPage() {
     window.setTimeout(() => heroEmailRef.current?.focus(), prefersReduced ? 0 : 320)
   }, [])
 
-  /* Scroll-linked effects: header progress bar + the Saturn turning as you
-     scroll downward. One passive listener, rAF-throttled, direct style
-     writes (no re-renders). */
+  /* Scroll-linked motion, all via direct style writes (no re-renders):
+       • header scroll-progress bar
+       • the Saturn ring spinning (stroke-dashoffset) + a soft hero parallax
+       • the feature timeline filling downward, led by the comet head
+       • the hero scroll cue fading out
+     With motion enabled we run one rAF loop (so the ring keeps a gentle
+     ambient drift even when idle), paused while the tab is hidden. With
+     reduced motion we only touch the scroll-linked bits, on scroll. */
   React.useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    let raf = 0
-    const update = () => {
-      raf = 0
-      const doc = document.documentElement
-      const max = doc.scrollHeight - window.innerHeight
-      const y = window.scrollY
+
+    const writeScrollLinked = (y: number, max: number) => {
       if (progressRef.current) {
         progressRef.current.style.transform = `scaleX(${max > 0 ? Math.min(y / max, 1) : 0})`
       }
-      if (!prefersReduced && saturnRef.current) {
-        saturnRef.current.style.transform = `rotate(${y * 0.12}deg)`
+      if (timelineRef.current && spineFillRef.current) {
+        const r = timelineRef.current.getBoundingClientRect()
+        const p =
+          r.height > 0
+            ? Math.min(Math.max((window.innerHeight * 0.55 - r.top) / r.height, 0), 1)
+            : 0
+        spineFillRef.current.style.height = `${p * 100}%`
+      }
+      if (scrollCueRef.current) {
+        scrollCueRef.current.style.opacity = `${Math.max(0, 1 - y / 280)}`
       }
     }
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update)
+
+    if (prefersReduced) {
+      let raf = 0
+      const onScroll = () => {
+        if (raf) return
+        raf = requestAnimationFrame(() => {
+          raf = 0
+          writeScrollLinked(window.scrollY, document.documentElement.scrollHeight - window.innerHeight)
+        })
+      }
+      onScroll()
+      window.addEventListener('scroll', onScroll, { passive: true })
+      window.addEventListener('resize', onScroll, { passive: true })
+      return () => {
+        window.removeEventListener('scroll', onScroll)
+        window.removeEventListener('resize', onScroll)
+        if (raf) cancelAnimationFrame(raf)
+      }
     }
-    update()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll, { passive: true })
+
+    let raf = 0
+    let ambient = 0
+    const frame = () => {
+      const y = window.scrollY
+      const max = document.documentElement.scrollHeight - window.innerHeight
+      writeScrollLinked(y, max)
+      ambient += 0.3
+      if (ringRef.current) {
+        ringRef.current.style.strokeDashoffset = `${-(y * 0.5 + ambient)}`
+      }
+      if (saturnParallaxRef.current) {
+        saturnParallaxRef.current.style.transform = `translate3d(0, ${y * -0.05}px, 0)`
+      }
+      raf = requestAnimationFrame(frame)
+    }
+    const onVisibility = () => {
+      if (document.hidden) {
+        if (raf) { cancelAnimationFrame(raf); raf = 0 }
+      } else if (!raf) {
+        raf = requestAnimationFrame(frame)
+      }
+    }
+    raf = requestAnimationFrame(frame)
+    document.addEventListener('visibilitychange', onVisibility)
     return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
       if (raf) cancelAnimationFrame(raf)
+      document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [])
 
@@ -784,12 +962,6 @@ export function LandingPage() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
           <SaturnPathLogo size="md" asLink={false} />
           <div className="flex items-center gap-2 sm:gap-3">
-            <a
-              href="#features"
-              className="hidden rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-heading)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] sm:block"
-            >
-              Features
-            </a>
             <Button
               type="button"
               size="sm"
@@ -827,7 +999,7 @@ export function LandingPage() {
                   Launching on 7/17/2026
                 </span>
                 <h1 className="sp-display mt-4 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
-                  Your personalized path to a higher SAT score.
+                  <WordsReveal text="Your personalized path to a higher SAT score." />
                 </h1>
                 <p className="mt-5 text-lg leading-relaxed text-[var(--text-muted)]">
                   SaturnPath is a data-driven SAT prep planner that learns your weak
@@ -846,16 +1018,45 @@ export function LandingPage() {
               </Reveal>
             </div>
 
-            {/* Right — brand visual that turns as you scroll downward */}
+            {/* Right — brand visual: the ring spins as you scroll downward,
+                while the planet stays put and the whole piece drifts gently. */}
             <div className="flex justify-center lg:justify-end">
               <Reveal variant="scale" delay={200}>
-                <div className="lp-float text-[var(--accent)] opacity-90 dark:text-[var(--accent-hover)]">
-                  <div ref={saturnRef} style={{ willChange: 'transform' }}>
-                    <SaturnIllustration className="h-56 w-56 sm:h-72 sm:w-72 lg:h-80 lg:w-80" />
+                <div
+                  ref={saturnParallaxRef}
+                  className="relative"
+                  style={{ willChange: 'transform' }}
+                >
+                  {/* Ambient orbiting accent dots */}
+                  <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+                    <span className="lp-orbit lp-orbit-1">
+                      <span className="lp-orbit-dot" />
+                    </span>
+                    <span className="lp-orbit lp-orbit-2">
+                      <span className="lp-orbit-dot" />
+                    </span>
+                  </div>
+                  <div className="lp-float text-[var(--accent)] opacity-95 dark:text-[var(--accent-hover)]">
+                    <SaturnIllustration
+                      ringRef={ringRef}
+                      className="h-56 w-56 sm:h-72 sm:w-72 lg:h-80 lg:w-80"
+                    />
                   </div>
                 </div>
               </Reveal>
             </div>
+          </div>
+
+          {/* Scroll cue — fades out as the page moves */}
+          <div
+            ref={scrollCueRef}
+            aria-hidden="true"
+            className="relative z-10 mx-auto hidden w-fit flex-col items-center gap-1.5 pb-2 text-[var(--text-muted)] sm:flex"
+          >
+            <span className="text-[11px] font-medium uppercase tracking-[var(--tracking-wide)]">
+              Scroll to explore
+            </span>
+            <ChevronDown className="lp-bounce h-4 w-4" />
           </div>
 
           {/* Stats strip */}
@@ -892,16 +1093,29 @@ export function LandingPage() {
               </p>
             </Reveal>
 
-            <div className="mt-16 space-y-24 lg:mt-20 lg:space-y-32">
+            <div
+              ref={timelineRef}
+              className="lp-timeline mt-16 space-y-24 lg:mt-20 lg:space-y-40"
+            >
+              {/* The central purple line: a track with a scroll-driven fill
+                  and a glowing comet head leading the way down. */}
+              <div className="lp-timeline-track" aria-hidden="true">
+                <div ref={spineFillRef} className="lp-timeline-fill">
+                  <span className="lp-timeline-comet" />
+                </div>
+              </div>
+
               {SHOWCASE.map(({ icon: Icon, eyebrow, title, body, bullets, Mock }, i) => {
                 const flip = i % 2 === 1
                 return (
                   <div
                     key={eyebrow}
-                    className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16"
+                    className="relative grid items-center gap-10 pl-12 lg:grid-cols-2 lg:gap-16 lg:pl-0"
                   >
+                    <TimelineNode />
                     <Reveal
                       variant={flip ? 'right' : 'left'}
+                      duration={950}
                       className={flip ? 'lg:order-2' : undefined}
                     >
                       <div className="flex items-center gap-3">
@@ -917,12 +1131,16 @@ export function LandingPage() {
                         {body}
                       </p>
                       <ul className="mt-6 space-y-3">
-                        {bullets.map((b) => (
-                          <li key={b} className="flex items-start gap-2.5">
-                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent-soft-foreground)]" />
-                            <span className="text-sm leading-relaxed text-[var(--text-body)]">
-                              {b}
-                            </span>
+                        {bullets.map((b, bi) => (
+                          <li key={b}>
+                            <Reveal variant="up" duration={650} delay={260 + bi * 110}>
+                              <span className="flex items-start gap-2.5">
+                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent-soft-foreground)]" />
+                                <span className="text-sm leading-relaxed text-[var(--text-body)]">
+                                  {b}
+                                </span>
+                              </span>
+                            </Reveal>
                           </li>
                         ))}
                       </ul>
@@ -930,7 +1148,8 @@ export function LandingPage() {
 
                     <Reveal
                       variant={flip ? 'left' : 'right'}
-                      delay={120}
+                      delay={150}
+                      duration={1000}
                       className={flip ? 'lg:order-1' : undefined}
                     >
                       <Mock />
@@ -988,7 +1207,7 @@ export function LandingPage() {
           <div className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-8 lg:py-28">
             <Reveal variant="scale">
               <div className="mx-auto mb-6 text-[var(--accent)] dark:text-[var(--accent-hover)]">
-                <SaturnIllustration className="lp-float mx-auto h-20 w-20 opacity-90" />
+                <SaturnIllustration ringIdle className="lp-float mx-auto h-20 w-20 opacity-90" />
               </div>
               <h2 className="sp-display text-3xl sm:text-4xl">
                 Be first in line.
