@@ -1,12 +1,12 @@
-import { Check, Target, BarChart2, Sparkles, BookOpen, UserPlus } from 'lucide-react'
+import { Check, Target, Clock, Sparkles, BookOpen, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const STEPS = [
-  { label: 'Goals',       icon: Target,    description: 'Your SAT targets'    },
-  { label: 'Performance', icon: BarChart2,  description: 'Practice data'       },
-  { label: 'Analysis',    icon: BookOpen,   description: 'Your weak spots'     },
-  { label: 'Your Plan',   icon: Sparkles,   description: 'Recommendations'     },
-  { label: 'Account',     icon: UserPlus,   description: 'Save your plan'      },
+  { label: 'Goals',    icon: Target,   description: 'Your SAT targets'  },
+  { label: 'Time',     icon: Clock,    description: 'Your schedule'     },
+  { label: 'Overview', icon: BookOpen, description: 'Plan summary'      },
+  { label: 'Your Plan',icon: Sparkles, description: 'Ready to study'   },
+  { label: 'Account',  icon: UserPlus, description: 'Save your plan'   },
 ]
 
 interface WizardProgressProps {

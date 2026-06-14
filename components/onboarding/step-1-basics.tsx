@@ -1,8 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Target, Calendar, Clock, TrendingUp, AlertCircle } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Target, TrendingUp, AlertCircle } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import type { OnboardingStep1Data } from '@/types'
@@ -12,14 +11,6 @@ interface Step1Props {
   onChange: (data: OnboardingStep1Data) => void
   errors: Partial<Record<keyof OnboardingStep1Data, string>>
 }
-
-const DAILY_PRESETS = [
-  { label: '30 min', value: 30 },
-  { label: '45 min', value: 45 },
-  { label: '1 hour', value: 60 },
-  { label: '90 min', value: 90 },
-  { label: '2 hours', value: 120 },
-]
 
 const SCORE_MARKS = [400, 600, 800, 1000, 1200, 1400, 1600]
 
@@ -89,7 +80,6 @@ function ScoreSlider({
 
 export function Step1Basics({ data, onChange, errors }: Step1Props) {
   const gap = data.targetScore - data.currentScore
-  const todayStr = new Date().toISOString().split('T')[0]
 
   return (
     <div className="space-y-8">
@@ -99,7 +89,7 @@ export function Step1Basics({ data, onChange, errors }: Step1Props) {
         </div>
         <h2 className="text-xl font-bold">Set Your SAT Goals</h2>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Tell us where you are and where you want to be — we'll build the bridge.
+          Where are you now, and where do you want to be?
         </p>
       </div>
 
@@ -131,7 +121,7 @@ export function Step1Basics({ data, onChange, errors }: Step1Props) {
         onChange={v => onChange({ ...data, currentScore: v })}
         error={errors.currentScore}
         icon={TrendingUp}
-        helpText="Enter 400 if you haven't taken a practice test yet"
+        helpText="Use 400 if you haven't taken a practice test yet"
       />
 
       {/* Target score */}
@@ -144,61 +134,6 @@ export function Step1Basics({ data, onChange, errors }: Step1Props) {
         icon={Target}
         helpText="Most top universities look for 1500+"
       />
-
-      {/* Test date */}
-      <div className="space-y-2">
-        <Label htmlFor="test-date" className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-violet-500" />
-          SAT Test Date
-        </Label>
-        <Input
-          id="test-date"
-          type="date"
-          min={todayStr}
-          value={data.testDate}
-          onChange={e => onChange({ ...data, testDate: e.target.value })}
-          className={cn(errors.testDate && 'border-red-400 ring-red-400')}
-        />
-        {errors.testDate && (
-          <p className="text-xs text-red-500 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" /> {errors.testDate}
-          </p>
-        )}
-      </div>
-
-      {/* Daily study minutes */}
-      <div className="space-y-3">
-        <Label className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-violet-500" />
-          Daily Study Time
-        </Label>
-        <div className="grid grid-cols-5 gap-2">
-          {DAILY_PRESETS.map(p => (
-            <button
-              key={p.value}
-              type="button"
-              onClick={() => onChange({ ...data, dailyStudyMinutes: p.value })}
-              className={cn(
-                'py-2.5 px-1 rounded-xl text-xs font-semibold border-2 transition-all duration-150',
-                data.dailyStudyMinutes === p.value
-                  ? 'bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-500/20'
-                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-violet-300 dark:hover:border-violet-600'
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-        {errors.dailyStudyMinutes && (
-          <p className="text-xs text-red-500 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" /> {errors.dailyStudyMinutes}
-          </p>
-        )}
-        <p className="text-xs text-slate-400">
-          ≈ {Math.round((data.dailyStudyMinutes * 7) / 60)} hrs/week ·
-          Consistency beats intensity — even 30 min/day compounds.
-        </p>
-      </div>
     </div>
   )
 }

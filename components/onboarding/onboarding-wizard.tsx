@@ -3,16 +3,15 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Loader2, CheckCircle2, Rocket, UserPlus, ShieldCheck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, Rocket, UserPlus, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LEGAL, MIN_BIRTH_YEAR, ageFromBirthYear, validateAgeConsent } from '@/lib/legal/config'
 import { WizardProgress } from './wizard-progress'
 import { Step1Basics } from './step-1-basics'
-import { Step2Performance } from './step-2-performance'
+import { Step2Time } from './step-2-time'
 import { Step3Analysis } from './step-3-analysis'
 import { Step4Recommendations } from './step-4-recommendations'
 import { getOnboardingRecommendations, saveOnboarding, signUpAndSaveOnboarding } from '@/actions/onboarding'
-// ─── Step 5 types + component (inlined to avoid separate-file hot-reload issues) ─
 import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 import type {
@@ -158,7 +157,7 @@ function Step5Account({ data, onChange, errors }: Step5AccountProps) {
                   onChange={e => set('parentalAck', e.target.checked)}
                   className="mt-0.5 h-4 w-4 shrink-0 accent-violet-600"
                 />
-                <span>I am under 18 and have my parent or guardian’s permission to use {LEGAL.appName}.</span>
+                <span>I am under 18 and have my parent or guardian's permission to use {LEGAL.appName}.</span>
               </label>
               {errors.parentalAck && <p className="text-xs text-red-600 dark:text-red-400">{errors.parentalAck}</p>}
             </>
@@ -239,7 +238,6 @@ function computeAnalysis(step1: OnboardingStep1Data, step2: OnboardingStep2Data)
     ? Math.max(0, Math.ceil((new Date(step1.testDate).getTime() - Date.now()) / 86400000))
     : 90
 
-  // Rough improvement estimate: each mastered weak area ≈ 30-50 pts
   const estimatedImprovement = Math.min(scoreGap, weakDomains.length * 40 + Math.round(scoreGap * 0.3))
 
   return { domains, weakDomains, strongDomains, totalAttempted, totalCorrect, overallAccuracy, scoreGap, studyDays, estimatedImprovement }
@@ -247,7 +245,7 @@ function computeAnalysis(step1: OnboardingStep1Data, step2: OnboardingStep2Data)
 
 // ─── Validation ───────────────────────────────────────────────────────────
 
-function validateStep1(data: OnboardingStep1Data) {
+function validateStep1Scores(data: OnboardingStep1Data) {
   const errors: Partial<Record<keyof OnboardingStep1Data, string>> = {}
   if (data.currentScore < 400 || data.currentScore > 1600)
     errors.currentScore = 'Score must be between 400 and 1600'
@@ -255,29 +253,17 @@ function validateStep1(data: OnboardingStep1Data) {
     errors.targetScore = 'Score must be between 400 and 1600'
   if (data.targetScore <= data.currentScore)
     errors.targetScore = 'Target must be higher than your current score'
+  return errors
+}
+
+function validateStep2Time(data: OnboardingStep1Data) {
+  const errors: Partial<Record<keyof OnboardingStep1Data, string>> = {}
   if (!data.testDate)
     errors.testDate = 'Please enter your SAT test date'
   else if (new Date(data.testDate) <= new Date())
     errors.testDate = 'Test date must be in the future'
   if (data.dailyStudyMinutes < 10)
     errors.dailyStudyMinutes = 'Please select a study time'
-  return errors
-}
-
-function validateStep2(data: OnboardingStep2Data) {
-  const errors: Record<string, string> = {}
-  const allPerfs = [
-    ...Object.entries(data.reading_writing).map(([k, v]) => ({ prefix: 'rw', key: k, ...v })),
-    ...Object.entries(data.math).map(([k, v]) => ({ prefix: 'math', key: k, ...v })),
-  ]
-  for (const p of allPerfs) {
-    if (p.correct > p.attempted && p.attempted > 0) {
-      errors[`${p.prefix}_${p.key}`] = 'Correct cannot exceed attempted'
-    }
-    if (p.attempted < 0 || p.correct < 0) {
-      errors[`${p.prefix}_${p.key}`] = 'Values cannot be negative'
-    }
-  }
   return errors
 }
 
@@ -296,7 +282,6 @@ function validateStep5(data: Step5AccountData) {
   if (data.password.length < 8) errors.password = 'Password must be at least 8 characters'
   if (data.password !== data.confirmPassword) errors.confirmPassword = 'Passwords do not match'
 
-  // Age gate + consent — mirrors the authoritative server check (validateAgeConsent).
   const birthYear = data.birthYear ? Number(data.birthYear) : null
   const consentError = validateAgeConsent({
     birthYear,
@@ -327,41 +312,38 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
 
   const [step, setStep] = React.useState(1)
   const [step1Data, setStep1Data] = React.useState<OnboardingStep1Data>(defaultStep1)
-  const [step2Data, setStep2Data] = React.useState<OnboardingStep2Data>(defaultStep2)
   const [step5Data, setStep5Data] = React.useState<Step5AccountData>(defaultStep5)
   const [step1Errors, setStep1Errors] = React.useState<Partial<Record<keyof OnboardingStep1Data, string>>>({})
-  const [step2Errors, setStep2Errors] = React.useState<Record<string, string>>({})
   const [step5Errors, setStep5Errors] = React.useState<Partial<Record<keyof Step5AccountData, string>>>({})
   const [analysis, setAnalysis] = React.useState<OnboardingAnalysis | null>(null)
   const [aiRecs, setAiRecs] = React.useState<AIOnboardingRec | null>(null)
   const [aiLoading, setAiLoading] = React.useState(false)
   const [aiError, setAiError] = React.useState<string | null>(null)
-  const [saving, setSaving]   = React.useState(false)
+  const [saving, setSaving] = React.useState(false)
   const [direction, setDirection] = React.useState<'forward' | 'back'>('forward')
   const [needsConfirmation, setNeedsConfirmation] = React.useState(false)
 
   async function handleNext() {
     if (step === 1) {
-      const errs = validateStep1(step1Data)
+      const errs = validateStep1Scores(step1Data)
       if (Object.keys(errs).length > 0) { setStep1Errors(errs); return }
       setStep1Errors({})
       setDirection('forward')
       setStep(2)
     } else if (step === 2) {
-      const errs = validateStep2(step2Data)
-      if (Object.keys(errs).length > 0) { setStep2Errors(errs); return }
-      setStep2Errors({})
-      const computed = computeAnalysis(step1Data, step2Data)
+      const errs = validateStep2Time(step1Data)
+      if (Object.keys(errs).length > 0) { setStep1Errors(errs); return }
+      setStep1Errors({})
+      const computed = computeAnalysis(step1Data, defaultStep2)
       setAnalysis(computed)
       setDirection('forward')
       setStep(3)
     } else if (step === 3) {
-      // Kick off AI recommendations in parallel with transition
       setDirection('forward')
       setStep(4)
       setAiLoading(true)
       setAiError(null)
-      const computed = analysis ?? computeAnalysis(step1Data, step2Data)
+      const computed = analysis ?? computeAnalysis(step1Data, defaultStep2)
       const result = await getOnboardingRecommendations(step1Data, computed)
       setAiLoading(false)
       if (result.error) {
@@ -370,7 +352,6 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
         setAiRecs(result.data ?? null)
       }
     } else if (step === 4 && !isAuthenticated) {
-      // Move to account creation step
       setDirection('forward')
       setStep(5)
     }
@@ -378,6 +359,7 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
 
   function handleBack() {
     setDirection('back')
+    setStep1Errors({})
     setStep(s => Math.max(1, s - 1))
   }
 
@@ -392,9 +374,8 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
   }
 
   async function handleComplete() {
-    const computed = analysis ?? computeAnalysis(step1Data, step2Data)
+    const computed = analysis ?? computeAnalysis(step1Data, defaultStep2)
 
-    // Validate account fields up front for the unauthenticated path.
     if (!isAuthenticated) {
       const errs = validateStep5(step5Data)
       if (Object.keys(errs).length > 0) { setStep5Errors(errs); return }
@@ -404,8 +385,7 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
     setSaving(true)
     try {
       if (isAuthenticated) {
-        // Already signed in — just save
-        const result = await saveOnboarding(step1Data, step2Data, computed, aiRecs)
+        const result = await saveOnboarding(step1Data, defaultStep2, computed, aiRecs)
         if (result.error) {
           toast({ title: 'Error saving data', description: result.error, variant: 'destructive' })
           return
@@ -420,7 +400,7 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
             agreedToTerms: step5Data.agreedToTerms,
             parentalAck: step5Data.parentalAck,
           },
-          step1Data, step2Data, computed, aiRecs,
+          step1Data, defaultStep2, computed, aiRecs,
         )
         if (result.needsConfirmation) {
           setNeedsConfirmation(true)
@@ -436,8 +416,6 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
       router.push('/home')
       router.refresh()
     } catch (err) {
-      // Surface unexpected server-action failures (e.g. a misconfigured
-      // environment) instead of leaving the button stuck on "Saving…".
       toast({
         title: 'Something went wrong',
         description: err instanceof Error ? err.message : 'Please try again in a moment.',
@@ -451,7 +429,6 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
   const isLastStep = isAuthenticated ? step === 4 : step === 5
   const canGoBack = step > 1
 
-  // Email confirmation state — shown instead of wizard after successful signup
   if (needsConfirmation) {
     return (
       <div className="flex flex-col min-h-full items-center justify-center px-6 py-12 text-center space-y-4">
@@ -481,7 +458,7 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
         <WizardProgress currentStep={step} hideAccountStep={isAuthenticated} />
       </div>
 
-      {/* Content with animated transition */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div
           key={step}
@@ -498,10 +475,10 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
             />
           )}
           {step === 2 && (
-            <Step2Performance
-              data={step2Data}
-              onChange={setStep2Data}
-              errors={step2Errors}
+            <Step2Time
+              data={step1Data}
+              onChange={setStep1Data}
+              errors={step1Errors}
             />
           )}
           {step === 3 && analysis && (
@@ -509,6 +486,7 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
               analysis={analysis}
               step1CurrentScore={step1Data.currentScore}
               step1TargetScore={step1Data.targetScore}
+              dailyStudyMinutes={step1Data.dailyStudyMinutes}
             />
           )}
           {step === 4 && (
@@ -516,7 +494,7 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
               aiRecs={aiRecs}
               loading={aiLoading}
               error={aiError}
-              analysis={analysis ?? computeAnalysis(step1Data, step2Data)}
+              analysis={analysis ?? computeAnalysis(step1Data, defaultStep2)}
               dailyStudyMinutes={step1Data.dailyStudyMinutes}
               onRetry={handleRetryAI}
             />
@@ -534,7 +512,6 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
       {/* Footer navigation */}
       <div className="px-6 pb-6 pt-4 border-t border-[var(--border)] bg-[var(--card)]">
         <div className="flex items-center justify-between gap-3">
-          {/* Back button */}
           <Button
             variant="outline"
             onClick={handleBack}
@@ -558,25 +535,28 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
             ))}
           </div>
 
-          {/* Next / Complete button */}
           {isLastStep ? (
-            <Button
-              onClick={handleComplete}
-              disabled={saving || aiLoading}
-              className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 shadow-lg shadow-violet-500/25 min-w-[140px]"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Saving…
-                </>
-              ) : (
-                <>
-                  <Rocket className="h-4 w-4" />
-                  {isAuthenticated ? 'Start My Journey' : 'Create Account & Start'}
-                </>
-              )}
-            </Button>
+            <div className={cn('ai-planner-frame ai-planner-frame-sm inline-flex transition-opacity', (saving || aiLoading) && 'opacity-50')}>
+              <div className="ai-planner-frame-inner bg-transparent">
+                <Button
+                  onClick={handleComplete}
+                  disabled={saving || aiLoading}
+                  className="gap-2 bg-black text-violet-300 hover:bg-zinc-900 min-w-[140px] disabled:opacity-100"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="h-4 w-4" />
+                      {isAuthenticated ? 'Start My Journey' : 'Create Account & Start'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
           ) : (
             <Button
               onClick={handleNext}
@@ -587,21 +567,6 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
             </Button>
           )}
         </div>
-
-        {/* Skip step 2 */}
-        {step === 2 && (
-          <p className="text-center mt-3 text-xs text-slate-400">
-            No practice data yet?{' '}
-            <button
-              className="text-violet-600 dark:text-violet-400 hover:underline font-medium"
-              onClick={handleNext}
-            >
-              Skip this step
-            </button>
-          </p>
-        )}
-
-
       </div>
     </div>
   )

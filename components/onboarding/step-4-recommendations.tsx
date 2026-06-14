@@ -1,9 +1,7 @@
 'use client'
 
-import * as React from 'react'
-import { Sparkles, ExternalLink, CheckCircle2, AlertCircle, Loader2, Clock, BookOpen, TrendingUp, ClipboardList } from 'lucide-react'
+import { Sparkles, AlertCircle, Loader2, Calendar, Clock, Target, TrendingUp, BookOpen, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { COLLEGE_BOARD_QB_URL } from '@/lib/constants'
 import type { AIOnboardingRec, OnboardingAnalysis } from '@/types'
 
 interface Step4Props {
@@ -20,27 +18,21 @@ export function Step4Recommendations({
 }: Step4Props) {
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-6">
+      <div className="flex flex-col items-center justify-center py-20 gap-5">
         <div className="relative">
-          <div className="h-20 w-20 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-            <Sparkles className="h-9 w-9 text-violet-600 dark:text-violet-400" />
+          <div className="h-16 w-16 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+            <Sparkles className="h-7 w-7 text-violet-600 dark:text-violet-400" />
           </div>
           <div className="absolute inset-0 rounded-full border-4 border-violet-500/30 border-t-violet-600 animate-spin" />
         </div>
-        <div className="text-center space-y-2">
-          <p className="font-bold text-lg">Building your personalized plan…</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
-            Our AI is analyzing your strengths, weak spots, and timeline to craft a study plan just for you.
-          </p>
+        <div className="text-center space-y-1">
+          <p className="font-bold text-lg">Building your plan…</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">This only takes a moment.</p>
         </div>
-        <div className="flex flex-col gap-2 w-full max-w-xs">
-          {[
-            'Analyzing your performance data…',
-            'Mapping weak areas to College Board domains…',
-            'Calculating your optimal study sequence…',
-          ].map((msg, i) => (
-            <div key={i} className="flex items-center gap-3 text-xs text-slate-500">
-              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-violet-500" />
+        <div className="flex flex-col items-start gap-1.5 text-xs text-slate-400">
+          {['Mapping your score goal…', 'Scheduling your study days…', 'Prioritizing SAT domains…'].map((msg, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Loader2 className="h-3 w-3 animate-spin text-violet-500 shrink-0" />
               <span>{msg}</span>
             </div>
           ))}
@@ -51,173 +43,121 @@ export function Step4Recommendations({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 gap-4">
-        <div className="h-16 w-16 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
-          <AlertCircle className="h-8 w-8 text-red-500" />
+      <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+        <div className="h-14 w-14 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+          <AlertCircle className="h-7 w-7 text-red-500" />
         </div>
-        <div className="text-center space-y-1">
-          <p className="font-semibold">Couldn't generate recommendations</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">{error}</p>
+        <div className="space-y-1">
+          <p className="font-semibold">Couldn't build recommendations</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">{error}</p>
         </div>
-        <button
-          onClick={onRetry}
-          className="text-sm text-violet-600 dark:text-violet-400 hover:underline font-medium"
-        >
+        <button onClick={onRetry} className="text-sm text-violet-600 dark:text-violet-400 hover:underline font-medium">
           Try again
         </button>
-        <p className="text-xs text-slate-400 dark:text-slate-500 text-center max-w-sm">
-          You can still complete setup — your data will be saved and you can generate a study plan later from the Home page.
+        <p className="text-xs text-slate-400 max-w-xs">
+          You can still finish setup — your plan will be generated from the Home page.
         </p>
       </div>
     )
   }
 
-  if (!aiRecs) return null
+  const estimatedWeeks = aiRecs?.estimatedTimelineWeeks ?? Math.ceil(analysis.studyDays / 7)
+  const weeklyHours = Math.round((dailyStudyMinutes * 7) / 60)
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-1">
-        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 mb-2">
-          <Sparkles className="h-7 w-7" />
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-900/30 mb-1">
+          <CheckCircle2 className="h-8 w-8 text-violet-600 dark:text-violet-400" />
         </div>
-        <h2 className="text-xl font-bold">Your Study Plan is Ready</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Personalized recommendations based on your performance data.
+        <h2 className="text-xl font-bold">Your Plan is Ready</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+          A personalized day-by-day schedule has been built for you.
         </p>
       </div>
 
-      {/* AI personal message */}
-      <div className="rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 p-5 text-white">
-        <div className="flex items-start gap-3">
-          <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
-            <Sparkles className="h-4 w-4" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-violet-200 uppercase tracking-wider mb-1">AI Coach</p>
-            <p className="text-sm leading-relaxed">{aiRecs.message}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 gap-3">
         {[
-          { icon: TrendingUp, label: 'Est. Timeline', value: `${aiRecs.estimatedTimelineWeeks}w`, color: 'text-violet-500' },
-          { icon: Clock, label: 'Daily Goal', value: `${dailyStudyMinutes}m`, color: 'text-indigo-500' },
-          { icon: BookOpen, label: 'Focus Areas', value: `${analysis.weakDomains.length}`, color: 'text-violet-500' },
-        ].map(({ icon: Icon, label, value, color }) => (
-          <div key={label} className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-center">
-            <Icon className={`h-5 w-5 ${color} mx-auto mb-1`} />
-            <p className="text-xl font-bold">{value}</p>
-            <p className="text-[10px] text-slate-400">{label}</p>
+          {
+            icon: Target,
+            label: 'Score Goal',
+            value: `+${analysis.scoreGap}`,
+            sub: 'points to gain',
+            color: 'text-violet-600 dark:text-violet-400',
+            bg: 'bg-violet-50 dark:bg-violet-900/20',
+          },
+          {
+            icon: Calendar,
+            label: 'Study Days',
+            value: analysis.studyDays,
+            sub: `≈ ${estimatedWeeks} weeks`,
+            color: 'text-indigo-600 dark:text-indigo-400',
+            bg: 'bg-indigo-50 dark:bg-indigo-900/20',
+          },
+          {
+            icon: Clock,
+            label: 'Daily Goal',
+            value: `${dailyStudyMinutes}m`,
+            sub: `${weeklyHours} hrs/week`,
+            color: 'text-purple-600 dark:text-purple-400',
+            bg: 'bg-purple-50 dark:bg-purple-900/20',
+          },
+          {
+            icon: TrendingUp,
+            label: 'Est. Gain',
+            value: `+${analysis.estimatedImprovement}`,
+            sub: 'potential pts',
+            color: 'text-emerald-600 dark:text-emerald-400',
+            bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+          },
+        ].map(({ icon: Icon, label, value, sub, color, bg }) => (
+          <div key={label} className={cn('rounded-xl p-4', bg)}>
+            <Icon className={cn('h-5 w-5 mb-2', color)} />
+            <p className={cn('text-2xl font-bold', color)}>{value}</p>
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400">{label}</p>
+            <p className="text-[10px] text-slate-400">{sub}</p>
           </div>
         ))}
       </div>
 
-      {/* Weekly plan summary */}
-      {aiRecs.weeklyPlanSummary && (
-        <div className="rounded-xl border border-[var(--border)] bg-slate-50 dark:bg-slate-800/50 p-4">
-          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-violet-500" />
-            Study Approach
-          </h3>
-          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            {aiRecs.weeklyPlanSummary}
-          </p>
-        </div>
-      )}
-
-      {/* Priority topics */}
-      {aiRecs.priorityTopics.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-red-400" />
-            Priority Topics — Start Here
-          </h3>
-          {aiRecs.priorityTopics.map((topic, i) => (
-            <div
-              key={i}
-              className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 space-y-3"
-            >
-              <div className="flex items-start gap-3">
-                <div className={cn(
-                  'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white mt-0.5',
-                  i === 0 ? 'bg-red-500' : i === 1 ? 'bg-amber-500' : 'bg-violet-500'
-                )}>
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold">{topic.domain}</p>
-                    <span className={cn(
-                      'text-[10px] font-bold px-1.5 py-0.5 rounded',
-                      topic.subject === 'Math'
-                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
-                        : 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400'
-                    )}>
-                      {topic.subject}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{topic.reason}</p>
-                  {topic.weeklyGoal && (
-                    <p className="text-xs text-violet-600 dark:text-violet-400 mt-1 font-medium">
-                      This week: {topic.weeklyGoal}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* College Board QB filter recommendation */}
-              {topic.cbFilters && (
-                <div className="ml-9 rounded-lg bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900 p-3 space-y-1">
-                  <p className="text-[10px] font-bold text-violet-700 dark:text-violet-400 uppercase tracking-wide flex items-center gap-1">
-                    <ClipboardList className="h-3 w-3 shrink-0" />
-                    College Board QB Filters
-                  </p>
-                  <div className="text-xs text-violet-800 dark:text-violet-300 space-y-0.5">
-                    <p>Domain: <span className="font-semibold">{topic.cbFilters.domain}</span></p>
-                    {topic.cbFilters.skill && (
-                      <p>Skill: <span className="font-semibold">{topic.cbFilters.skill}</span></p>
-                    )}
-                    <p>Difficulty: <span className="font-semibold capitalize">{topic.cbFilters.difficulty}</span></p>
-                  </div>
-                  <a
-                    href={COLLEGE_BOARD_QB_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:underline font-semibold mt-1"
-                  >
-                    Open College Board Question Bank
-                    <ExternalLink className="h-2.5 w-2.5" />
-                  </a>
-                </div>
-              )}
+      {/* What happens next */}
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+          What happens next
+        </p>
+        {[
+          {
+            icon: Calendar,
+            title: 'Check your Calendar',
+            desc: 'Daily tasks are already scheduled — open the Calendar to see them.',
+          },
+          {
+            icon: BookOpen,
+            title: 'Practice on College Board',
+            desc: 'Each task includes Question Bank filter settings to use on the CB website.',
+          },
+          {
+            icon: Sparkles,
+            title: 'Your plan adapts',
+            desc: 'Log your sessions and the planner automatically adjusts your priorities.',
+          },
+        ].map(({ icon: Icon, title, desc }) => (
+          <div key={title} className="flex items-start gap-3">
+            <div className="h-8 w-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center shrink-0 mt-0.5">
+              <Icon className="h-4 w-4 text-violet-600 dark:text-violet-400" />
             </div>
-          ))}
-        </div>
-      )}
+            <div>
+              <p className="text-sm font-medium">{title}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
-      {/* Study tips */}
-      {aiRecs.studyTips.length > 0 && (
-        <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/20 p-4">
-          <h3 className="text-sm font-semibold text-emerald-800 dark:text-emerald-400 mb-3 flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4" />
-            Study Tips for You
-          </h3>
-          <ul className="space-y-2">
-            {aiRecs.studyTips.map((tip, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-emerald-800 dark:text-emerald-200">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                {tip}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Copyright notice */}
       <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 leading-relaxed px-4">
-        This plan recommends College Board Question Bank filter settings only. No SAT questions are stored or displayed by this platform. All practice must be done directly on the College Board website.
+        Tasks link to College Board Question Bank filters only — no SAT questions are stored here.
       </p>
     </div>
   )
