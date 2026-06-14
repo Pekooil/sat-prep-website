@@ -1036,13 +1036,17 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
               </Reveal>
 
               <Reveal delay={150}>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Button asChild size="lg" className="font-semibold">
-                    <Link href="/signup">
-                      Get started free
-                      <ArrowRight className="h-[18px] w-[18px]" />
-                    </Link>
-                  </Button>
+                <div className="mt-8 flex flex-wrap gap-3 items-center">
+                  <div className="ai-planner-frame ai-planner-frame-sm inline-flex">
+                    <div className="ai-planner-frame-inner bg-transparent">
+                      <Button asChild size="lg" className="font-semibold bg-black text-white hover:bg-zinc-900">
+                        <Link href="/signup">
+                          Get started free
+                          <ArrowRight className="h-[18px] w-[18px]" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
                   <Button asChild size="lg" variant="outline">
                     <Link href="/login">Sign in</Link>
                   </Button>
@@ -1250,13 +1254,17 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
               </p>
             </Reveal>
             <Reveal delay={150}>
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <Button asChild size="lg" className="font-semibold">
-                  <Link href="/signup">
-                    Get started free
-                    <ArrowRight className="h-[18px] w-[18px]" />
-                  </Link>
-                </Button>
+              <div className="mt-8 flex flex-wrap justify-center gap-3 items-center">
+                <div className="ai-planner-frame ai-planner-frame-sm inline-flex">
+                  <div className="ai-planner-frame-inner bg-transparent">
+                    <Button asChild size="lg" className="font-semibold bg-black text-white hover:bg-zinc-900">
+                      <Link href="/signup">
+                        Get started free
+                        <ArrowRight className="h-[18px] w-[18px]" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
                 <Button asChild size="lg" variant="outline">
                   <Link href="/login">Sign in</Link>
                 </Button>
