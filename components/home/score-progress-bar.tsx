@@ -52,23 +52,23 @@ export function ScoreProgressBar({
       </div>
 
       <div className="relative h-2 rounded-full bg-[var(--surface-sunken)] overflow-visible">
-        {/* White glowing fill bar */}
+        {/* Purple glowing fill bar */}
         <div
           className="absolute inset-y-0 left-0 rounded-full overflow-hidden"
           style={{
             width: `${animatedWidth}%`,
             transition: 'width 900ms cubic-bezier(0.16,1,0.3,1)',
-            background: 'linear-gradient(90deg, rgba(255,255,255,0.7) 0%, #ffffff 100%)',
-            boxShadow: '0 0 8px 2px rgba(255,255,255,0.45), 0 0 20px 4px rgba(255,255,255,0.25)',
+            background: 'linear-gradient(90deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%)',
+            boxShadow: '0 0 8px 3px rgba(168,85,247,0.6), 0 0 20px 6px rgba(168,85,247,0.3)',
           }}
         >
-          {/* Bright white light core along the center */}
+          {/* Bright purple light core along the center */}
           <div
             className="absolute inset-x-0 rounded-full"
             style={{
-              top: '20%',
-              bottom: '20%',
-              background: 'rgba(255,255,255,0.95)',
+              top: '15%',
+              bottom: '15%',
+              background: 'rgba(233,213,255,0.7)',
               filter: 'blur(1px)',
             }}
           />
@@ -93,9 +93,9 @@ export function ScoreProgressBar({
           style={{
             left: `${animatedWidth}%`,
             transition: 'left 900ms cubic-bezier(0.16,1,0.3,1)',
-            borderColor: '#ffffff',
-            boxShadow: '0 0 6px 2px rgba(255,255,255,0.8)',
-            background: '#ffffff',
+            borderColor: '#e9d5ff',
+            boxShadow: '0 0 8px 3px rgba(168,85,247,0.8)',
+            background: '#c084fc',
           }}
         />
       </div>
