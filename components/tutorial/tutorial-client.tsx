@@ -5,7 +5,7 @@ import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import {
   CheckCircle2, Circle, ChevronDown, ExternalLink,
   HelpCircle, ArrowRight, BookOpen, BarChart2,
-  Download, PenLine, RotateCcw, ChevronRight, AlertTriangle, Send,
+  Download, PenLine, RotateCcw, ChevronRight, AlertTriangle, Send, GraduationCap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
@@ -594,9 +594,12 @@ export function TutorialClient() {
 
       {/* ── Page header ── */}
       <div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
-          College Board Question Bank Tutorial
-        </h1>
+        <div className="flex items-center gap-2 mb-1">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/30">
+            <GraduationCap className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">College Board Question Bank Tutorial</h1>
+        </div>
         <p className="text-[var(--muted-foreground)] text-sm mt-1.5 leading-relaxed">
           Follow these eight steps every time you have a practice session on your calendar.
           Check off each step as you complete it — your progress is saved automatically.

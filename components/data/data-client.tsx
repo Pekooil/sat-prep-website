@@ -3,7 +3,7 @@
 import * as React from 'react'
 import {
   Download, FileText, Plus, TrendingUp, Clock, Target,
-  BookOpen, CheckCircle2, Flame, Calendar,
+  BookOpen, CheckCircle2, Flame, Calendar, BarChart3,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -262,7 +262,12 @@ export function DataClient({
       {/* ── Header bar ─────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between no-print">
         <div>
-          <h1 className="sp-display text-2xl">Analytics</h1>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/30">
+              <BarChart3 className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+            </div>
+            <h1 className="sp-display text-2xl">Analytics</h1>
+          </div>
           <p className="text-sm text-[var(--text-muted)] mt-0.5">
             Your SAT prep performance, habits, and planning insights
           </p>

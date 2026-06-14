@@ -95,6 +95,7 @@ export default async function HomePage() {
           suffix="/1600"
           color="blue"
           description={recentScores[0] ? `Last test: ${recentScores[0].test_type}` : 'No tests logged'}
+          href="/data"
         />
         <ScoreCard
           label="Target Score"
@@ -106,6 +107,7 @@ export default async function HomePage() {
               ? `Gap: ${profile.target_score - profile.current_score} pts`
               : 'Set your goal'
           }
+          href="/data"
         />
         <ScoreCard
           label="Predicted Score"
@@ -129,6 +131,7 @@ export default async function HomePage() {
           suffix=" to review"
           color="amber"
           description={`${errors.length - unmasteredErrors} mastered`}
+          href="/error-log"
         />
       </div>
 
