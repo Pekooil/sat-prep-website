@@ -100,6 +100,15 @@ export default function SignupPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
+        <Link
+          href="/"
+          className="mb-3 inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-heading)] transition-colors"
+        >
+          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M10 12L6 8l4-4" />
+          </svg>
+          Back to home
+        </Link>
         <h1 className="sp-display text-2xl">Create your account</h1>
         <p className="mt-1 text-sm text-[var(--text-muted)]">Start your personalized SAT prep journey today</p>
       </div>

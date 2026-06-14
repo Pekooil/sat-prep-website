@@ -8,21 +8,26 @@
  *   8 AM UTC      →  "0 8  * * *"
  *   8 AM IST      →  "30 2 * * *"
  *
- * For each user with at least one reminder channel enabled, the endpoint:
+ * For each real user (non-anonymous, has email) with at least one task:
  *   1. Creates in-app notification rows (if inapp_reminders_enabled)
  *   2. Sends an email digest via Resend   (if email_reminders_enabled)
+ *
+ * Users who have never saved notification preferences are treated as having
+ * all reminders enabled (America/New_York timezone default). They can opt
+ * out any time via /settings.
  *
  * The user's timezone preference is used to compute their local "today" date
  * so that task queries return the right day regardless of when the cron fires.
  *
  * Security: requires Authorization: Bearer <CRON_SECRET> header.
+ * Vercel automatically adds this header when CRON_SECRET is set as an env var.
  *
  * Required env vars:
  *   SUPABASE_SERVICE_ROLE_KEY  — Supabase → Settings → API → service_role
  *   RESEND_API_KEY             — resend.com → API Keys
- *   RESEND_FROM_EMAIL          — verified sender, e.g. "Planner <hi@yourdomain.com>"
+ *   RESEND_FROM_EMAIL          — verified sender, e.g. "SaturnPath <noreply@yourdomain.com>"
  *   NEXT_PUBLIC_APP_URL        — your deployed URL
- *   CRON_SECRET                — any random string
+ *   CRON_SECRET                — any random string; Vercel injects it as the Bearer token
  */
 
 import { timingSafeEqual } from 'node:crypto'
@@ -31,18 +36,16 @@ import { Resend } from 'resend'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildReminderEmail, type ReminderTask } from '@/lib/email/reminder-template'
 
-// This route uses the Supabase service-role key and Node crypto — pin to the
-// Node.js runtime and allow up to the platform max for the per-user fan-out loop.
-export const runtime = 'nodejs'
+export const runtime    = 'nodejs'
 export const maxDuration = 300
 
-/** Constant-time bearer-token comparison that is safe against length leaks. */
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
 function isAuthorized(header: string | null, secret: string): boolean {
   if (!header) return false
   const expected = `Bearer ${secret}`
   const a = Buffer.from(header)
   const b = Buffer.from(expected)
-  // timingSafeEqual throws on length mismatch — guard first (length is not secret).
   if (a.length !== b.length) return false
   return timingSafeEqual(a, b)
 }
@@ -61,13 +64,25 @@ type PrefRow = {
 
 type UserRow = {
   id: string
-  email: string | null
+  email: string
   full_name: string | null
+}
+
+type PrefValues = Omit<PrefRow, 'user_id'>
+
+// Default preferences for users who haven't visited Settings yet.
+// All channels enabled, Eastern time.
+const DEFAULT_PREFS: PrefValues = {
+  email_reminders_enabled:   true,
+  inapp_reminders_enabled:   true,
+  daily_assignment_reminder: true,
+  overdue_reminder:          true,
+  practice_test_reminder:    true,
+  timezone:                  'America/New_York',
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Returns the user's local date as "YYYY-MM-DD" using their stored timezone. */
 function localDate(timezone: string, base: Date = new Date()): string {
   try {
     return new Intl.DateTimeFormat('en-CA', {
@@ -75,7 +90,6 @@ function localDate(timezone: string, base: Date = new Date()): string {
       year: 'numeric', month: '2-digit', day: '2-digit',
     }).format(base)
   } catch {
-    // Fallback to UTC if timezone string is invalid
     return base.toISOString().split('T')[0]
   }
 }
@@ -84,8 +98,6 @@ function localDate(timezone: string, base: Date = new Date()): string {
 
 export async function POST(request: Request) {
   // ── Auth guard (fail CLOSED) ────────────────────────────────────────────────
-  // This endpoint runs with the service-role key (bypasses RLS) and sends mass
-  // email. If the secret is not configured we must refuse — never run unguarded.
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
     console.error('[reminders/daily] CRON_SECRET is not set — refusing to run.')
@@ -95,10 +107,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const appUrl     = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-  const fromEmail  = process.env.RESEND_FROM_EMAIL   ?? 'SaturnPath <noreply@example.com>'
-  const resendKey  = process.env.RESEND_API_KEY
-  const resend     = resendKey ? new Resend(resendKey) : null
+  const appUrl    = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const fromEmail = process.env.RESEND_FROM_EMAIL   ?? 'SaturnPath <onboarding@resend.dev>'
+  const resendKey = process.env.RESEND_API_KEY
+  const resend    = resendKey ? new Resend(resendKey) : null
 
   let supabase: ReturnType<typeof createAdminClient>
   try {
@@ -107,34 +119,51 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 })
   }
 
-  // ── Load all notification preferences ───────────────────────────────────────
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: allPrefs, error: prefsErr } = await (supabase.from('notification_preferences') as any)
-    .select('user_id, email_reminders_enabled, inapp_reminders_enabled, daily_assignment_reminder, overdue_reminder, practice_test_reminder, timezone')
+  // ── Load all real users (non-anonymous, must have an email address) ─────────
+  const { data: allUsers, error: usersErr } = await supabase
+    .from('users')
+    .select('id, email, full_name')
+    .not('email', 'is', null)
+    .neq('email', '')
 
-  if (prefsErr || !allPrefs) {
+  if (usersErr) {
     return NextResponse.json(
-      { error: 'Failed to load preferences', detail: prefsErr?.message },
+      { error: 'Failed to load users', detail: usersErr.message },
       { status: 500 },
     )
   }
+  if (!allUsers || allUsers.length === 0) {
+    return NextResponse.json({ ok: true, processed: 0, skipped: 0 })
+  }
+
+  // ── Load all notification preferences into a lookup map ────────────────────
+  // Users without a row get DEFAULT_PREFS (all reminders on, Eastern time).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: allPrefsRaw } = await (supabase.from('notification_preferences') as any)
+    .select('user_id, email_reminders_enabled, inapp_reminders_enabled, daily_assignment_reminder, overdue_reminder, practice_test_reminder, timezone')
+
+  const prefsMap = new Map<string, PrefValues>(
+    ((allPrefsRaw ?? []) as PrefRow[]).map(p => [p.user_id, p])
+  )
 
   const now = new Date()
   let processed = 0
   let skipped   = 0
 
-  for (const pref of allPrefs as PrefRow[]) {
-    // Skip users who have disabled all channels
+  for (const u of allUsers as UserRow[]) {
+    const pref = prefsMap.get(u.id) ?? DEFAULT_PREFS
+
+    // Skip users who have explicitly disabled all channels
     if (!pref.email_reminders_enabled && !pref.inapp_reminders_enabled) {
       skipped++
       continue
     }
 
-    // ── Compute the user's local "today" and "+7 days" ─────────────────────
-    const today    = localDate(pref.timezone, now)
+    // ── Compute the user's local "today" ───────────────────────────────────
+    const today     = localDate(pref.timezone, now)
     const sevenDays = localDate(pref.timezone, new Date(+now + 7 * 86_400_000))
 
-    // ── Fetch the three task buckets in parallel ────────────────────────────
+    // ── Fetch task buckets in parallel ─────────────────────────────────────
     const [
       { data: todayRaw },
       { data: overdueRaw },
@@ -144,7 +173,7 @@ export async function POST(request: Request) {
         ? supabase
             .from('calendar_tasks')
             .select('id, title, task_date, duration_minutes, category')
-            .eq('user_id', pref.user_id)
+            .eq('user_id', u.id)
             .eq('task_date', today)
             .eq('is_completed', false)
         : Promise.resolve({ data: [] }),
@@ -153,7 +182,7 @@ export async function POST(request: Request) {
         ? supabase
             .from('calendar_tasks')
             .select('id, title, task_date, duration_minutes, category')
-            .eq('user_id', pref.user_id)
+            .eq('user_id', u.id)
             .lt('task_date', today)
             .eq('is_completed', false)
             .order('task_date', { ascending: false })
@@ -164,7 +193,7 @@ export async function POST(request: Request) {
         ? supabase
             .from('calendar_tasks')
             .select('id, title, task_date, duration_minutes, category')
-            .eq('user_id', pref.user_id)
+            .eq('user_id', u.id)
             .eq('category', 'Full Practice Test')
             .eq('is_completed', false)
             .gte('task_date', today)
@@ -192,7 +221,7 @@ export async function POST(request: Request) {
 
       if (todayTasks.length > 0) {
         notifs.push({
-          user_id: pref.user_id,
+          user_id: u.id,
           title:   `📅 ${todayTasks.length} task${todayTasks.length > 1 ? 's' : ''} due today`,
           message: todayTasks.slice(0, 3).map(t => t.title).join(', ') +
                    (todayTasks.length > 3 ? ` +${todayTasks.length - 3} more` : ''),
@@ -204,7 +233,7 @@ export async function POST(request: Request) {
 
       if (overdueTasks.length > 0) {
         notifs.push({
-          user_id: pref.user_id,
+          user_id: u.id,
           title:   `⚠️ ${overdueTasks.length} overdue task${overdueTasks.length > 1 ? 's' : ''}`,
           message: 'You have incomplete tasks from previous days. Open the calendar to catch up.',
           type:    'reminder',
@@ -219,7 +248,7 @@ export async function POST(request: Request) {
           weekday: 'short', month: 'short', day: 'numeric',
         })
         notifs.push({
-          user_id: pref.user_id,
+          user_id: u.id,
           title:   '📝 Practice test coming up',
           message: `${next.title} · ${dateStr}`,
           type:    'reminder',
@@ -234,24 +263,15 @@ export async function POST(request: Request) {
     }
 
     // ── Email ───────────────────────────────────────────────────────────────
-    if (pref.email_reminders_enabled && resend) {
-      const { data: userRow } = await supabase
-        .from('users')
-        .select('id, email, full_name')
-        .eq('id', pref.user_id)
-        .single()
-
-      const u = userRow as UserRow | null
-      if (u?.email) {
-        const firstName = u.full_name?.split(' ')[0] ?? 'Student'
-        const { subject, html } = buildReminderEmail({
-          firstName, todayTasks, overdueTasks, upcomingTests, appUrl,
-        })
-        try {
-          await resend.emails.send({ from: fromEmail, to: u.email, subject, html })
-        } catch (emailErr) {
-          console.error('[reminders/daily] email error for', u.email, emailErr)
-        }
+    if (pref.email_reminders_enabled && resend && u.email) {
+      const firstName = u.full_name?.split(' ')[0] ?? 'Student'
+      const { subject, html } = buildReminderEmail({
+        firstName, todayTasks, overdueTasks, upcomingTests, appUrl,
+      })
+      try {
+        await resend.emails.send({ from: fromEmail, to: u.email, subject, html })
+      } catch (emailErr) {
+        console.error('[reminders/daily] email error for', u.email, emailErr)
       }
     }
 

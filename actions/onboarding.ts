@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppUrl } from '@/lib/app-url'
@@ -8,6 +9,7 @@ import { generateRecommendations } from '@/lib/sat-planner'
 import { runAdaptiveReplanner } from '@/lib/adaptive-replanner'
 import { StudyPlanEngine } from '@/lib/study-plan-engine'
 import { validateAgeConsent } from '@/lib/legal/config'
+import { buildConfirmationEmail } from '@/lib/email/confirmation-template'
 import type { TopicPerformance } from '@/lib/study-plan-engine/types'
 import type {
   OnboardingStep1Data,
@@ -170,6 +172,22 @@ export async function saveOnboarding(
   })
   if (notifErr) console.error('[saveOnboarding] notification insert failed:', notifErr.message)
 
+  // Seed default notification preferences so the daily cron picks this user up
+  // immediately. Upsert so it never overwrites preferences a user already saved.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from('notification_preferences') as any).upsert(
+    {
+      user_id: user.id,
+      email_reminders_enabled:   true,
+      inapp_reminders_enabled:   true,
+      daily_assignment_reminder: true,
+      overdue_reminder:          true,
+      practice_test_reminder:    true,
+      timezone:                  'America/New_York',
+    },
+    { onConflict: 'user_id' },
+  )
+
   // Trigger initial replanning pass now that diagnostic sessions and plan exist.
   // Fire-and-forget — onboarding completion should not block on this.
   runAdaptiveReplanner(supabase, user.id, 'question_session').catch(() => { /* non-fatal */ })
@@ -205,30 +223,29 @@ export async function signUpAndSaveOnboarding(
   })
   if (consentError) return { error: consentError }
 
-  const supabase = await createClient()
+  const admin = createAdminClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
-  // 1. Create the account
-  const { data, error: signUpError } = await supabase.auth.signUp({
+  // 1. Create the account via generateLink — this creates the user and returns
+  //    the confirmation URL without triggering Supabase's own email service.
+  //    We send a branded email via Resend instead.
+  const { data: linkData, error: signUpError } = await admin.auth.admin.generateLink({
+    type: 'signup',
     email: credentials.email,
     password: credentials.password,
     options: {
       data: { full_name: credentials.fullName },
-      emailRedirectTo: `${getAppUrl()}/auth/confirm`,
+      redirectTo: `${getAppUrl()}/auth/confirm`,
     },
   })
   if (signUpError) return { error: signUpError.message }
-  if (!data.user) return { error: 'Account creation failed. Please try again.' }
+  if (!linkData.user) return { error: 'Account creation failed. Please try again.' }
 
-  // When email confirmation is enabled the new user has no session yet, so any
-  // write made as that user would be blocked by RLS. Persist their profile +
-  // plan with the service-role client (keyed to the new user id) so that once
-  // they confirm their email and sign in, onboarding is already complete and
-  // they land straight on the dashboard. When confirmation is off, the freshly
-  // authenticated session client is used instead.
-  const needsConfirmation = !data.session
-  const db = needsConfirmation ? createAdminClient() : supabase
-
-  const user = data.user
+  // User is unconfirmed (no session). Use admin client for all writes so RLS
+  // doesn't block them. Once the user confirms their email and signs in, their
+  // plan is already in the DB and they land straight on the dashboard.
+  const db = admin
+  const user = linkData.user
   const hoursPerWeek = Math.round((step1.dailyStudyMinutes * 7) / 60)
   const today = new Date().toISOString().split('T')[0]
 
@@ -335,17 +352,49 @@ export async function signUpAndSaveOnboarding(
     is_read: false,
   })
 
+  // 7. Seed default notification preferences so the daily reminder cron picks
+  //    this user up immediately. All channels on, Eastern timezone. Non-fatal.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (db.from('notification_preferences') as any).upsert(
+    {
+      user_id: user.id,
+      email_reminders_enabled:   true,
+      inapp_reminders_enabled:   true,
+      daily_assignment_reminder: true,
+      overdue_reminder:          true,
+      practice_test_reminder:    true,
+      timezone:                  'America/New_York',
+    },
+    { onConflict: 'user_id' },
+  )
+
   // Seed the initial replanning pass (fire-and-forget — never blocks signup).
   runAdaptiveReplanner(db, user.id, 'question_session').catch(() => { /* non-fatal */ })
 
-  // Email confirmation pending: the plan is already saved, so once the user
-  // confirms and signs in they land straight on the dashboard (no re-onboarding).
-  if (needsConfirmation) return { needsConfirmation: true }
+  // Send branded confirmation email via Resend.
+  const resendKey = process.env.RESEND_API_KEY
+  const fromEmail = process.env.RESEND_FROM_EMAIL ?? 'SaturnPath <onboarding@resend.dev>'
+  if (resendKey && linkData.properties?.action_link) {
+    try {
+      const resend = new Resend(resendKey)
+      const firstName = credentials.fullName.split(' ')[0] || 'there'
+      const { subject, html } = buildConfirmationEmail({
+        firstName,
+        confirmUrl: linkData.properties.action_link,
+        appUrl,
+      })
+      await resend.emails.send({ from: fromEmail, to: credentials.email, subject, html })
+    } catch (emailErr) {
+      console.error('[signUpAndSaveOnboarding] Resend error:', emailErr)
+      // Non-fatal — plan is saved; user can request a new confirmation email.
+    }
+  } else if (!resendKey) {
+    console.warn('[signUpAndSaveOnboarding] RESEND_API_KEY not set — confirmation email not sent.')
+  }
 
-  revalidatePath('/home')
-  revalidatePath('/data')
-  revalidatePath('/calendar')
-  return {}
+  // Plan is already saved. Once the user confirms and signs in they land
+  // straight on the dashboard (no re-onboarding).
+  return { needsConfirmation: true }
 }
 
 
