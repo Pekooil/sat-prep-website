@@ -83,7 +83,7 @@ export function InventoryCharts({ items }: InventoryChartsProps) {
         color: domainColor(domain),
       }
     })
-    .sort((a, b) => b.available - a.available)
+    .sort((a, b) => b.remaining - a.remaining)
     .slice(0, 8)
 
   return (
@@ -140,7 +140,7 @@ export function InventoryCharts({ items }: InventoryChartsProps) {
       {/* Most depleted domains */}
       <Card className="bg-[var(--card)] border-[var(--border)] lg:col-span-2">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Questions Available by Domain</CardTitle>
+          <CardTitle className="text-sm font-medium">Questions Remaining by Domain</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={220}>
@@ -150,11 +150,11 @@ export function InventoryCharts({ items }: InventoryChartsProps) {
               <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" width={160} />
               <Tooltip
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(v: any) => [`${v} questions`, 'Available']}
+                formatter={(v: any) => [`${v} questions`, 'Remaining']}
 
                 contentStyle={{ background: 'var(--popover)', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 12, boxShadow: 'var(--shadow-lg)', color: 'var(--foreground)' }}
               />
-              <Bar dataKey="available" name="Available" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="remaining" name="Remaining" radius={[0, 4, 4, 0]}>
                 {depletedDomains.map((entry, i) => (
                   <Cell key={i} fill={entry.color} />
                 ))}

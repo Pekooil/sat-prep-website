@@ -49,6 +49,10 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes ai-border-spin {
+  to { transform: rotate(360deg); }
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ============================================================
@@ -693,6 +697,57 @@ input[type="range"]::-moz-range-thumb {
   .lp-ring-idle,
   .lp-orbit,
   .lp-bounce { animation: none; }
+}
+
+/* ── AI gradient frame — Gemini-style spinning purple border ─────────────────
+   Usage: wrap content in .ai-planner-frame > .ai-planner-frame-inner.
+   Add .ai-planner-frame-sm for smaller elements (rounded-lg / 8px radius).
+   Always set the background on .ai-planner-frame-inner via className.        */
+.ai-planner-frame {
+  --ai-frame-inner-radius: 12px; /* default: --radius-lg; override in -sm */
+  position: relative;
+  border-radius: calc(var(--ai-frame-inner-radius) + 2px);
+  padding: 2px;
+  overflow: hidden;
+  filter:
+    drop-shadow(0 0 10px rgba(139, 92, 246, 0.35))
+    drop-shadow(0 0 26px rgba(109, 40, 217, 0.20));
+}
+
+.ai-planner-frame-sm {
+  --ai-frame-inner-radius: 8px; /* rounded-lg scale */
+}
+
+.ai-planner-frame::before {
+  content: '';
+  position: absolute;
+  inset: -100%;
+  z-index: 0;
+  background: conic-gradient(
+    from 0deg,
+    #4c1d95,
+    #7c3aed,
+    #a78bfa,
+    #f0abfc,
+    #c084fc,
+    #818cf8,
+    #7c3aed,
+    #4c1d95
+  );
+  animation: ai-border-spin 6s linear infinite;
+}
+
+.ai-planner-frame-inner {
+  position: relative;
+  z-index: 1;
+  border-radius: var(--ai-frame-inner-radius, 12px);
+  /* background is always set via className on each usage */
+}
+
+.dark .ai-planner-frame {
+  filter:
+    drop-shadow(0 0 16px rgba(139, 92, 246, 0.56))
+    drop-shadow(0 0 40px rgba(109, 40, 217, 0.32));
 }
 
 @media print {

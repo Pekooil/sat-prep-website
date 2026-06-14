@@ -481,35 +481,34 @@ export function TaskDrawer({
                   </div>
                   {/* Mastery target context bar */}
                   {task.mastery_target != null && task.mastery_target > 0 && (
-                    <div className={cn(
-                      'rounded-lg px-3 py-2.5 text-xs',
-                      masteryTierColor(task.mastery_target),
-                    )}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="font-medium text-[var(--foreground)]">
-                          {masteryTierLabel(task.mastery_target)}
-                        </span>
-                        <span className={cn('font-bold', masteryTierIconColor(task.mastery_target))}>
-                          {task.mastery_target}% target
-                        </span>
+                    <div className="ai-planner-frame ai-planner-frame-sm">
+                      <div className="ai-planner-frame-inner bg-[var(--surface-sunken)] px-3 py-2.5 text-xs">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-medium text-[var(--foreground)]">
+                            {masteryTierLabel(task.mastery_target)}
+                          </span>
+                          <span className={cn('font-bold', masteryTierIconColor(task.mastery_target))}>
+                            {task.mastery_target}% target
+                          </span>
+                        </div>
+                        <div className="w-full bg-[var(--border)] rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-[var(--accent)] transition-all"
+                            style={{ width: `${task.mastery_target}%` }}
+                          />
+                        </div>
+                        <p className="mt-1.5 text-[var(--muted-foreground)] leading-relaxed">
+                          {task.mastery_target <= 65
+                            ? 'A first achievable milestone — reach this accuracy before moving on.'
+                            : task.mastery_target <= 75
+                            ? 'A step-up goal — shows real progress from where you started.'
+                            : task.mastery_target <= 82
+                            ? 'A stretch goal — you\'re developing; push toward consistent accuracy.'
+                            : task.mastery_target <= 90
+                            ? 'Near-mastery — one strong push to reach the top tier.'
+                            : 'Peak target — maintain elite accuracy and refine edge cases.'}
+                        </p>
                       </div>
-                      <div className="w-full bg-[var(--border)] rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-[var(--accent)] transition-all"
-                          style={{ width: `${task.mastery_target}%` }}
-                        />
-                      </div>
-                      <p className="mt-1.5 text-[var(--muted-foreground)] leading-relaxed">
-                        {task.mastery_target <= 65
-                          ? 'A first achievable milestone — reach this accuracy before moving on.'
-                          : task.mastery_target <= 75
-                          ? 'A step-up goal — shows real progress from where you started.'
-                          : task.mastery_target <= 82
-                          ? 'A stretch goal — you\'re developing; push toward consistent accuracy.'
-                          : task.mastery_target <= 90
-                          ? 'Near-mastery — one strong push to reach the top tier.'
-                          : 'Peak target — maintain elite accuracy and refine edge cases.'}
-                      </p>
                     </div>
                   )}
                 </section>
