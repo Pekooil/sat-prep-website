@@ -11,6 +11,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import {
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+} from 'recharts'
 import { useErrorLogs } from '@/hooks/use-error-logs'
 import { AddErrorDialog } from './add-error-dialog'
 import { ErrorRow } from './error-row'
@@ -36,6 +40,246 @@ const MISTAKE_BAR_COLOR: Record<MistakeTypeKey, string> = {
   time:     'bg-blue-500',
   strategy: 'bg-orange-500',
   other:    'bg-green-500',
+}
+
+// Hex values that match task-colors.ts Tailwind classes
+const DOMAIN_HEX: Record<string, string> = {
+  'Algebra':                              '#3b82f6',
+  'Advanced Math':                        '#6366f1',
+  'Problem-Solving and Data Analysis':    '#f97316',
+  'Geometry and Trigonometry':            '#14b8a6',
+  'Information and Ideas':                '#22c55e',
+  'Craft and Structure':                  '#f43f5e',
+  'Expression of Ideas':                  '#f59e0b',
+  'Standard English Conventions':         '#06b6d4',
+}
+
+const DOMAIN_ABBR: Record<string, string> = {
+  'Problem-Solving and Data Analysis': 'PSDA',
+  'Geometry and Trigonometry':         'Geo & Trig',
+  'Standard English Conventions':      'Std English',
+  'Expression of Ideas':               'Expression',
+  'Information and Ideas':             'Info & Ideas',
+  'Craft and Structure':               'Craft',
+  'Advanced Math':                     'Adv Math',
+  'Algebra':                           'Algebra',
+}
+
+const SUBJECT_HEX: Record<string, string> = {
+  math:            '#3b82f6',
+  reading_writing: '#7c3aed',
+}
+
+const SUBJECT_LABEL: Record<string, string> = {
+  math:            'Math',
+  reading_writing: 'Reading & Writing',
+}
+
+const TYPE_HEX: Record<string, string> = {
+  concept:  '#ef4444',
+  careless: '#f59e0b',
+  time:     '#3b82f6',
+  strategy: '#f97316',
+  other:    '#22c55e',
+}
+
+const TYPE_LABEL: Record<string, string> = {
+  concept:  'Concept Gap',
+  careless: 'Careless',
+  time:     'Timing Issue',
+  strategy: 'Strategy',
+  other:    'Other',
+}
+
+const TIP_STYLE = {
+  backgroundColor: 'var(--popover)',
+  border: '1px solid var(--border)',
+  borderRadius: '8px',
+  fontSize: '12px',
+  padding: '8px 12px',
+  color: 'var(--foreground)',
+}
+
+// ─── Mistakes Pie Chart (toggleable: domain / subject / type) ─────────────────
+
+type PieMode = 'domain' | 'subject' | 'type'
+
+const PIE_MODE_TITLE: Record<PieMode, string> = {
+  domain:  'Mistakes by Domain',
+  subject: 'Mistakes by Subject',
+  type:    'Mistakes by Type',
+}
+
+function DomainPieChart({ errors }: { errors: ErrorLog[] }) {
+  const [mode, setMode] = React.useState<PieMode>('domain')
+
+  const { data, total } = React.useMemo(() => {
+    const active = errors.filter(e => !e.archived)
+    const counts = new Map<string, number>()
+
+    if (mode === 'domain') {
+      for (const e of active) counts.set(e.category, (counts.get(e.category) ?? 0) + 1)
+    } else if (mode === 'subject') {
+      for (const e of active) counts.set(e.subject, (counts.get(e.subject) ?? 0) + 1)
+    } else {
+      for (const e of active) counts.set(e.error_type, (counts.get(e.error_type) ?? 0) + 1)
+    }
+
+    const rows = [...counts.entries()]
+      .map(([name, value]) => {
+        if (mode === 'domain')  return { name, label: DOMAIN_ABBR[name]  ?? name, value, color: DOMAIN_HEX[name]   ?? '#6b7280' }
+        if (mode === 'subject') return { name, label: SUBJECT_LABEL[name] ?? name, value, color: SUBJECT_HEX[name] ?? '#6b7280' }
+        return                         { name, label: TYPE_LABEL[name]    ?? name, value, color: TYPE_HEX[name]    ?? '#6b7280' }
+      })
+      .filter(d => d.value > 0)
+      .sort((a, b) => b.value - a.value)
+
+    return { data: rows, total: rows.reduce((s, d) => s + d.value, 0) }
+  }, [mode, errors])
+
+  return (
+    <Card>
+      <CardHeader className="pb-2 pt-4 px-4">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <CardTitle className="text-sm font-semibold">{PIE_MODE_TITLE[mode]}</CardTitle>
+            {total > 0 && (
+              <p className="text-xs text-[var(--muted-foreground)]">{total} active errors</p>
+            )}
+          </div>
+          <div className="flex gap-1 shrink-0">
+            {(['domain', 'subject', 'type'] as PieMode[]).map(m => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={cn(
+                  'text-[10px] px-2 py-0.5 rounded border transition-colors',
+                  mode === m
+                    ? 'bg-[var(--accent)] text-white border-transparent'
+                    : 'text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)]'
+                )}
+              >
+                {m === 'domain' ? 'Domain' : m === 'subject' ? 'Subject' : 'Type'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="px-4 pb-4">
+        {data.length === 0 ? (
+          <div className="flex items-center justify-center h-[180px]">
+            <p className="text-sm text-[var(--muted-foreground)]">No data yet</p>
+          </div>
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height={160}>
+              <PieChart>
+                <Pie
+                  data={data}
+                  dataKey="value"
+                  nameKey="label"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={68}
+                  innerRadius={32}
+                  strokeWidth={0}
+                >
+                  {data.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={TIP_STYLE}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(val: any, name: any) => [
+                    `${val} (${Math.round((Number(val) / total) * 100)}%)`,
+                    name,
+                  ]}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+
+            <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2">
+              {data.map(d => (
+                <div key={d.name} className="flex items-center gap-1 text-[10px]">
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ background: d.color }} />
+                  <span className="text-[var(--muted-foreground)]">{d.label}</span>
+                  <span className="font-semibold">{d.value}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ─── Mistake Trend Line Chart ─────────────────────────────────────────────────
+
+function MistakeTrendChart({ errors }: { errors: ErrorLog[] }) {
+  const active = errors.filter(e => !e.archived)
+
+  const dateCounts = new Map<string, number>()
+  for (const e of active) {
+    const date = e.created_at.slice(0, 10)
+    dateCounts.set(date, (dateCounts.get(date) ?? 0) + 1)
+  }
+
+  const data = [...dateCounts.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, count]) => ({
+      label: new Date(date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      count,
+    }))
+
+  return (
+    <Card>
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-sm font-semibold">Mistake Trend</CardTitle>
+        <p className="text-xs text-[var(--muted-foreground)]">Errors logged per day</p>
+      </CardHeader>
+      <CardContent className="px-4 pb-4">
+        {data.length === 0 ? (
+          <div className="flex items-center justify-center h-[200px]">
+            <p className="text-sm text-[var(--muted-foreground)]">No data yet</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={data} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
+                tickLine={false}
+                axisLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                allowDecimals={false}
+                tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip
+                contentStyle={TIP_STYLE}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                formatter={(val: any) => [val, 'Errors']}
+              />
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="#7c3aed"
+                strokeWidth={2}
+                dot={{ fill: '#7c3aed', r: 3, strokeWidth: 0 }}
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </CardContent>
+    </Card>
+  )
 }
 
 // ─── Most Frequent Mistakes Summary ──────────────────────────────────────────
@@ -230,6 +474,14 @@ export function ErrorLogClient() {
 
       {/* Summary card */}
       {!loading && errors.length > 0 && <FrequencySummary errors={errors} />}
+
+      {/* Domain pie + trend line charts */}
+      {!loading && errors.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <DomainPieChart errors={errors} />
+          <MistakeTrendChart errors={errors} />
+        </div>
+      )}
 
       {/* Top bar: search + Log Error */}
       <div className="flex items-center gap-2">

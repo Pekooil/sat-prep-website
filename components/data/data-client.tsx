@@ -14,7 +14,7 @@ import { AccuracyTrends } from './accuracy-trends'
 import { ScoreTrend } from './score-trend'
 import { TopicMasteryHeatmap } from './topic-mastery-heatmap'
 import { TopicMasteryTrends } from './topic-mastery-trends'
-import { MistakeFrequency } from './mistake-frequency'
+import { TimeTrend } from './time-trend'
 import { StudyTimeChart } from './study-time-chart'
 import { ConsistencyChart } from './consistency-chart'
 import { ReplanTimeline } from './replan-timeline'
@@ -25,6 +25,7 @@ import { TopicMasteryCards } from '@/components/ai-coach/topic-mastery-cards'
 import { PredictedScoreWidget } from '@/components/ai-coach/predicted-score-widget'
 import type { ScoreHistory, QuestionSession, ReplanAuditLog } from '@/types'
 import type { ErrorSummary } from './mistake-frequency'
+// ErrorSummary kept for the DataClientProps shape; MistakeFrequency component removed
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -213,6 +214,10 @@ export function DataClient({
   const filteredScores = preset === 'all'
     ? scores
     : scores.filter(s => inRange(s.test_date, range))
+
+  const filteredTasks = preset === 'all'
+    ? tasks
+    : tasks.filter(t => inRange(t.task_date, range))
 
   // KPI values
   const totalAttempted  = filteredSessions.reduce((s, q) => s + (q.questions_attempted ?? 0), 0)
@@ -406,15 +411,15 @@ export function DataClient({
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* Section 3 — Mistakes                                              */}
+      {/* Section 3 — Time Trend                                            */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <section>
         <SectionHeader
-          icon={Target}
-          title="Mistake Analysis"
-          subtitle="Error type frequency and patterns in your error log"
+          icon={Clock}
+          title="Time Trend"
+          subtitle="Time allocated to each domain vs. time actually spent"
         />
-        <MistakeFrequency errors={filteredErrors} />
+        <TimeTrend sessions={filteredSessions} tasks={filteredTasks} />
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
