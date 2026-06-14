@@ -391,6 +391,11 @@ const WaitlistForm = React.forwardRef<
           {error}
         </p>
       )}
+      <p className="mt-2 text-left text-xs text-[var(--text-muted)]">
+        By joining, you agree to receive occasional launch emails. See our{' '}
+        <Link href="/privacy" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>.
+        Unsubscribe anytime.
+      </p>
     </form>
   )
 })
@@ -1374,17 +1379,30 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
 
       {/* ── Footer ── */}
       <footer className="border-t border-[var(--border)]">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-10 sm:flex-row sm:px-8">
-          <SaturnPathLogo size="sm" asLink={false} />
-          <p className="text-sm text-[var(--text-muted)]">
-            © {new Date().getFullYear()} SaturnPath. All rights reserved.
-          </p>
-          <Link
-            href="/login"
-            className="text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-heading)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] rounded-[var(--radius-sm)]"
-          >
-            Sign in for beta
-          </Link>
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-5 py-10 sm:px-8">
+          <div className="flex w-full flex-col items-center justify-between gap-4 sm:flex-row">
+            <SaturnPathLogo size="sm" asLink={false} />
+            <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+              <Link href="/privacy" className="font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-heading)]">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-heading)]">
+                Terms of Service
+              </Link>
+              <Link href="/login" className="font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-heading)]">
+                Sign in for beta
+              </Link>
+            </nav>
+          </div>
+          <div className="w-full space-y-1 border-t border-[var(--border)] pt-6 text-center">
+            <p className="text-sm text-[var(--text-muted)]">
+              © {new Date().getFullYear()} SaturnPath. All rights reserved.
+            </p>
+            <p className="text-xs text-[var(--text-muted)]">
+              SAT is a trademark of the College Board, which is not affiliated with and does not
+              endorse SaturnPath. SaturnPath is an independent study aid.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

@@ -20,6 +20,14 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_study_minutes INTEGER DEFAULT 60;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS has_completed_onboarding BOOLEAN DEFAULT FALSE;
 
+-- Migration (Legal compliance): age-gate + consent capture.
+-- birth_year only (NOT full DOB) to minimize personal data held about minors;
+-- terms_accepted_at records acceptance of Terms + Privacy Policy at sign-up;
+-- parental_ack records the under-18 parent/guardian permission acknowledgement.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_year        SMALLINT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS parental_ack      BOOLEAN DEFAULT FALSE;
+
 -- diagnostic_tests
 CREATE TABLE IF NOT EXISTS diagnostic_tests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

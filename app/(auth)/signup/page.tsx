@@ -6,8 +6,13 @@ import { Loader2, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { signUp } from '@/actions/auth'
 import { guestPreview } from '@/actions/onboarding'
+import { LEGAL, MIN_BIRTH_YEAR, ageFromBirthYear } from '@/lib/legal/config'
+
+const CURRENT_YEAR = new Date().getFullYear()
+const BIRTH_YEARS = Array.from({ length: CURRENT_YEAR - MIN_BIRTH_YEAR + 1 }, (_, i) => CURRENT_YEAR - i)
 
 function isRedirectError(err: unknown): boolean {
   return (
@@ -24,6 +29,13 @@ export default function SignupPage() {
   const [guestPending, setGuestPending] = React.useState(false)
   const [error,        setError]        = React.useState<string | null>(null)
   const [confirmed,    setConfirmed]    = React.useState(false)
+  const [birthYear,    setBirthYear]    = React.useState('')
+  const [agree,        setAgree]        = React.useState(false)
+  const [parental,     setParental]     = React.useState(false)
+
+  const age = birthYear ? ageFromBirthYear(Number(birthYear)) : null
+  const needsParental = age !== null && age < LEGAL.parentalConsentBelowAge
+  const isUnderMin = age !== null && age < LEGAL.minAge
 
   async function handleGuest() {
     setGuestPending(true)
@@ -52,6 +64,27 @@ export default function SignupPage() {
       setError('Passwords do not match')
       return
     }
+    // ── Age gate + consent (client-side mirror of the server check) ──────────
+    if (!birthYear) {
+      setError('Please select your birth year.')
+      return
+    }
+    if (isUnderMin) {
+      setError(`You must be at least ${LEGAL.minAge} years old to create an account.`)
+      return
+    }
+    if (!agree) {
+      setError('Please agree to the Terms of Service and Privacy Policy to continue.')
+      return
+    }
+    if (needsParental && !parental) {
+      setError('Because you are under 18, please confirm you have a parent or guardian’s permission.')
+      return
+    }
+    fd.set('birth_year', birthYear)
+    fd.set('agree_terms', agree ? 'true' : '')
+    fd.set('parental_ack', parental ? 'true' : '')
+
     setPending(true)
     setError(null)
     try {
@@ -151,6 +184,60 @@ export default function SignupPage() {
           />
         </div>
 
+        {/* Age gate */}
+        <div className="space-y-1.5">
+          <Label htmlFor="birth_year">Birth year</Label>
+          <select
+            id="birth_year"
+            value={birthYear}
+            onChange={e => setBirthYear(e.target.value)}
+            disabled={pending}
+            className="flex h-10 w-full rounded-[var(--radius-md)] border border-[var(--input-border)] bg-[var(--surface-raised)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="" disabled>Select your birth year</option>
+            {BIRTH_YEARS.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+          {isUnderMin && (
+            <p className="text-xs text-red-700 dark:text-red-300">
+              You must be at least {LEGAL.minAge} years old to create an account.
+            </p>
+          )}
+        </div>
+
+        {/* Consent */}
+        <div className="flex items-start gap-2.5">
+          <Checkbox
+            id="agree_terms"
+            checked={agree}
+            onCheckedChange={v => setAgree(v === true)}
+            disabled={pending}
+            className="mt-0.5"
+          />
+          <Label htmlFor="agree_terms" className="text-xs font-normal leading-relaxed text-[var(--text-muted)]">
+            I agree to the{' '}
+            <Link href="/terms" className="underline hover:text-[var(--text-heading)]">Terms of Service</Link>
+            {' '}and{' '}
+            <Link href="/privacy" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>.
+          </Label>
+        </div>
+
+        {needsParental && !isUnderMin && (
+          <div className="flex items-start gap-2.5">
+            <Checkbox
+              id="parental_ack"
+              checked={parental}
+              onCheckedChange={v => setParental(v === true)}
+              disabled={pending}
+              className="mt-0.5"
+            />
+            <Label htmlFor="parental_ack" className="text-xs font-normal leading-relaxed text-[var(--text-muted)]">
+              I am under 18 and have my parent or guardian’s permission to use {LEGAL.appName}.
+            </Label>
+          </div>
+        )}
+
         {error && (
           <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/10 px-4 py-3">
             <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
@@ -161,13 +248,6 @@ export default function SignupPage() {
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {pending ? 'Creating account…' : 'Create free account'}
         </Button>
-
-        <p className="text-center text-xs text-[var(--text-muted)]">
-          By signing up you agree to our{' '}
-          <Link href="/terms" className="underline hover:text-[var(--text-heading)]">Terms of Service</Link>
-          {' '}and{' '}
-          <Link href="/privacy" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>
-        </p>
       </form>
 
       {/* Guest preview */}

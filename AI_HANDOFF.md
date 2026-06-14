@@ -30,6 +30,15 @@ Launch config: `.claude/launch.json` → server name `sat-planner`
 Apply all three blocks in **Supabase SQL Editor** as one script. All statements are idempotent.
 Full SQL is in `supabase/schema.sql` (bottom section).
 
+### Legal compliance — age gate + consent (Session 22)
+```sql
+ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_year        SMALLINT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS parental_ack      BOOLEAN DEFAULT FALSE;
+```
+Stores birth **year** only (not full DOB) to minimize PII held about minors. Signup
+will error until these exist (the upsert writes them). See `LEGAL_COMPLIANCE.md`.
+
 ### Auth trigger fix (if new users can't register)
 ```sql
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -612,4 +621,5 @@ Still open (documented, not yet implemented): app-layer rate limiting / CAPTCHA 
 | 15 | Review Day overhaul: single `'Review Session'` task per review day (replaces per-domain blocks); new `ReviewSessionDialog` component with inline error-log mastered toggle + edit |
 | 16 | Inventory-aware question assignment: replaced `applyInventoryCap()` with full `assignStudyBlock()` pipeline — per-skill inventory cap, ≥80% time floor, cross-skill substitution by adaptive priority, bank-complete tasks + notification; `StudyPlanEngineResult` gains optional `inventoryExhausted` + `nearlyExhaustedSkills` fields |
 | 17 | **Launch-readiness security audit + fixes.** C1: global `question_inventory` writes locked to admins (`lib/auth/is-admin.ts` + service-role client; RLS now SELECT-only). H1: `/api/reminders/daily` auth now fails CLOSED (requires `CRON_SECRET`, timing-safe). H2: anonymous `guestOnboarding` gated behind `ENABLE_GUEST_ONBOARDING` (off). H3: added `/privacy` + `/terms` (`app/(legal)/`), fixed signup link (was dead `/info`). M1: CSP header (`next.config.ts`, dev-only `unsafe-eval`). M2: `handle_new_user` `SET search_path`. Cleanup: removed deprecated `X-XSS-Protection`, stale `/info` from `proxy.ts`/`robots.ts`. New env: `ADMIN_EMAILS`, `ENABLE_GUEST_ONBOARDING`. |
+| 22 | **Legal compliance (US-only).** Age gate (13+, under-18 parental ack) enforced in `validateAgeConsent` (`lib/legal/config.ts`) on both signup paths; new `users` columns `birth_year`/`terms_accepted_at`/`parental_ack`. Self-service account deletion (`actions/account.ts` + Settings danger-zone + `/login?deleted=1`). Central `LEGAL` config; tightened Privacy (CCPA/SOPIPA/cookies) + Terms; Privacy/Terms links + SAT-trademark disclaimer on landing/login; waitlist consent microcopy; CAN-SPAM email footer (entity+address); non-blocking `CookieNotice`. New `LEGAL_COMPLIANCE.md` (obligations matrix + pre-launch checklist). |
 | 18 | **Signup + email-confirmation fix** (review feedback: "signup link did nothing, probably a missing env var"). Added `lib/supabase/env.ts` with validated `getSupabaseUrl()`/`getSupabaseAnonKey()` (clear error instead of a silent hang on missing `NEXT_PUBLIC_SUPABASE_*`); wired into server/client/proxy. Added `lib/app-url.ts getAppUrl()` (empty-string-safe origin) — fixes prod `NEXT_PUBLIC_APP_URL=""` producing a relative `emailRedirectTo`; used by `actions/auth.ts` + `actions/onboarding.ts`. Wrapped login/signup/onboarding-wizard server-action calls in `try/catch` (re-throwing `NEXT_REDIRECT`) so failures surface instead of hanging the button. Reworked `app/auth/confirm/page.tsx`: clears any transient session and redirects to `/login?confirmed=1` (was `/home`, which bounced new users into `/onboarding`); login page shows a confirmed/error banner. **Eager signup persistence:** `signUpAndSaveOnboarding()` now writes profile+plan via the service-role admin client when confirmation is pending (upsert `has_completed_onboarding: true`), so a confirmed user lands straight on the dashboard instead of re-onboarding. |

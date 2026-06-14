@@ -6,11 +6,35 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-12 (Session 21 — Landing page ring-spin + feature timeline)
+2026-06-13 (Session 22 — Legal compliance: age gate, deletion, consent, policies)
 
 ---
 
 ## What Was Done This Session
+
+### Session 22 — Legal Compliance (US-only)
+
+**Goal:** Make the site meet its US legal responsibilities. Scope confirmed with the user: US-only (COPPA + CCPA/CPRA + state student-privacy + CAN-SPAM + ADA/WCAG; no GDPR/blocking cookie gate), 13+ age gate, tighten existing Privacy/Terms copy (counsel disclaimer kept), placeholders centralized.
+
+**New files**
+- `lib/legal/config.ts` — single source of truth `LEGAL` (entity, emails, mailing address, governing law, effective date, minAge) + age helpers (`ageFromBirthYear`, `isUnderMinAge`, `requiresParentalAck`, `validateAgeConsent`). All contact details are clearly-marked placeholders.
+- `actions/account.ts` — `deleteAccount()`: admin-client `auth.admin.deleteUser` cascades all user-owned rows; signs out → `/login?deleted=1`.
+- `components/settings/delete-account.tsx` — danger-zone card + type-DELETE confirm dialog.
+- `components/legal/cookie-notice.tsx` — non-blocking, dismissible cookie/analytics notice (localStorage `sp-cookie-notice`); mounted in `app/layout.tsx`.
+- `LEGAL_COMPLIANCE.md` — obligations→code matrix + operational pre-launch checklist.
+
+**Age gate + consent (COPPA)**
+- New `users` columns: `birth_year` (year only, not full DOB), `terms_accepted_at`, `parental_ack` (`supabase/schema.sql` + `types/database.ts`; **apply migration manually in Supabase**).
+- Birth-year select + "I agree to Terms/Privacy" checkbox + conditional under-18 parental-permission checkbox on both `app/(auth)/signup/page.tsx` and the onboarding wizard Step 5 (`components/onboarding/onboarding-wizard.tsx`).
+- **Server-side enforcement** via `validateAgeConsent` in `actions/auth.ts signUp()` and `actions/onboarding.ts signUpAndSaveOnboarding()` (blocks <13, requires consent, requires parental ack <18); consent/age persisted on the users upsert.
+
+**Discoverability + consent surfaces**
+- Privacy/Terms links + SAT-trademark disclaimer in landing footer; "By continuing you agree…" on login; waitlist consent microcopy under the wishlist form (`components/marketing/landing-page.tsx`, `app/(auth)/login/page.tsx`).
+- CAN-SPAM: reminder email footer now carries entity + mailing address + unsubscribe (`lib/email/reminder-template.ts`).
+
+**Tightened copy** — `app/(legal)/privacy/page.tsx` (CCPA notice-at-collection, SOPIPA/student-data, cookies, age, in-app deletion) and `terms/page.tsx` (entity, age/parental, communications, accessibility/WCAG); both now import from `LEGAL`.
+
+**Verified** (preview): age-gate logic (under-13 block, under-18 parental checkbox, adult clean), privacy page render, landing footer links + disclaimer + waitlist consent, cookie notice, no console errors, `tsc --noEmit` clean. **Pending manual:** apply the `users` migration; replace `lib/legal/config.ts` placeholders; counsel review; DPAs (see `LEGAL_COMPLIANCE.md`).
 
 ### Session 21 — Landing Page Ring-Spin + Feature Timeline
 

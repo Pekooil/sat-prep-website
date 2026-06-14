@@ -30,6 +30,8 @@ export default function LoginPage() {
     /* eslint-disable react-hooks/set-state-in-effect -- one-time URL flag read on mount */
     if (params.get('confirmed') === '1') {
       setNotice('Your email is confirmed. Sign in to continue.')
+    } else if (params.get('deleted') === '1') {
+      setNotice('Your account and all associated data have been deleted.')
     } else if (params.get('error')) {
       setError(params.get('error')!.replace(/\+/g, ' '))
     }
@@ -122,6 +124,13 @@ export default function LoginPage() {
         <Link href="/onboarding" className="font-semibold text-[var(--accent)] hover:underline">
           Create one free
         </Link>
+      </p>
+
+      <p className="text-center text-xs text-[var(--text-muted)]">
+        By continuing you agree to our{' '}
+        <Link href="/terms" className="underline hover:text-[var(--text-heading)]">Terms of Service</Link>
+        {' '}and{' '}
+        <Link href="/privacy" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>.
       </p>
     </div>
   )

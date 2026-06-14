@@ -15,6 +15,9 @@ export interface Database {
           study_hours_per_week: number | null
           daily_study_minutes: number | null
           has_completed_onboarding: boolean
+          birth_year: number | null
+          terms_accepted_at: string | null
+          parental_ack: boolean
           created_at: string
           updated_at: string
         }
@@ -28,6 +31,9 @@ export interface Database {
           study_hours_per_week?: number | null
           daily_study_minutes?: number | null
           has_completed_onboarding?: boolean
+          birth_year?: number | null
+          terms_accepted_at?: string | null
+          parental_ack?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -40,6 +46,9 @@ export interface Database {
           study_hours_per_week?: number | null
           daily_study_minutes?: number | null
           has_completed_onboarding?: boolean
+          birth_year?: number | null
+          terms_accepted_at?: string | null
+          parental_ack?: boolean
           updated_at?: string
         }
         Relationships: []

@@ -7,6 +7,7 @@ import { getAppUrl } from '@/lib/app-url'
 import { generateRecommendations } from '@/lib/sat-planner'
 import { runAdaptiveReplanner } from '@/lib/adaptive-replanner'
 import { StudyPlanEngine } from '@/lib/study-plan-engine'
+import { validateAgeConsent } from '@/lib/legal/config'
 import type { TopicPerformance } from '@/lib/study-plan-engine/types'
 import type {
   OnboardingStep1Data,
@@ -182,12 +183,28 @@ export async function saveOnboarding(
 // ─── Sign Up + Save Onboarding (single action for unauthenticated onboarding) ──
 
 export async function signUpAndSaveOnboarding(
-  credentials: { email: string; password: string; fullName: string },
+  credentials: {
+    email: string
+    password: string
+    fullName: string
+    birthYear: number
+    agreedToTerms: boolean
+    parentalAck: boolean
+  },
   step1: OnboardingStep1Data,
   step2: OnboardingStep2Data,
   analysis: OnboardingAnalysis,
   recs: AIOnboardingRec | null,
 ): Promise<{ error?: string; needsConfirmation?: boolean }> {
+  // Age gate + consent (authoritative server-side check) — block before any
+  // account is created for under-13 / missing consent.
+  const consentError = validateAgeConsent({
+    birthYear: credentials.birthYear,
+    agreedToTerms: credentials.agreedToTerms,
+    parentalAck: credentials.parentalAck,
+  })
+  if (consentError) return { error: consentError }
+
   const supabase = await createClient()
 
   // 1. Create the account
@@ -224,6 +241,9 @@ export async function signUpAndSaveOnboarding(
         id: user.id,
         email: credentials.email,
         full_name: credentials.fullName,
+        birth_year: credentials.birthYear,
+        terms_accepted_at: new Date().toISOString(),
+        parental_ack: credentials.parentalAck,
         current_score: step1.currentScore,
         target_score: step1.targetScore,
         test_date: step1.testDate,

@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
+import { LEGAL } from '@/lib/legal/config'
 
 // NOTE FOR OPERATORS: Baseline terms drafted to match the product. Have qualified
-// legal counsel review before public launch. Update CONTACT_EMAIL + GOVERNING_LAW.
-const APP_NAME = 'SaturnPath'
-const CONTACT_EMAIL = 'support@saturnpath.app'
-const GOVERNING_LAW = 'the State of California, USA'
-const EFFECTIVE_DATE = 'June 10, 2026'
+// legal counsel review before public launch. All contact/entity details live in
+// lib/legal/config.ts — update those placeholders before launch.
+const APP_NAME = LEGAL.appName
+const CONTACT_EMAIL = LEGAL.supportEmail
+const GOVERNING_LAW = LEGAL.governingLaw
+const EFFECTIVE_DATE = LEGAL.effectiveDate
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -25,15 +27,17 @@ export default function TermsOfServicePage() {
 
       <p>
         These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of {APP_NAME}
-        (the &ldquo;Service&rdquo;). By creating an account or using the Service, you agree to these
-        Terms. If you do not agree, do not use the Service.
+        (the &ldquo;Service&rdquo;), operated by {LEGAL.legalEntity}. By creating an account or using
+        the Service, you agree to these Terms. If you do not agree, do not use the Service.
       </p>
 
       <H2>Who may use the Service</H2>
       <p>
-        You must be at least 13 years old to use the Service. If you are under 18, you represent that
-        your parent or legal guardian has reviewed and agreed to these Terms on your behalf. You are
-        responsible for keeping your account credentials secure and for all activity under your account.
+        You must be at least {LEGAL.minAge} years old to use the Service, and we ask for your birth year
+        at sign-up to confirm this. If you are under 18, you represent that your parent or legal guardian
+        has reviewed and agreed to these Terms on your behalf and has given you permission to use the
+        Service; we ask you to confirm this at sign-up. You are responsible for keeping your account
+        credentials secure and for all activity under your account.
       </p>
 
       <H2>What the Service does</H2>
@@ -62,6 +66,21 @@ export default function TermsOfServicePage() {
         <a className="text-[var(--accent)] hover:underline" href="/privacy">Privacy Policy</a>.
       </p>
 
+      <H2>Communications</H2>
+      <p>
+        With your account you may choose to receive reminder emails and in-app notifications. You can
+        turn these on or off at any time in Settings; turning off email reminders also serves as your
+        opt-out. Transactional messages necessary to operate your account may still be sent.
+      </p>
+
+      <H2>Accessibility</H2>
+      <p>
+        We aim to make the Service usable by everyone and work toward conformance with WCAG 2.1 Level AA.
+        If you encounter an accessibility barrier, please contact us at{' '}
+        <a className="text-[var(--accent)] hover:underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>{' '}
+        and we will try to help.
+      </p>
+
       <H2>Disclaimers</H2>
       <p>
         The Service is provided &ldquo;as is&rdquo; and &ldquo;as available,&rdquo; without warranties
@@ -79,7 +98,7 @@ export default function TermsOfServicePage() {
 
       <H2>Termination</H2>
       <p>
-        You may stop using the Service and request deletion of your account at any time. We may suspend
+        You may stop using the Service and delete your account at any time from Settings. We may suspend
         or terminate access if you violate these Terms or to protect the Service and its users.
       </p>
 
@@ -97,6 +116,7 @@ export default function TermsOfServicePage() {
       <p>
         Questions about these Terms?{' '}
         <a className="text-[var(--accent)] hover:underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+        {' '}&middot; {LEGAL.legalEntity}, {LEGAL.mailingAddress}
       </p>
     </>
   )

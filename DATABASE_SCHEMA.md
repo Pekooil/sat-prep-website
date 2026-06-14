@@ -39,10 +39,15 @@ Extends `auth.users`. Created automatically by the `on_auth_user_created` trigge
 | `study_hours_per_week` | `integer` | default 10 |
 | `daily_study_minutes` | `integer` | default 60; used by study plan engine |
 | `has_completed_onboarding` | `boolean` | default false |
+| `birth_year` | `smallint` | nullable; year only (not full DOB) for the COPPA age gate |
+| `terms_accepted_at` | `timestamptz` | nullable; when the user accepted Terms + Privacy at sign-up |
+| `parental_ack` | `boolean` | default false; under-18 parent/guardian permission acknowledgement |
 | `created_at` | `timestamptz` | auto |
 | `updated_at` | `timestamptz` | auto |
 
 **RLS:** `Users can manage own profile` — `auth.uid() = id` for ALL operations.
+
+> **Account deletion:** `actions/account.ts deleteAccount()` calls `auth.admin.deleteUser(id)`; because `users.id` references `auth.users(id) ON DELETE CASCADE` and every user-owned table cascades from `users(id)`, all of the user's data is removed in one operation (self-service CCPA right-to-delete). `waitlist_signups` is unlinked and unaffected.
 
 ---
 

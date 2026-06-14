@@ -1,5 +1,6 @@
 import { Bell } from 'lucide-react'
 import { NotificationPrefs } from '@/components/settings/notification-prefs'
+import { DeleteAccount } from '@/components/settings/delete-account'
 import { getNotificationPreferences } from '@/actions/notification-preferences'
 
 export default async function SettingsPage() {
@@ -43,6 +44,11 @@ CRON_SECRET=any-random-string  # protects the cron endpoint`}
 
       {/* ── Preferences form ─────────────────────────────────────────────── */}
       <NotificationPrefs initial={prefs} />
+
+      {/* ── Danger zone: self-service account + data deletion ─────────────── */}
+      <div className="border-t border-[var(--border)] pt-8">
+        <DeleteAccount />
+      </div>
     </div>
   )
 }

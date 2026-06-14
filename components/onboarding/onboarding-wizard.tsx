@@ -1,9 +1,11 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Loader2, CheckCircle2, Rocket, UserPlus, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LEGAL, MIN_BIRTH_YEAR, ageFromBirthYear, validateAgeConsent } from '@/lib/legal/config'
 import { WizardProgress } from './wizard-progress'
 import { Step1Basics } from './step-1-basics'
 import { Step2Performance } from './step-2-performance'
@@ -27,6 +29,9 @@ export interface Step5AccountData {
   email: string
   password: string
   confirmPassword: string
+  birthYear: string
+  agreedToTerms: boolean
+  parentalAck: boolean
 }
 
 interface Step5AccountProps {
@@ -35,10 +40,15 @@ interface Step5AccountProps {
   errors: Partial<Record<keyof Step5AccountData, string>>
 }
 
+const CURRENT_YEAR = new Date().getFullYear()
+const BIRTH_YEARS = Array.from({ length: CURRENT_YEAR - MIN_BIRTH_YEAR + 1 }, (_, i) => CURRENT_YEAR - i)
+
 function Step5Account({ data, onChange, errors }: Step5AccountProps) {
-  function set(field: keyof Step5AccountData, value: string) {
+  function set(field: keyof Step5AccountData, value: string | boolean) {
     onChange({ ...data, [field]: value })
   }
+  const age = data.birthYear ? ageFromBirthYear(Number(data.birthYear)) : null
+  const needsParental = age !== null && age < LEGAL.parentalConsentBelowAge
   return (
     <div className="space-y-6">
       <div>
@@ -102,6 +112,57 @@ function Step5Account({ data, onChange, errors }: Step5AccountProps) {
             className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm ring-offset-background placeholder:text-[var(--muted-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
           />
           {errors.confirmPassword && <p className="text-xs text-red-600 dark:text-red-400">{errors.confirmPassword}</p>}
+        </div>
+
+        {/* Age gate */}
+        <div className="space-y-1.5">
+          <label htmlFor="s5-birthyear" className="text-sm font-medium text-[var(--foreground)]">Birth year</label>
+          <select
+            id="s5-birthyear"
+            value={data.birthYear}
+            onChange={e => set('birthYear', e.target.value)}
+            className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+          >
+            <option value="" disabled>Select your birth year</option>
+            {BIRTH_YEARS.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+          {errors.birthYear && <p className="text-xs text-red-600 dark:text-red-400">{errors.birthYear}</p>}
+        </div>
+
+        {/* Consent */}
+        <div className="space-y-2">
+          <label className="flex items-start gap-2.5 text-xs leading-relaxed text-[var(--muted-foreground)]">
+            <input
+              type="checkbox"
+              checked={data.agreedToTerms}
+              onChange={e => set('agreedToTerms', e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-violet-600"
+            />
+            <span>
+              I agree to the{' '}
+              <Link href="/terms" target="_blank" className="underline hover:text-[var(--foreground)]">Terms of Service</Link>
+              {' '}and{' '}
+              <Link href="/privacy" target="_blank" className="underline hover:text-[var(--foreground)]">Privacy Policy</Link>.
+            </span>
+          </label>
+          {errors.agreedToTerms && <p className="text-xs text-red-600 dark:text-red-400">{errors.agreedToTerms}</p>}
+
+          {needsParental && (
+            <>
+              <label className="flex items-start gap-2.5 text-xs leading-relaxed text-[var(--muted-foreground)]">
+                <input
+                  type="checkbox"
+                  checked={data.parentalAck}
+                  onChange={e => set('parentalAck', e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-violet-600"
+                />
+                <span>I am under 18 and have my parent or guardian’s permission to use {LEGAL.appName}.</span>
+              </label>
+              {errors.parentalAck && <p className="text-xs text-red-600 dark:text-red-400">{errors.parentalAck}</p>}
+            </>
+          )}
         </div>
       </div>
       <div className="flex items-start gap-2.5 rounded-xl bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800 p-3.5 text-xs text-violet-700 dark:text-violet-300">
@@ -222,7 +283,10 @@ function validateStep2(data: OnboardingStep2Data) {
 
 // ─── Main Wizard Component ────────────────────────────────────────────────
 
-const defaultStep5: Step5AccountData = { fullName: '', email: '', password: '', confirmPassword: '' }
+const defaultStep5: Step5AccountData = {
+  fullName: '', email: '', password: '', confirmPassword: '',
+  birthYear: '', agreedToTerms: false, parentalAck: false,
+}
 
 function validateStep5(data: Step5AccountData) {
   const errors: Partial<Record<keyof Step5AccountData, string>> = {}
@@ -231,6 +295,23 @@ function validateStep5(data: Step5AccountData) {
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.email = 'Enter a valid email address'
   if (data.password.length < 8) errors.password = 'Password must be at least 8 characters'
   if (data.password !== data.confirmPassword) errors.confirmPassword = 'Passwords do not match'
+
+  // Age gate + consent — mirrors the authoritative server check (validateAgeConsent).
+  const birthYear = data.birthYear ? Number(data.birthYear) : null
+  const consentError = validateAgeConsent({
+    birthYear,
+    agreedToTerms: data.agreedToTerms,
+    parentalAck: data.parentalAck,
+  })
+  if (consentError) {
+    if (!data.birthYear || (birthYear !== null && ageFromBirthYear(birthYear) < LEGAL.minAge)) {
+      errors.birthYear = consentError
+    } else if (!data.agreedToTerms) {
+      errors.agreedToTerms = consentError
+    } else {
+      errors.parentalAck = consentError
+    }
+  }
   return errors
 }
 
@@ -348,7 +429,14 @@ export function OnboardingWizard({ isAuthenticated = false, allowGuest = false }
         }
       } else {
         const result = await signUpAndSaveOnboarding(
-          { email: step5Data.email, password: step5Data.password, fullName: step5Data.fullName },
+          {
+            email: step5Data.email,
+            password: step5Data.password,
+            fullName: step5Data.fullName,
+            birthYear: Number(step5Data.birthYear),
+            agreedToTerms: step5Data.agreedToTerms,
+            parentalAck: step5Data.parentalAck,
+          },
           step1Data, step2Data, computed, aiRecs,
         )
         if (result.needsConfirmation) {

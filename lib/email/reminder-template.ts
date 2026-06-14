@@ -6,6 +6,8 @@
  * email clients (Gmail, Outlook, Apple Mail, etc.).
  */
 
+import { LEGAL } from '@/lib/legal/config'
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ReminderTask {
@@ -205,7 +207,9 @@ export function buildReminderEmail(d: ReminderEmailData): {
           <td style="padding:20px 32px; text-align:center;">
             <p style="font-size:12px; color:#94a3b8; margin:0; line-height:1.6;">
               You received this because email reminders are enabled on your account.<br />
-              <a href="${esc(d.appUrl)}/settings" style="color:#7c3aed; text-decoration:underline;">Manage notification preferences</a>
+              <a href="${esc(d.appUrl)}/settings" style="color:#7c3aed; text-decoration:underline;">Manage notification preferences or unsubscribe</a><br />
+              ${esc(LEGAL.appName)} · ${esc(LEGAL.legalEntity)}<br />
+              ${esc(LEGAL.mailingAddress)}
             </p>
           </td>
         </tr>

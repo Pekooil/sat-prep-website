@@ -2,7 +2,9 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppUrl } from '@/lib/app-url'
+import { validateAgeConsent } from '@/lib/legal/config'
 
 export async function signIn(formData: FormData) {
   'use server'
@@ -25,6 +27,14 @@ export async function signUp(formData: FormData) {
   const password = formData.get('password')  as string
   const fullName = formData.get('full_name') as string
 
+  // ── Age gate + consent (authoritative server-side check) ──────────────────
+  const birthYear   = Number(formData.get('birth_year'))
+  const agreedTerms = formData.get('agree_terms') === 'on' || formData.get('agree_terms') === 'true'
+  const parentalAck = formData.get('parental_ack') === 'on' || formData.get('parental_ack') === 'true'
+
+  const consentError = validateAgeConsent({ birthYear, agreedToTerms: agreedTerms, parentalAck })
+  if (consentError) return { error: consentError }
+
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -38,10 +48,35 @@ export async function signUp(formData: FormData) {
   if (error) {
     return { error: error.message }
   }
+  if (!data.user) {
+    return { error: 'Account creation failed. Please try again.' }
+  }
+
+  // Persist age/consent records onto the users row. When email confirmation is
+  // pending there is no session, so RLS would block the write — use the
+  // service-role admin client in that case (same pattern as onboarding). Upsert
+  // so it works even before the on_auth_user_created trigger materializes the row.
+  const needsConfirmation = !data.session
+  const db = needsConfirmation ? createAdminClient() : supabase
+  const { error: profileErr } = await db
+    .from('users')
+    .upsert(
+      {
+        id: data.user.id,
+        email,
+        full_name: fullName,
+        birth_year: birthYear,
+        terms_accepted_at: new Date().toISOString(),
+        parental_ack: parentalAck,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' },
+    )
+  if (profileErr) return { error: profileErr.message }
 
   // Email confirmation is enabled in Supabase — session won't exist yet.
   // Redirect to login with a flag so the page shows a "check your email" message.
-  if (!data.session) {
+  if (needsConfirmation) {
     return { needsConfirmation: true }
   }
 

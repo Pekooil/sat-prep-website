@@ -4,6 +4,7 @@ import Script from 'next/script'
 import './globals.css'
 import { ThemeProvider } from '@/components/layout/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
+import { CookieNotice } from '@/components/legal/cookie-notice'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
@@ -105,6 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </a>
           {children}
           <Toaster />
+          <CookieNotice />
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />
