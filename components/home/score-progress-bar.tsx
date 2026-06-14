@@ -58,8 +58,8 @@ export function ScoreProgressBar({
           style={{
             width: `${animatedWidth}%`,
             transition: 'width 900ms cubic-bezier(0.16,1,0.3,1)',
-            background: 'linear-gradient(90deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%)',
-            boxShadow: '0 0 8px 3px rgba(168,85,247,0.6), 0 0 20px 6px rgba(168,85,247,0.3)',
+            background: 'linear-gradient(90deg, #3b0764 0%, #581c87 50%, #6b21a8 100%)',
+            boxShadow: '0 0 8px 3px rgba(109,40,217,0.6), 0 0 20px 6px rgba(109,40,217,0.3)',
           }}
         >
           {/* Bright purple light core along the center */}
@@ -74,17 +74,30 @@ export function ScoreProgressBar({
           />
         </div>
 
-        {/* Gold glowing target mark */}
+        {/* Gold glowing Saturn target mark */}
         {ptsAway > 0 && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-4 rounded-full"
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
             style={{
-              width: '5.2px',
               left: `${targetPct}%`,
-              background: 'linear-gradient(180deg, #ffe066 0%, #f5a623 100%)',
-              boxShadow: '0 0 6px 2px rgba(255,196,0,0.85), 0 0 16px 4px rgba(255,160,0,0.5)',
+              filter: 'drop-shadow(0 0 4px rgba(255,196,0,0.9)) drop-shadow(0 0 10px rgba(255,160,0,0.55))',
             }}
-          />
+          >
+            <svg width="40" height="40" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="saturnBodyGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ffe066" />
+                  <stop offset="100%" stopColor="#f5a623" />
+                </linearGradient>
+              </defs>
+              {/* Full ring behind planet (closed ellipse) */}
+              <ellipse cx="9" cy="9.5" rx="8" ry="2.2" fill="none" stroke="#f5a623" strokeWidth="1.8" strokeOpacity="0.7" />
+              {/* Planet body */}
+              <circle cx="9" cy="9" r="4.2" fill="url(#saturnBodyGrad)" />
+              {/* Front half of ring (bottom arc, in front of planet) */}
+              <path d="M 1 9.5 A 8 2.2 0 0 1 17 9.5" fill="none" stroke="#ffe066" strokeWidth="1.8" />
+            </svg>
+          </div>
         )}
 
         {/* Current score thumb */}
