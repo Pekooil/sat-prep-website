@@ -90,6 +90,41 @@ export async function signOut() {
   redirect('/login')
 }
 
+export async function saveGoogleConsent(formData: FormData) {
+  'use server'
+  const birthYear   = Number(formData.get('birth_year'))
+  const agreedTerms = formData.get('agree_terms') === 'true'
+  const parentalAck = formData.get('parental_ack') === 'true'
+
+  const consentError = validateAgeConsent({ birthYear, agreedToTerms: agreedTerms, parentalAck })
+  if (consentError) return { error: consentError }
+
+  const supabase = await createClient()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) return { error: 'Session expired. Please sign in again.' }
+
+  const { error: profileErr } = await supabase
+    .from('users')
+    .upsert(
+      {
+        id: user.id,
+        email: user.email ?? '',
+        full_name:
+          (user.user_metadata?.full_name as string | undefined) ??
+          (user.user_metadata?.name as string | undefined) ??
+          '',
+        birth_year:        birthYear,
+        terms_accepted_at: new Date().toISOString(),
+        parental_ack:      parentalAck,
+        updated_at:        new Date().toISOString(),
+      },
+      { onConflict: 'id' },
+    )
+  if (profileErr) return { error: profileErr.message }
+
+  redirect('/onboarding')
+}
+
 export async function upgradeGuestAccount(formData: FormData) {
   'use server'
   const email    = formData.get('email')    as string
