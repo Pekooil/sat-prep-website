@@ -1,6 +1,6 @@
 # SAT Study Planner AI — Complete Handoff
 
-**Last updated:** 2026-06-13 (Session 24 — public launch: beta gate removed, waitlist CTAs replaced with signup CTAs)
+**Last updated:** 2026-06-14 (Session 25 — error log charts, data tab time trend, session workflow dialog polish)
 **Project root:** `/Users/darcywang/sat-prep-website`
 **Stack:** Next.js 16.2.7 (App Router), React 19, TypeScript 5 strict, Tailwind CSS v4, Supabase
 **No external AI API** — all planning logic is deterministic TypeScript.
@@ -234,6 +234,9 @@ components/
     review-session-dialog.tsx  Slide-over for 'Review Session' tasks: lists active (unmastered, unarchived)
                                error logs; per-entry mastered toggle + EditErrorDialog; Mark Session Complete footer.
     session-workflow-dialog.tsx  6-phase UX (idle→active→review→results→missed_analysis→plan_updated).
+                               Session 25: full polish — animated phase transitions (160ms fade+translateY),
+                               letter buttons A/B/C/D replacing Select dropdowns, card-per-question missed_analysis,
+                               all CSS tokens consistent (no hardcoded slate/bg-slate-50), emoji removed from toast.
     practice-test-score-dialog.tsx  Do NOT modify.
     task-form-dialog.tsx       Manual task creation.
     task-colors.ts             Domain color map + 'Review Session' (slate) entry.
@@ -260,8 +263,12 @@ components/
     plan-version-history.tsx  Version list with restore.
     ai-recommendations.tsx    AI coach message list with dismiss.
     ai-coach-panel.tsx        UNUSED — route deleted, file remains. Safe to delete.
+  data/
+    time-trend.tsx              NEW (Session 25): horizontal grouped bar chart — allocated vs actual time per domain.
   error-log/
-    error-log-client.tsx, error-row.tsx, add-error-dialog.tsx, edit-error-dialog.tsx, mistake-type-badge.tsx
+    error-log-client.tsx        Session 25: added DomainPieChart (toggleable domain/subject/type modes) + MistakeTrendChart
+                                (line chart by date) in a 2-col grid below FrequencySummary.
+    error-row.tsx, add-error-dialog.tsx, edit-error-dialog.tsx, mistake-type-badge.tsx
   layout/
     navbar.tsx                Desktop nav (reads NAV_LINKS from constants.ts — 5 links).
     mobile-nav.tsx            Bottom nav: Home · Calendar · Errors · Data · Settings.
@@ -428,7 +435,10 @@ ciWidth: <5 sessions→±100, 5–19→±70, 20–49→±50, 50+→±30
    - TopicMasteryTrends + AccuracyHeatmap (2-col grid)
    - TopicMasteryCards (8-domain cards) ← from `components/ai-coach/`
 
-3. **Mistake Analysis** — MistakeFrequency
+3. **Time Trend** — `components/data/time-trend.tsx`
+   - Horizontal grouped bar chart: allocated time vs actual time per domain
+   - Allocated = completed `calendar_tasks.duration_minutes`; Actual = `question_sessions.time_spent_minutes`
+   - Applies the same date-range filter as other sections via `filteredTasks` in `data-client.tsx`
 
 4. **Study Habits** — StudyTimeChart + ConsistencyChart
 
@@ -436,6 +446,7 @@ ciWidth: <5 sessions→±100, 5–19→±70, 20–49→±50, 50+→±30
 
 > `PredictedScoreWidget` and `TopicMasteryCards` do NOT apply the date-range filter — they always show all-time data.
 > `topic-rankings.tsx` was removed in Session 8. File still exists but is not imported.
+> **Mistake Analysis section was deleted in Session 25.** `components/data/mistake-frequency.tsx` still exists but is no longer imported by `data-client.tsx`. Its `ErrorSummary` type is still referenced in `DataClientProps`.
 
 ---
 
@@ -641,4 +652,5 @@ Still open (documented, not yet implemented): app-layer rate limiting / CAPTCHA 
 | 24 | **Public launch.** Beta gate removed from `proxy.ts` (deleted `betaToken` fn + step-0 block + `/beta` from matcher). Landing page CTAs replaced: "Join Waitlist" → "Get started free" (→ `/signup`); "Sign in for beta" → "Sign in"; `WaitlistForm` email-capture component removed entirely; hero + closing-CTA sections now have direct signup/login buttons. `getLandingStats()` in `actions/waitlist.ts` now counts from `users` table (not `waitlist_signups`) so the stats strip shows actual user count. `Flag`, `Loader2`, `Input`, `Label` lucide/ui imports removed from landing-page.tsx. `app/beta/` + `actions/beta.ts` remain on disk as dead code (unreachable with no env var set and no proxy gate). |
 | 23 | **Google OAuth sign-in/sign-up.** `app/auth/callback/route.ts` — route handler exchanges OAuth code for session, checks `terms_accepted_at` to distinguish new vs returning Google users, routes to `/auth/google-consent` (new) or `/home`/`/onboarding`. `app/auth/google-consent/page.tsx` — standalone consent page (birth year + terms/parental ack) for first-time Google users; mirrors the age gate from email signup. `actions/auth.ts saveGoogleConsent()` — server action validates consent, upserts `birth_year`/`terms_accepted_at`/`parental_ack`, redirects to `/onboarding`. Login + signup pages gain "Continue with Google" button (Supabase `signInWithOAuth` client-side; Google "G" SVG icon). **Requires manual Supabase setup:** Authentication → Providers → Google → enable + paste Google OAuth Client ID/Secret (from Google Cloud Console; callback URL = `<project>.supabase.co/auth/v1/callback`). |
 | 25 | **Onboarding UX overhaul.** Removed "Performance" tab (no more practice data entry). New 4-step flow: Goals (scores only) → Time (test date + daily commitment) → Overview (score journey visual, timeline, 8-domain list) → Your Plan (stat cards + "what happens next"). `step-2-performance.tsx` is obsolete (kept on disk, not imported). `step-2-time.tsx` is new. Wizard always passes `defaultStep2` (all zeros) to `saveOnboarding` — domains start with equal priority and adapt via practice sessions. No DB schema changes. |
+| 26 | **Error log charts + Data tab time trend + Session workflow dialog polish.** Error log: added `DomainPieChart` (toggleable domain/subject/type breakdown with matching domain hex colors) + `MistakeTrendChart` (violet line chart by date) in a 2-col grid. Subject colors: Math=#3b82f6, R&W=#7c3aed. Data tab: deleted Mistake Analysis section; added Time Trend section (`components/data/time-trend.tsx`) showing allocated vs actual time per domain as a horizontal grouped bar chart; `filteredTasks` computation added to `data-client.tsx`. Session workflow dialog: complete rewrite with 160ms fade+translateY phase transitions, A/B/C/D letter buttons (violet=your answer, emerald=correct answer), card-per-question missed_analysis layout, all tokens consistent (`bg-[var(--surface-sunken)]` etc.), emoji removed from "Time's up!" toast. |
 | 18 | **Signup + email-confirmation fix** (review feedback: "signup link did nothing, probably a missing env var"). Added `lib/supabase/env.ts` with validated `getSupabaseUrl()`/`getSupabaseAnonKey()` (clear error instead of a silent hang on missing `NEXT_PUBLIC_SUPABASE_*`); wired into server/client/proxy. Added `lib/app-url.ts getAppUrl()` (empty-string-safe origin) — fixes prod `NEXT_PUBLIC_APP_URL=""` producing a relative `emailRedirectTo`; used by `actions/auth.ts` + `actions/onboarding.ts`. Wrapped login/signup/onboarding-wizard server-action calls in `try/catch` (re-throwing `NEXT_REDIRECT`) so failures surface instead of hanging the button. Reworked `app/auth/confirm/page.tsx`: clears any transient session and redirects to `/login?confirmed=1` (was `/home`, which bounced new users into `/onboarding`); login page shows a confirmed/error banner. **Eager signup persistence:** `signUpAndSaveOnboarding()` now writes profile+plan via the service-role admin client when confirmation is pending (upsert `has_completed_onboarding: true`), so a confirmed user lands straight on the dashboard instead of re-onboarding. |
