@@ -1,65 +1,7 @@
-import { CalendarDays, Flame, Target, PartyPopper } from 'lucide-react'
+import { CalendarDays, Flame, Target } from 'lucide-react'
 import type { User } from '@/types'
 import { daysUntilTest, formatDate } from '@/lib/utils'
-
-const SCORE_MIN = 400
-const SCORE_MAX = 1600
-const SCORE_RANGE = SCORE_MAX - SCORE_MIN
-
-function ScoreProgressBar({ currentScore, targetScore }: { currentScore: number; targetScore: number }) {
-  const clamp = (v: number) => Math.min(Math.max(v, SCORE_MIN), SCORE_MAX)
-  const pct = (score: number) => ((clamp(score) - SCORE_MIN) / SCORE_RANGE) * 100
-
-  const fillPct = pct(currentScore)
-  const targetPct = pct(targetScore)
-  const ptsAway = Math.max(0, targetScore - currentScore)
-  const milestoneLabels = [400, 600, 800, 1000, 1200, 1400, 1600]
-
-  return (
-    <div className="mt-6">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-[var(--text-muted)]">Next milestone: {targetScore}</span>
-        {ptsAway > 0 ? (
-          <span className="sp-numeric text-xs font-medium text-[var(--text-body)]">{ptsAway} pts away</span>
-        ) : (
-          <span className="flex items-center gap-1 text-xs font-semibold text-[var(--success)]">
-            <PartyPopper className="h-3.5 w-3.5 shrink-0" />
-            Goal reached!
-          </span>
-        )}
-      </div>
-
-      <div className="relative h-2 rounded-full bg-[var(--surface-sunken)] overflow-visible">
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-[var(--accent)]"
-          style={{ width: `${fillPct}%`, transition: `width 700ms cubic-bezier(0.16,1,0.3,1)` }}
-        />
-        {ptsAway > 0 && (
-          <div
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-3.5 w-0.5 rounded-full bg-[var(--border-strong)]"
-            style={{ left: `${targetPct}%` }}
-          />
-        )}
-        <div
-          className="absolute top-1/2 z-10 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--accent)] bg-[var(--surface-raised)] shadow-[var(--shadow-xs)]"
-          style={{ left: `${fillPct}%` }}
-        />
-      </div>
-
-      <div className="relative mt-2 h-4">
-        {milestoneLabels.map(label => (
-          <span
-            key={label}
-            className="sp-numeric absolute -translate-x-1/2 text-[10px] text-[var(--text-muted)]"
-            style={{ left: `${pct(label)}%` }}
-          >
-            {label}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
+import { ScoreProgressBar } from './score-progress-bar'
 
 interface WelcomeBannerProps {
   profile: User | null
