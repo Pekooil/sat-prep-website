@@ -19,6 +19,32 @@ function remainingColor(pct: number) {
   return '#dc2626'
 }
 
+const DOMAIN_COLORS: Record<string, string> = {
+  'Algebra':                              '#3b82f6',
+  'Advanced Math':                        '#6366f1',
+  'Problem-Solving and Data Analysis':    '#f97316',
+  'Geometry and Trigonometry':            '#14b8a6',
+  'Information and Ideas':                '#22c55e',
+  'Craft and Structure':                  '#f43f5e',
+  'Expression of Ideas':                  '#f59e0b',
+  'Standard English Conventions':         '#06b6d4',
+}
+
+function domainColor(domain: string) {
+  return DOMAIN_COLORS[domain] ?? '#6b7280'
+}
+
+const DOMAIN_SHORT: Record<string, string> = {
+  'Problem-Solving and Data Analysis': 'Problem-Solving & Data',
+  'Geometry and Trigonometry':         'Geometry & Trig',
+  'Standard English Conventions':      'Standard English',
+  'Expression of Ideas':               'Expression of Ideas',
+  'Information and Ideas':             'Info & Ideas',
+  'Craft and Structure':               'Craft & Structure',
+  'Advanced Math':                     'Advanced Math',
+  'Algebra':                           'Algebra',
+}
+
 export function InventoryCharts({ items }: InventoryChartsProps) {
   // Chart 1: by section
   const sectionData = [...new Set(items.map(i => i.section))].map(section => {
@@ -43,17 +69,21 @@ export function InventoryCharts({ items }: InventoryChartsProps) {
     }
   })
 
-  // Chart 3: most depleted skills (remaining / available lowest)
-  const depletedSkills = [...items]
-    .filter(i => i.available_count > 0)
-    .map(i => ({
-      name: i.skill.length > 28 ? i.skill.slice(0, 26) + '…' : i.skill,
-      fullName: i.skill,
-      pct: Math.round((i.remaining / i.available_count) * 100),
-      remaining: i.remaining,
-      available: i.available_count,
-    }))
-    .sort((a, b) => a.pct - b.pct)
+  // Chart 3: questions available by domain
+  const depletedDomains = [...new Set(items.map(i => i.domain))]
+    .map(domain => {
+      const rows = items.filter(i => i.domain === domain)
+      const remaining = rows.reduce((s, r) => s + r.remaining, 0)
+      const available = rows.reduce((s, r) => s + r.available_count, 0)
+      return {
+        name: DOMAIN_SHORT[domain] ?? domain,
+        fullName: domain,
+        remaining,
+        available,
+        color: domainColor(domain),
+      }
+    })
+    .sort((a, b) => b.available - a.available)
     .slice(0, 8)
 
   return (
@@ -107,27 +137,26 @@ export function InventoryCharts({ items }: InventoryChartsProps) {
         </CardContent>
       </Card>
 
-      {/* Most depleted skills */}
+      {/* Most depleted domains */}
       <Card className="bg-[var(--card)] border-[var(--border)] lg:col-span-2">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Most Depleted Skills (% remaining)</CardTitle>
+          <CardTitle className="text-sm font-medium">Questions Available by Domain</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={depletedSkills} layout="vertical" barCategoryGap="20%">
+            <BarChart data={depletedDomains} layout="vertical" barCategoryGap="20%">
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" tickFormatter={v => `${v}%`} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" width={180} />
+              <XAxis type="number" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} stroke="var(--border)" width={160} />
               <Tooltip
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(v: any, _name: any, entry: any) =>
-                  [`${v}% (${entry?.payload?.remaining ?? 0}/${entry?.payload?.available ?? 0})`, 'Remaining']
-                }
+                formatter={(v: any) => [`${v} questions`, 'Available']}
+
                 contentStyle={{ background: 'var(--popover)', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 12, boxShadow: 'var(--shadow-lg)', color: 'var(--foreground)' }}
               />
-              <Bar dataKey="pct" name="Remaining %" radius={[0, 4, 4, 0]}>
-                {depletedSkills.map((entry, i) => (
-                  <Cell key={i} fill={remainingColor(entry.pct)} />
+              <Bar dataKey="available" name="Available" radius={[0, 4, 4, 0]}>
+                {depletedDomains.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
                 ))}
               </Bar>
             </BarChart>
