@@ -15,10 +15,24 @@ satisfied in the codebase, and lists the operational steps that must be done
 
 ## Single source of truth
 
-All legal/contact details live in **`lib/legal/config.ts`** (`LEGAL`). Update the
-placeholders there once and every surface (policies, email footer, age gate) picks
-them up: `legalEntity`, `privacyEmail`, `supportEmail`, `mailingAddress`,
-`governingLaw`, `effectiveDate`, `minAge`.
+All legal/contact details live in **`lib/legal/config.ts`** (`LEGAL`). Update them
+once and every surface (policies, email footer, age gate) picks them up:
+`legalEntity`, `privacyEmail`, `supportEmail`, `mailingAddress`, `governingLaw`,
+`effectiveDate`, `minAge`.
+
+**Operating model:** SaturnPath is a **free, non-commercial, individual-run project**
+— there is **no registered company**, so `legalEntity` identifies the project/operator
+rather than an LLC/Inc. This matters legally:
+- **CCPA/CPRA likely does not strictly apply** — it binds for-profit "businesses"
+  meeting revenue/volume thresholds. The CCPA-style rights in the Privacy Policy are
+  kept as good practice (and because self-service deletion already exists), but a hobby
+  project is generally out of scope.
+- **COPPA still applies** — it governs collecting data from under-13s regardless of
+  profit. The age gate (block <13) is the key control and is in place.
+- **CAN-SPAM physical-address requirement is deferred** — it applies to *commercial*
+  email only. Today's reminder emails are transactional (user-enabled, account-related)
+  and exempt, so `mailingAddress` is intentionally empty and the address line is omitted
+  everywhere. It MUST be set before any marketing email (the waitlist launch blast).
 
 ---
 
@@ -58,20 +72,24 @@ about minors.
 
 ## Operational pre-launch checklist (NOT code)
 
-- [ ] **Apply the `users` migration** above in the Supabase SQL Editor (signup will
-      error until `birth_year` / `terms_accepted_at` / `parental_ack` exist).
-- [ ] **Replace every placeholder in `lib/legal/config.ts`** — real legal entity name,
-      monitored `privacyEmail` + `supportEmail`, and a valid physical `mailingAddress`
-      (the address is **legally required** by CAN-SPAM for any marketing email).
-- [ ] **Counsel review** of Privacy Policy + Terms, especially the minors (COPPA),
-      student-data (FERPA/SOPIPA), and CCPA/CPRA sections.
-- [ ] **Sign DPAs** with subprocessors: Supabase (DB/auth), Vercel (hosting/analytics),
-      Resend (email).
-- [ ] **Verify Resend** sender domain + `RESEND_FROM_EMAIL`; confirm the postal address
-      renders in a real reminder email.
-- [ ] **Waitlist launch email**: when you build the marketing blast that emails
-      `waitlist_signups`, it MUST reuse the CAN-SPAM footer (entity + address +
-      one-click unsubscribe). The consent microcopy at the signup point is in place.
+- [ ] **Apply the `users` migration** above (`birth_year` / `terms_accepted_at` /
+      `parental_ack`) in the Supabase SQL Editor — **still pending** (production-schema
+      changes are a manual human step). Signup will error until these columns exist.
+- [x] **Contact details in `lib/legal/config.ts`** — `privacyEmail`/`supportEmail` set to
+      `saturnpathsupport@gmail.com`; `legalEntity` reflects the non-commercial project
+      (no LLC); `mailingAddress` intentionally empty (see operating-model note above).
+- [ ] **Before any marketing email** (waitlist launch blast): set a real
+      `mailingAddress` in `lib/legal/config.ts` (CAN-SPAM). Free options: your own
+      home address, a relative's/friend's address with permission, or a free virtual-
+      mailbox trial. USPS PO Boxes and paid virtual mailboxes also work but cost money.
+      The blast MUST reuse the email footer (entity + address + one-click unsubscribe);
+      the signup-point consent microcopy is already in place.
+- [ ] **Counsel review** of Privacy Policy + Terms (optional for a hobby project, but
+      recommended if usage grows) — focus on the minors (COPPA) and student-data
+      (FERPA/SOPIPA) sections.
+- [ ] **Sign DPAs** with subprocessors when feasible: Supabase, Vercel, Resend
+      (standard click-through DPAs; lower priority for a non-commercial project).
+- [ ] **Verify Resend** sender domain + `RESEND_FROM_EMAIL` before relying on email.
 - [ ] **Abuse protection** for anonymous auth (Supabase Auth CAPTCHA / Turnstile) +
       an anonymous-user cleanup job before re-enabling guest paths at scale (see
       `ENABLE_GUEST_ONBOARDING`).

@@ -303,7 +303,7 @@ function TimelineNode() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   Wishlist email capture — the only live interaction on the page
+   Waitlist email capture — the only live interaction on the page
    ════════════════════════════════════════════════════════════════════════ */
 const WaitlistForm = React.forwardRef<
   HTMLInputElement,
@@ -380,7 +380,7 @@ const WaitlistForm = React.forwardRef<
             </>
           ) : (
             <>
-              Join Wishlist
+              Join Waitlist
               <ArrowRight className="h-[18px] w-[18px]" />
             </>
           )}
@@ -1006,7 +1006,7 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
   const timelineRef = React.useRef<HTMLDivElement>(null)
   const spineFillRef = React.useRef<HTMLDivElement>(null)
 
-  const focusWishlist = React.useCallback(() => {
+  const focusWaitlist = React.useCallback(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     heroEmailRef.current?.scrollIntoView({
       behavior: prefersReduced ? 'auto' : 'smooth',
@@ -1111,10 +1111,10 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
             <Button
               type="button"
               size="sm"
-              onClick={focusWishlist}
+              onClick={focusWaitlist}
               className="font-semibold"
             >
-              Join Wishlist
+              Join Waitlist
             </Button>
             <Link
               href="/login"
@@ -1360,7 +1360,7 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-lg text-[var(--text-muted)]">
                 SaturnPath launches on 7/17/2026 — completely free, no paywall, no
-                tiers. Join the wishlist and we&apos;ll email you the moment
+                tiers. Join the waitlist and we&apos;ll email you the moment
                 it&apos;s ready.
               </p>
             </Reveal>

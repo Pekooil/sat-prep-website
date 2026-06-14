@@ -37,7 +37,7 @@ function BetaGateCard() {
             href="/"
             className="font-medium text-[var(--accent-soft-foreground)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] rounded-sm"
           >
-            Join the wishlist
+            Join the waitlist
           </a>
         </p>
       </div>

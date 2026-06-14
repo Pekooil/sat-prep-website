@@ -116,7 +116,7 @@ export default function TermsOfServicePage() {
       <p>
         Questions about these Terms?{' '}
         <a className="text-[var(--accent)] hover:underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-        {' '}&middot; {LEGAL.legalEntity}, {LEGAL.mailingAddress}
+        {' '}&middot; {LEGAL.legalEntity}{LEGAL.mailingAddress ? `, ${LEGAL.mailingAddress}` : ''}
       </p>
     </>
   )

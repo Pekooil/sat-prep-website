@@ -8,7 +8,7 @@ export default async function RootPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   // Logged-in users go straight to the app. Logged-out visitors see the
-  // public marketing landing page (the wishlist is the only live action).
+  // public marketing landing page (the waitlist is the only live action).
   if (user) {
     redirect('/home')
   }

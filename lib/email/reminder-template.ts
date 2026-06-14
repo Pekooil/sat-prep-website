@@ -208,8 +208,7 @@ export function buildReminderEmail(d: ReminderEmailData): {
             <p style="font-size:12px; color:#94a3b8; margin:0; line-height:1.6;">
               You received this because email reminders are enabled on your account.<br />
               <a href="${esc(d.appUrl)}/settings" style="color:#7c3aed; text-decoration:underline;">Manage notification preferences or unsubscribe</a><br />
-              ${esc(LEGAL.appName)} · ${esc(LEGAL.legalEntity)}<br />
-              ${esc(LEGAL.mailingAddress)}
+              ${esc(LEGAL.legalEntity)}${LEGAL.mailingAddress ? `<br />${esc(LEGAL.mailingAddress)}` : ''}
             </p>
           </td>
         </tr>

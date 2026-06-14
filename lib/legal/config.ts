@@ -2,24 +2,27 @@
  * Central legal/contact configuration — single source of truth for the app's
  * legal pages, email footers, consent copy, and the age gate.
  *
- * ⚠️ OPERATOR ACTION REQUIRED BEFORE PUBLIC LAUNCH:
- * Replace every value marked "— TBD" with real, verified information. These are
- * clearly-marked placeholders. In particular:
- *   - `legalEntity`     — the legal name of the operating entity / individual
- *   - `privacyEmail`    — a monitored inbox for privacy / data-rights requests
- *   - `supportEmail`    — a monitored inbox for general support + Terms questions
- *   - `mailingAddress`  — a valid physical postal address (REQUIRED by CAN-SPAM
- *                         for any commercial email, e.g. the waitlist launch blast)
+ * SaturnPath is run as a free, independent, non-commercial project — there is no
+ * registered company, so `legalEntity` simply identifies the project + operator,
+ * not an LLC/Inc. Contact for any legal/data request is `privacyEmail`.
+ *
+ * `mailingAddress` is intentionally left empty. A physical postal address is only
+ * legally required by CAN-SPAM for *commercial* (marketing) email — e.g. a future
+ * "we've launched" blast to the waitlist. The reminder emails the app sends today
+ * are transactional/relationship messages (account-enabled study reminders), which
+ * are exempt. When `mailingAddress` is empty, every consumer omits the address line
+ * gracefully. ⚠️ Set a real address here BEFORE sending any marketing email.
  *
  * These baselines are NOT a substitute for review by qualified legal counsel.
  * See LEGAL_COMPLIANCE.md for the full pre-launch checklist.
  */
 export const LEGAL = {
   appName: 'SaturnPath',
-  legalEntity: 'SaturnPath [LEGAL ENTITY NAME — TBD before launch]',
-  privacyEmail: 'saturnpathsupport@gmail.com', // — TBD: confirm this inbox is monitored
-  supportEmail: 'saturnpathsupport@gmail.com', // — TBD: confirm this inbox is monitored
-  mailingAddress: '[STREET ADDRESS, CITY, STATE ZIP — TBD before launch]',
+  legalEntity: 'SaturnPath — an independent, non-commercial study project',
+  privacyEmail: 'saturnpathsupport@gmail.com',
+  supportEmail: 'saturnpathsupport@gmail.com',
+  /** Empty until a real postal address is needed for marketing email (CAN-SPAM). */
+  mailingAddress: '',
   governingLaw: 'the State of California, USA',
   effectiveDate: 'June 13, 2026',
   /** Minimum age to create an account. Under-13 is blocked (COPPA). */
