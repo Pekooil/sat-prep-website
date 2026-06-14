@@ -171,13 +171,13 @@ export default function LoginPage() {
 
       <p className="text-sm text-center text-[var(--text-muted)]">
         Don&apos;t have an account?{' '}
-        <Link href="/onboarding" className="font-semibold text-[var(--accent)] hover:underline">
+        <Link href="/signup" className="font-semibold text-[var(--accent)] hover:underline">
           Create one free
         </Link>
       </p>
 
       <p className="text-center text-xs text-[var(--text-muted)]">
-        By continuing you agree to our{' '}
+        By continuing you confirm you are at least 13 years old and agree to our{' '}
         <Link href="/terms" className="underline hover:text-[var(--text-heading)]">Terms of Service</Link>
         {' '}and{' '}
         <Link href="/privacy" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>.

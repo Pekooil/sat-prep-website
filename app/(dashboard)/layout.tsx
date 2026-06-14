@@ -16,8 +16,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('id', user.id)
     .single()
 
+  // Google users must accept terms before accessing the app
+  if (profile && !profile.terms_accepted_at) {
+    redirect('/auth/google-consent')
+  }
+
   // First-time users must complete onboarding
-  if (profile && profile.has_completed_onboarding === false) {
+  if (profile && !profile.has_completed_onboarding) {
     redirect('/onboarding')
   }
 

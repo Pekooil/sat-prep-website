@@ -15,7 +15,8 @@ import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/supabase/env'
 // Routes that require a valid session
 const PROTECTED_PREFIXES = [
   '/home', '/calendar', '/data', '/error-log',
-  '/settings', '/tutorial', '/inventory',
+  '/settings', '/tutorial', '/inventory', '/onboarding',
+  '/auth/google-consent',
 ]
 
 // Routes only accessible when NOT logged in
@@ -100,6 +101,7 @@ export const config = {
     '/tutorial/:path*',
     '/inventory/:path*',
     '/onboarding/:path*',
+    '/auth/google-consent',
     '/login',
     '/signup',
   ],

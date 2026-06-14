@@ -6,19 +6,22 @@ export default async function OnboardingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // If already logged in and already onboarded, send to dashboard
-  if (user) {
-    const { data: profile } = await supabase
-      .from('users')
-      .select('has_completed_onboarding')
-      .eq('id', user.id)
-      .single()
+  // Proxy guarantees auth; this is a fallback safety net.
+  if (!user) redirect('/signup')
 
-    if (profile?.has_completed_onboarding) {
-      redirect('/home')
-    }
+  const { data: profile } = await supabase
+    .from('users')
+    .select('has_completed_onboarding, terms_accepted_at')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.terms_accepted_at) {
+    redirect('/auth/google-consent')
   }
 
-  // Allow unauthenticated users — account creation is step 5 of the wizard.
-  return <OnboardingWizard isAuthenticated={!!user} />
+  if (profile?.has_completed_onboarding) {
+    redirect('/home')
+  }
+
+  return <OnboardingWizard isAuthenticated={true} />
 }
