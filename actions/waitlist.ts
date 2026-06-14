@@ -61,13 +61,13 @@ export interface LandingStats {
 export async function getLandingStats(): Promise<LandingStats> {
   try {
     const admin = createAdminClient()
-    const [waitlistRes, inventoryRes] = await Promise.all([
+    const [usersRes, inventoryRes] = await Promise.all([
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (admin as any).from('waitlist_signups').select('id', { count: 'exact', head: true }),
+      (admin as any).from('users').select('id', { count: 'exact', head: true }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (admin as any).from('question_inventory').select('available_count'),
     ])
-    const userCount = waitlistRes.count ?? 0
+    const userCount = usersRes.count ?? 0
     const questionCount = (inventoryRes.data as Array<{ available_count: number }> | null)
       ?.reduce((sum: number, r: { available_count: number }) => sum + (r.available_count ?? 0), 0) ?? 0
     return { userCount, questionCount }

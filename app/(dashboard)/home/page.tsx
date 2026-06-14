@@ -9,7 +9,6 @@ import { WelcomeBanner } from '@/components/home/welcome-banner'
 import { ScoreCard } from '@/components/home/score-card'
 import { UpcomingTasks } from '@/components/home/upcoming-tasks'
 import { AIPlannerTrigger } from '@/components/home/ai-planner-trigger'
-import { GuestUpgradeBanner } from '@/components/home/guest-upgrade-banner'
 import { todayISO } from '@/lib/utils'
 
 export default async function HomePage() {
@@ -82,7 +81,6 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6">
-      {user?.is_anonymous && <GuestUpgradeBanner />}
       <WelcomeBanner
         profile={profile}
         streak={streak}

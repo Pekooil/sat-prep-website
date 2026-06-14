@@ -12,9 +12,7 @@ import {
   ChevronDown,
   ClipboardList,
   Database,
-  Flag,
   LineChart,
-  Loader2,
   NotebookPen,
   RefreshCw,
   Target,
@@ -22,10 +20,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { SaturnPathLogo } from '@/components/layout/saturn-path-logo'
-import { joinWaitlist } from '@/actions/waitlist'
 import type { LandingStats } from '@/actions/waitlist'
 import { cn } from '@/lib/utils'
 
@@ -301,104 +296,6 @@ function TimelineNode() {
     />
   )
 }
-
-/* ════════════════════════════════════════════════════════════════════════
-   Waitlist email capture — the only live interaction on the page
-   ════════════════════════════════════════════════════════════════════════ */
-const WaitlistForm = React.forwardRef<
-  HTMLInputElement,
-  { id: string; layout?: 'inline' | 'stacked' }
->(function WaitlistForm({ id, layout = 'inline' }, emailRef) {
-  const [pending, setPending] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
-  const [done, setDone] = React.useState(false)
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setPending(true)
-    setError(null)
-    const result = await joinWaitlist(new FormData(e.currentTarget))
-    setPending(false)
-    if (result.error) {
-      setError(result.error)
-      return
-    }
-    setDone(true)
-  }
-
-  if (done) {
-    return (
-      <div
-        role="status"
-        className="flex items-center gap-2.5 rounded-[var(--radius)] border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/60 dark:bg-emerald-900/20"
-      >
-        <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-        <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-          You&apos;re on the list. We&apos;ll email you the moment we launch.
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <form onSubmit={handleSubmit} noValidate className="w-full">
-      <div
-        className={
-          layout === 'inline'
-            ? 'flex flex-col gap-2.5 sm:flex-row sm:items-end'
-            : 'flex flex-col gap-2.5'
-        }
-      >
-        <div className="flex-1 space-y-1.5 text-left">
-          <Label htmlFor={id} className="sr-only">
-            Email address
-          </Label>
-          <Input
-            ref={emailRef}
-            id={id}
-            name="email"
-            type="email"
-            inputSize="lg"
-            placeholder="you@example.com"
-            autoComplete="email"
-            required
-            disabled={pending}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? `${id}-error` : undefined}
-          />
-        </div>
-        <Button
-          type="submit"
-          size="lg"
-          disabled={pending}
-          className="font-semibold sm:w-auto"
-        >
-          {pending ? (
-            <>
-              <Loader2 className="h-[18px] w-[18px] animate-spin" />
-              Joining…
-            </>
-          ) : (
-            <>
-              Join Waitlist
-              <ArrowRight className="h-[18px] w-[18px]" />
-            </>
-          )}
-        </Button>
-      </div>
-      {error && (
-        <p id={`${id}-error`} className="mt-2 text-left text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
-      )}
-      <p className="mt-2 text-left text-xs text-[var(--text-muted)]">
-        By joining, you agree to receive occasional launch emails. See our{' '}
-        <Link href="/privacy" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>.
-        Unsubscribe anytime.
-      </p>
-    </form>
-  )
-})
 
 /* ════════════════════════════════════════════════════════════════════════
    Product mocks — illustrative "screenshots" of the five headline features.
@@ -992,29 +889,18 @@ const STEPS = [
    ════════════════════════════════════════════════════════════════════════ */
 export function LandingPage({ stats }: { stats: LandingStats }) {
   const STATS = [
-    { value: stats.userCount,    suffix: '+', label: 'students practicing with SaturnPath' },
+    { value: stats.userCount,    suffix: '+', label: 'students already using SaturnPath' },
     { value: stats.questionCount, suffix: '+', label: 'questions from College Board Question Bank' },
     { value: 29,                 suffix: '',  label: 'different skills for practice' },
     { value: 100,                suffix: '%', label: 'free — no paywall, no tiers' },
   ]
 
-  const heroEmailRef = React.useRef<HTMLInputElement>(null)
   const progressRef = React.useRef<HTMLDivElement>(null)
   const ringRef = React.useRef<SVGGElement>(null)
   const saturnParallaxRef = React.useRef<HTMLDivElement>(null)
   const scrollCueRef = React.useRef<HTMLDivElement>(null)
   const timelineRef = React.useRef<HTMLDivElement>(null)
   const spineFillRef = React.useRef<HTMLDivElement>(null)
-
-  const focusWaitlist = React.useCallback(() => {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    heroEmailRef.current?.scrollIntoView({
-      behavior: prefersReduced ? 'auto' : 'smooth',
-      block: 'center',
-    })
-    // Defer focus until the smooth scroll settles so we don't fight it.
-    window.setTimeout(() => heroEmailRef.current?.focus(), prefersReduced ? 0 : 320)
-  }, [])
 
   /* Scroll-linked motion, all via direct style writes (no re-renders):
        • header scroll-progress bar
@@ -1108,19 +994,14 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
           <SaturnPathLogo size="md" asLink={false} />
           <div className="flex items-center gap-2 sm:gap-3">
-            <Button
-              type="button"
-              size="sm"
-              onClick={focusWaitlist}
-              className="font-semibold"
-            >
-              Join Waitlist
+            <Button asChild size="sm" className="font-semibold">
+              <Link href="/signup">Get started free</Link>
             </Button>
             <Link
               href="/login"
               className="rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-heading)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
             >
-              Sign in for beta
+              Sign in
             </Link>
           </div>
         </div>
@@ -1142,7 +1023,7 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
               <Reveal>
                 <span className="sp-eyebrow inline-flex items-center gap-2">
                   <span className="lp-pulse h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                  Launching on 7/17/2026
+                  100% free &middot; No paywall &middot; No tiers
                 </span>
                 <h1 className="sp-display mt-4 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
                   <WordsReveal text="Your personalized path to a higher SAT score." />
@@ -1155,11 +1036,16 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
               </Reveal>
 
               <Reveal delay={150}>
-                <div className="mt-8 max-w-md">
-                  <WaitlistForm id="hero-email" ref={heroEmailRef} />
-                  <p className="mt-3 text-sm text-[var(--text-muted)]">
-                    Be first in line when we open. No spam — just one launch email.
-                  </p>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Button asChild size="lg" className="font-semibold">
+                    <Link href="/signup">
+                      Get started free
+                      <ArrowRight className="h-[18px] w-[18px]" />
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link href="/login">Sign in</Link>
+                  </Button>
                 </div>
               </Reveal>
             </div>
@@ -1356,21 +1242,24 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
                 <SaturnIllustration ringIdle className="lp-float mx-auto h-20 w-20 opacity-90" />
               </div>
               <h2 className="sp-display text-3xl sm:text-4xl">
-                Be first in line.
+                Start studying smarter today.
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-lg text-[var(--text-muted)]">
-                SaturnPath launches on 7/17/2026 — completely free, no paywall, no
-                tiers. Join the waitlist and we&apos;ll email you the moment
-                it&apos;s ready.
+                SaturnPath is completely free — no paywall, no tiers. Create an account
+                and get your personalized study plan in minutes.
               </p>
             </Reveal>
             <Reveal delay={150}>
-              <div className="mx-auto mt-8 max-w-md">
-                <WaitlistForm id="cta-email" layout="inline" />
-                <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)]">
-                  <Flag className="h-3.5 w-3.5" />
-                  Launching on 7/17/2026 — be first in line. No spam.
-                </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <Button asChild size="lg" className="font-semibold">
+                  <Link href="/signup">
+                    Get started free
+                    <ArrowRight className="h-[18px] w-[18px]" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link href="/login">Sign in</Link>
+                </Button>
               </div>
             </Reveal>
           </div>
@@ -1390,7 +1279,7 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
                 Terms of Service
               </Link>
               <Link href="/login" className="font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-heading)]">
-                Sign in for beta
+                Sign in
               </Link>
             </nav>
           </div>

@@ -21,33 +21,8 @@ const PROTECTED_PREFIXES = [
 // Routes only accessible when NOT logged in
 const AUTH_ROUTES = ['/login', '/signup']
 
-// SHA-256 of (password + salt) — same logic as actions/beta.ts so the proxy
-// can verify the cookie without importing from actions/ (edge-safe Web Crypto).
-async function betaToken(password: string): Promise<string> {
-  const enc = new TextEncoder()
-  const buf = await crypto.subtle.digest('SHA-256', enc.encode(password + '-saturnpath-beta'))
-  return Array.from(new Uint8Array(buf))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  // ── 0. Beta gate — intercept /login and /signup when BETA_PASSWORD is set ─
-  // Checked BEFORE the Supabase session refresh to keep the path short for
-  // unauthenticated visitors who don't yet have the beta cookie.
-  const betaPassword = process.env.BETA_PASSWORD
-  if (betaPassword && AUTH_ROUTES.some(p => pathname.startsWith(p))) {
-    const expected = await betaToken(betaPassword)
-    const actual   = request.cookies.get('beta-access')?.value
-    if (actual !== expected) {
-      const gateUrl = request.nextUrl.clone()
-      gateUrl.pathname = '/beta'
-      gateUrl.searchParams.set('next', pathname)
-      return NextResponse.redirect(gateUrl)
-    }
-  }
 
   // ── 1. Supabase session refresh ───────────────────────────────────────────
   let response = NextResponse.next({ request })
@@ -127,6 +102,5 @@ export const config = {
     '/onboarding/:path*',
     '/login',
     '/signup',
-    '/beta',
   ],
 }
