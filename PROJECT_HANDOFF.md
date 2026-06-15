@@ -6,11 +6,91 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-14 (Session 29 — Practice test scheduling overhaul: biweekly cadence on last study day, mandatory 2-days-before test, SAT test day calendar marker, onboarding count display)
+2026-06-15 (Session 30 — Inventory mode system, tutorial step variants, Desmos link for math)
 
 ---
 
 ## What Was Done This Session
+
+### Session 30 — Inventory Mode System + Tutorial Variants + Desmos Calculator Link
+
+**Goal:** (A) Dual inventory mode toggle (`exclude_active` / `include_active`) with per-user DB preference, dual Supabase tables, plan engine integration, and immediate data refresh on toggle. (B) Tutorial step 5 variant for `include_active` users. (C) Desmos graphing calculator link for all math assignments.
+
+#### A. Inventory Mode System
+
+**`types/database.ts`**
+- Added `inventory_mode: 'exclude_active' | 'include_active' | null` to users Row/Insert/Update.
+- Added full `question_inventory_with_active` table type (identical schema to `question_inventory`).
+
+**`lib/study-plan-engine/types.ts`**
+- Added `inventoryMode?: 'exclude_active' | 'include_active'` to `StudyPlanEngineInput`.
+
+**`lib/study-plan-engine/plan-store.service.ts`**
+- `loadInventoryLimits` now accepts `mode` param; selects `question_inventory_with_active` for `include_active`, `question_inventory` for `exclude_active`.
+
+**`actions/question-inventory.ts`** (complete rewrite)
+- Removed all CRUD/admin mutations (`createInventoryItem`, `updateInventoryItem`, etc.) — admin data is managed via Supabase only.
+- Added: `InventoryMode` type, `getUserInventoryMode()`, `setInventoryMode()`, `getInventoryWithStats(mode)`, `getInventoryLimits(supabase, mode)`.
+
+**`actions/onboarding.ts`**
+- Both `saveOnboarding()` and `signUpAndSaveOnboarding()`: after plan generation, sets `users.inventory_mode` automatically — `include_active` for ≤4 practice tests, `exclude_active` for ≥5.
+
+**`actions/study-plan.ts`**
+- `generatePlanFromProfile()` and `generatePlanFromForm()` both read `inventory_mode` from the user row and pass it to the engine as `inventoryMode`.
+
+**`components/inventory/inventory-mode-toggle.tsx`** (new file)
+- Toggle UI with "Recommended" / "Not recommended" badge based on practice test count.
+- Warning dialog (using `Dialog`, not `AlertDialog` — that component doesn't exist) when switching modes.
+- Calls `setInventoryMode()` via `useTransition`, then calls `onModeChange(newMode)`.
+
+**`components/inventory/inventory-client.tsx`**
+- No Admin tab. `handleModeChange()` calls `getInventoryWithStats(newMode)` directly via `useTransition` for immediate data refresh without page reload.
+- Loading state: `opacity-60 pointer-events-none` while transition is in progress.
+
+**`components/inventory/empty-state.tsx`** — Simplified to informational message only (no import/create buttons).
+
+**`components/inventory/inventory-admin.tsx`** — DELETED (admin mutations removed; Supabase is the only way to manage inventory data).
+
+**`app/(dashboard)/inventory/page.tsx`** — Sequential fetch: `getUserInventoryMode()` first, then `getInventoryWithStats(mode)` with that mode.
+
+**PENDING (manual steps in Supabase):**
+- Create `question_inventory_with_active` table (copy schema from `question_inventory`).
+- Add RLS policy: SELECT-only for `authenticated` (same as `question_inventory`).
+- Add `inventory_mode` column to `users` table: `ALTER TABLE users ADD COLUMN inventory_mode text CHECK (inventory_mode IN ('exclude_active', 'include_active'));`
+- Enter the include-active question counts in the new table.
+
+#### B. Tutorial Step 5 Variant for include_active users
+
+**`components/tutorial/tutorial-client.tsx`**
+- Added `imageSrc?: string` to `TutorialStep` interface.
+- `AnimatedScreenshot` accepts optional `src` prop (falls back to `/tutorial/step${step}.png`).
+- `StepCard` passes `step.imageSrc` to `AnimatedScreenshot`.
+- `STEP5_EXCLUDE` — existing content unchanged; no `imageSrc` (uses default `step5.png`).
+- `STEP5_INCLUDE` — title: "Leave 'Exclude Active Questions' Unchecked"; description advises NOT checking the box; `imageSrc: '/tutorial/step5active.png'`; 4 new help Q&As.
+- At render time: `STEPS.map(s => s.id === 5 ? { ...s, ...step5Variant } : s)`.
+
+**`app/(dashboard)/tutorial/page.tsx`** — Made async, uses `noStore()`, fetches `inventory_mode`, passes to `TutorialClient`.
+
+**Note:** Place `public/tutorial/step5active.png` in the public folder (same zoom settings as step5.png).
+
+#### C. Desmos Graphing Calculator Link
+
+**`components/calendar/task-drawer.tsx`**
+- Added a "Calculator" section in the scrollable body, visible only for `task.subject === 'math' && !isPracticeTest`.
+- Link: `https://www.desmos.com/calculator` with `ExternalLink` icon.
+- Positioned between QB Filters section and Instructions section.
+
+**`components/calendar/session-workflow-dialog.tsx`**
+- In the `idle` phase, added a Desmos link button (same styling as the QB button) below the QB link, visible only for `task.subject === 'math'`.
+- Link: `https://www.desmos.com/calculator` with `ExternalLink` icon.
+
+**TypeScript:** `npx tsc --noEmit` → 0 errors.
+
+---
+
+## Previously Done (summary)
+
+### Session 29 — Practice Test Scheduling Overhaul
 
 ### Session 29 — Practice Test Scheduling Overhaul
 

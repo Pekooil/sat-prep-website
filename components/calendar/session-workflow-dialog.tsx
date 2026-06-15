@@ -459,6 +459,18 @@ export function SessionWorkflowDialog({
                   <ExternalLink className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
                   Open College Board Question Bank
                 </a>
+
+                {task.subject === 'math' && (
+                  <a
+                    href="https://www.desmos.com/calculator"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-sunken)] transition-colors"
+                  >
+                    <ExternalLink className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
+                    Open Desmos Graphing Calculator
+                  </a>
+                )}
               </div>
 
               <DialogFooter className="flex-none px-6 py-4 border-t border-[var(--border)]">

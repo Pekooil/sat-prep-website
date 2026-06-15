@@ -399,6 +399,24 @@ export function TaskDrawer({
                 </section>
               )}
 
+              {/* Desmos Calculator — math tasks only */}
+              {task.subject === 'math' && !isPracticeTest && (
+                <section>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)] mb-2">
+                    Calculator
+                  </h3>
+                  <a
+                    href="https://www.desmos.com/calculator"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline font-medium"
+                  >
+                    Open Desmos Graphing Calculator
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </section>
+              )}
+
               {/* Instructions — hidden for completed tasks (already done) */}
               {!task.is_completed && (
                 <section>

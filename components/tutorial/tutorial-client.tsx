@@ -26,6 +26,8 @@ interface TutorialStep {
   zoomOrigin: string
   zoom?: boolean
   hasScreenshot?: boolean
+  /** Override the default /tutorial/step{id}.png image source */
+  imageSrc?: string
   helpItems: { q: string; a: string }[]
   icon: React.ReactNode
   badge?: string
@@ -363,7 +365,7 @@ function ScreenshotPlaceholder({ alt, hint }: { alt: string; hint: string }) {
   )
 }
 
-function AnimatedScreenshot({ step, alt, zoomOrigin, zoom = true }: { step: number; alt: string; zoomOrigin: string; zoom?: boolean }) {
+function AnimatedScreenshot({ step, alt, zoomOrigin, zoom = true, src }: { step: number; alt: string; zoomOrigin: string; zoom?: boolean; src?: string }) {
   return (
     <div
       role="img"
@@ -372,7 +374,7 @@ function AnimatedScreenshot({ step, alt, zoomOrigin, zoom = true }: { step: numb
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={`/tutorial/step${step}.png`}
+        src={src ?? `/tutorial/step${step}.png`}
         alt={alt}
         className="w-full h-full object-cover object-top"
         style={zoom ? {
@@ -485,7 +487,7 @@ function StepCard({
       <div className="px-5">
         {step.hasScreenshot === false
           ? <ScreenshotPlaceholder alt={step.screenshotAlt} hint={step.screenshotHint} />
-          : <AnimatedScreenshot step={step.id} alt={step.screenshotAlt} zoomOrigin={step.zoomOrigin} zoom={step.zoom} />
+          : <AnimatedScreenshot step={step.id} alt={step.screenshotAlt} zoomOrigin={step.zoomOrigin} zoom={step.zoom} src={step.imageSrc} />
         }
       </div>
 
@@ -541,11 +543,64 @@ function StepCard({
   )
 }
 
+// ─── Step 5 variants by inventory mode ────────────────────────────────────────
+
+const STEP5_EXCLUDE: Pick<TutorialStep, 'title' | 'description' | 'detail' | 'helpItems' | 'badge' | 'imageSrc'> = {
+  title: 'Check "Exclude Active Questions"',
+  badge: 'Critical',
+  description:
+    'Before exporting, make sure the "Exclude Active Questions" checkbox is checked. This must be selected every single time you export questions — never skip it.',
+  detail:
+    'Active questions are questions that may appear on upcoming official College Board practice tests. If you practice them now, you will have already seen those questions when you later take a full-length practice test — artificially inflating your score and giving you a false read on your progress. Always check this box to keep your practice test results accurate and trustworthy.',
+  helpItems: [
+    {
+      q: 'What are "Active Questions"?',
+      a: 'Active questions are real items that the College Board currently uses or plans to use on upcoming official Digital SAT administrations and full-length practice tests. Seeing them in advance gives you an unfair preview that inflates your practice scores.',
+    },
+    {
+      q: 'What happens if I forget to check this box?',
+      a: 'You risk practicing questions that will later appear on a full-length practice test. When you take that test, your score will be artificially higher than your true ability because you already know the answers — making it harder to gauge your real progress.',
+    },
+    {
+      q: 'Do I need to check this box every time?',
+      a: 'Yes, every single time you export. The checkbox may not persist between sessions. Make it a habit: before you click Export, verify the box is checked. It takes one second and protects the integrity of every future practice test you take.',
+    },
+  ],
+}
+
+const STEP5_INCLUDE: Pick<TutorialStep, 'title' | 'description' | 'detail' | 'helpItems' | 'badge' | 'imageSrc'> = {
+  title: 'Leave "Exclude Active Questions" Unchecked',
+  imageSrc: '/tutorial/step5active.png',
+  badge: 'Critical',
+  description:
+    'Because your inventory is set to "Include active questions" mode, do NOT check the "Exclude Active Questions" box on the Question Bank website. Leave it unchecked every time you export.',
+  detail:
+    'Your study plan is built using the include-active inventory table, which counts active questions as part of your available pool. If you check "Exclude Active Questions" on the QB site, you will get fewer questions than your plan expects — your inventory tracking will fall out of sync and your session targets will be inaccurate. Leave the checkbox unchecked to keep your practice aligned with your plan.',
+  helpItems: [
+    {
+      q: 'Why is this the opposite of what other students do?',
+      a: 'Most students exclude active questions to protect practice-test integrity. Because your plan uses "Include active questions" inventory mode, your question counts are calibrated to include that pool. Excluding them on the QB site would give you a smaller set than your plan anticipates.',
+    },
+    {
+      q: 'Will this affect my practice test scores?',
+      a: 'It may. You could encounter questions on a full-length practice test that you have already seen during a study session. This is a known trade-off of include-active mode — your plan is designed around a larger question pool at the cost of some practice-test novelty.',
+    },
+    {
+      q: 'How do I know if my inventory mode is set correctly?',
+      a: 'Go to the Inventory tab and look at the Inventory sub-tab. The mode toggle at the top shows your current setting. If you see "Include active" selected, leave the QB checkbox unchecked. If you later switch to "Exclude active" mode, you must start checking it again.',
+    },
+    {
+      q: 'Can I switch modes later?',
+      a: 'Yes, from the Inventory → Inventory tab. Be aware that switching modes changes which question counts your plan uses. You will see a warning dialog before the switch is applied.',
+    },
+  ],
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'sat-planner-tutorial-progress'
 
-export function TutorialClient() {
+export function TutorialClient({ inventoryMode }: { inventoryMode?: 'exclude_active' | 'include_active' }) {
   const [completed, setCompleted] = React.useState<boolean[]>(() =>
     Array(STEPS.length).fill(false),
   )
@@ -572,6 +627,13 @@ export function TutorialClient() {
     if (!hydrated) return
     localStorage.setItem(STORAGE_KEY, JSON.stringify(completed))
   }, [completed, hydrated])
+
+  const step5Variant = inventoryMode === 'include_active' ? STEP5_INCLUDE : STEP5_EXCLUDE
+  const steps = STEPS.map(s => {
+    if (s.id === 5) return { ...s, ...step5Variant }
+    if (s.id === 6 && inventoryMode === 'include_active') return { ...s, imageSrc: '/tutorial/step6active.png' }
+    return s
+  })
 
   const completedCount = completed.filter(Boolean).length
   const progressPct = Math.round((completedCount / STEPS.length) * 100)
@@ -638,7 +700,7 @@ export function TutorialClient() {
 
         {/* Step pills */}
         <div className="flex flex-wrap gap-2">
-          {STEPS.map((step, i) => (
+          {steps.map((step, i) => (
             <button
               key={step.id}
               onClick={() => {
@@ -687,7 +749,7 @@ export function TutorialClient() {
 
       {/* ── Step cards ── */}
       <div className="space-y-8">
-        {STEPS.map((step, i) => (
+        {steps.map((step, i) => (
           <div key={step.id} id={`step-${step.id}`} className="scroll-mt-20">
             <StepCard
               step={step}
