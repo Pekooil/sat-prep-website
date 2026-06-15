@@ -77,6 +77,13 @@ export const CATEGORY_COLORS: Record<string, CategoryColor> = {
     dot: 'bg-slate-500',
     leftBar: 'border-l-slate-500',
   },
+  'SAT Test Day': {
+    bg: 'bg-yellow-50 dark:bg-yellow-950/30',
+    border: 'border-yellow-400 dark:border-yellow-600',
+    text: 'text-yellow-800 dark:text-yellow-200',
+    dot: 'bg-yellow-500',
+    leftBar: 'border-l-yellow-500',
+  },
 }
 
 const DEFAULT_COLOR: CategoryColor = {

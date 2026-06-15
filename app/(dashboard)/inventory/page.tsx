@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { unstable_noStore as noStore } from 'next/cache'
 import { Package } from 'lucide-react'
-import { getInventoryWithStats } from '@/actions/question-inventory'
+import { getInventoryWithStats, getUserInventoryMode } from '@/actions/question-inventory'
 import { InventoryClient } from '@/components/inventory/inventory-client'
 
 export const metadata: Metadata = {
@@ -19,7 +19,9 @@ function formatDate(iso: string): string {
 export default async function InventoryPage() {
   noStore()
 
-  const { data: items = [], lastUpdated, error } = await getInventoryWithStats()
+  // Mode must be resolved first so inventory is fetched from the correct table.
+  const { mode, practiceTestCount } = await getUserInventoryMode()
+  const { data: items = [], lastUpdated, error } = await getInventoryWithStats(mode)
 
   return (
     <div className="space-y-6">
@@ -48,7 +50,12 @@ export default async function InventoryPage() {
           Failed to load inventory: {error}
         </div>
       ) : (
-        <InventoryClient items={items} lastUpdated={lastUpdated ?? null} />
+        <InventoryClient
+          items={items}
+          lastUpdated={lastUpdated ?? null}
+          mode={mode}
+          practiceTestCount={practiceTestCount}
+        />
       )}
     </div>
   )

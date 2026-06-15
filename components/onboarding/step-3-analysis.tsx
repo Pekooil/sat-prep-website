@@ -1,6 +1,6 @@
 'use client'
 
-import { Target, Calendar, Clock, Layers, CheckCircle2, TrendingUp } from 'lucide-react'
+import { Target, Calendar, Clock, Layers, CheckCircle2, TrendingUp, ClipboardList } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { OnboardingAnalysis } from '@/types'
 
@@ -12,7 +12,7 @@ interface Step3Props {
 }
 
 export function Step3Analysis({ analysis, step1CurrentScore, step1TargetScore, dailyStudyMinutes }: Step3Props) {
-  const { scoreGap, studyDays } = analysis
+  const { scoreGap, studyDays, practiceTestCount } = analysis
   const weeklyHours = Math.round((dailyStudyMinutes * 7) / 60)
   const estimatedWeeks = Math.ceil(studyDays / 7)
 
@@ -89,6 +89,22 @@ export function Step3Analysis({ analysis, step1CurrentScore, step1TargetScore, d
           <p className="text-2xl font-bold text-violet-700 dark:text-violet-300">{dailyStudyMinutes}m</p>
           <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Daily commitment</p>
           <p className="text-[10px] text-slate-400">≈ {weeklyHours} hrs/week</p>
+        </div>
+      </div>
+
+      {/* Practice test count */}
+      <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-4 flex items-center gap-4">
+        <div className="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+          <ClipboardList className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{practiceTestCount}</p>
+          <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+            Bluebook practice test{practiceTestCount !== 1 ? 's' : ''} scheduled
+          </p>
+          <p className="text-[10px] text-slate-400">
+            Every 2 weeks + one 2 days before your test
+          </p>
         </div>
       </div>
 

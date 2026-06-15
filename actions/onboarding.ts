@@ -150,6 +150,11 @@ export async function saveOnboarding(
 
   if (planResult.error) return { error: planResult.error }
 
+  // Set default inventory mode based on practice test count (non-fatal)
+  const defaultMode = (planResult.practiceTestDays ?? 0) >= 5 ? 'exclude_active' : 'include_active'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from('users') as any).update({ inventory_mode: defaultMode }).eq('id', user.id)
+
   // 5. Baseline score history
   const mathEstimate = Math.round(step1.currentScore * 0.5)
   const { error: scoreErr } = await supabase.from('score_history').insert({
@@ -330,6 +335,11 @@ export async function signUpAndSaveOnboarding(
     topicPerformance,
   })
   if (planResult.error) return { error: planResult.error }
+
+  // Set default inventory mode based on practice test count (non-fatal)
+  const defaultSignupMode = (planResult.practiceTestDays ?? 0) >= 5 ? 'exclude_active' : 'include_active'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (db.from('users') as any).update({ inventory_mode: defaultSignupMode }).eq('id', user.id)
 
   // 5. Baseline score history
   const mathEstimate = Math.round(step1.currentScore * 0.5)

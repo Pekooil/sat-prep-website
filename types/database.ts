@@ -18,6 +18,7 @@ export interface Database {
           birth_year: number | null
           terms_accepted_at: string | null
           parental_ack: boolean
+          inventory_mode: 'exclude_active' | 'include_active' | null
           created_at: string
           updated_at: string
         }
@@ -34,6 +35,7 @@ export interface Database {
           birth_year?: number | null
           terms_accepted_at?: string | null
           parental_ack?: boolean
+          inventory_mode?: 'exclude_active' | 'include_active' | null
           created_at?: string
           updated_at?: string
         }
@@ -49,6 +51,7 @@ export interface Database {
           birth_year?: number | null
           terms_accepted_at?: string | null
           parental_ack?: boolean
+          inventory_mode?: 'exclude_active' | 'include_active' | null
           updated_at?: string
         }
         Relationships: []
@@ -546,6 +549,37 @@ export interface Database {
         Relationships: []
       }
       question_inventory: {
+        Row: {
+          id: string
+          section: 'Reading and Writing' | 'Math'
+          domain: string
+          skill: string
+          difficulty: 'easy' | 'medium' | 'hard'
+          available_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          section: 'Reading and Writing' | 'Math'
+          domain: string
+          skill: string
+          difficulty: 'easy' | 'medium' | 'hard'
+          available_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          section?: 'Reading and Writing' | 'Math'
+          domain?: string
+          skill?: string
+          difficulty?: 'easy' | 'medium' | 'hard'
+          available_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      question_inventory_with_active: {
         Row: {
           id: string
           section: 'Reading and Writing' | 'Math'

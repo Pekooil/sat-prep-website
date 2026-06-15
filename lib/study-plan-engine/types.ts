@@ -6,7 +6,7 @@
 export type Subject    = 'math' | 'reading_writing'
 export type SubjectAll = Subject | 'both'
 export type Difficulty = 'easy' | 'medium' | 'hard'
-export type DayType    = 'study' | 'review' | 'practice_test' | 'rest'
+export type DayType    = 'study' | 'review' | 'practice_test' | 'rest' | 'test_day'
 export type Phase      = 'foundation' | 'skill' | 'advanced' | 'strategy'
 
 // ─── Domain Catalog Types ─────────────────────────────────────────────────────
@@ -52,9 +52,18 @@ export interface StudyPlanEngineInput {
    * Optional per-day-of-week type override.
    * Keys are JS getDay() values: 0=Sun, 1=Mon … 6=Sat.
    * When provided, overrides the default Mon–Fri=study, Sat=review, Sun=rest layout.
-   * 'review' days in practiceTestWeeks are automatically promoted to 'practice_test'.
+   * The last 'study' day of the week is automatically promoted to 'practice_test'
+   * in biweekly practice-test weeks. A mandatory practice test is also placed
+   * 2 calendar days before the test date regardless of this schedule.
    */
   daySchedule?: Record<number, 'study' | 'review' | 'rest'>
+  /**
+   * Which inventory table to use when capping question counts.
+   * 'exclude_active' → question_inventory (default, excludes questions currently in flight)
+   * 'include_active' → question_inventory_with_active (higher counts, includes in-flight questions)
+   * Defaults to 'exclude_active' when omitted.
+   */
+  inventoryMode?: 'exclude_active' | 'include_active'
 }
 
 // ─── Scoring / Ranking ────────────────────────────────────────────────────────
@@ -139,6 +148,11 @@ export interface PracticeTestBlock extends ReplannerMeta {
   testNumber: number
 }
 
+export interface TestDayBlock extends ReplannerMeta {
+  durationMinutes: number
+  description: string
+}
+
 export interface DaySchedule {
   date: string           // ISO 'YYYY-MM-DD'
   dayOfWeek: number      // 0=Sun … 6=Sat
@@ -147,7 +161,7 @@ export interface DaySchedule {
   weekNumber: number
   phase: Phase
   /** Null on rest days */
-  blocks: Array<StudyBlock | ReviewBlock | PracticeTestBlock>
+  blocks: Array<StudyBlock | ReviewBlock | PracticeTestBlock | TestDayBlock>
   totalDurationMinutes: number
   totalQuestions: number
 }

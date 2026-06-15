@@ -6,11 +6,88 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-13 (Session 22 — Legal compliance: age gate, deletion, consent, policies)
+2026-06-14 (Session 29 — Practice test scheduling overhaul: biweekly cadence on last study day, mandatory 2-days-before test, SAT test day calendar marker, onboarding count display)
 
 ---
 
 ## What Was Done This Session
+
+### Session 29 — Practice Test Scheduling Overhaul
+
+**Goal:** Replace the complex practice-test week logic with a simple biweekly cadence, move practice tests to the student's last study day (not Saturday), always add a mandatory practice test 2 days before the SAT, mark the test date on the calendar, and show the total practice test count during onboarding.
+
+**`lib/study-plan-engine/types.ts`**
+- Added `'test_day'` to the `DayType` union.
+- Added `TestDayBlock` interface for the SAT test date calendar marker.
+- Updated `DaySchedule.blocks` to include `TestDayBlock`.
+
+**`lib/study-plan-engine/scheduler.service.ts`**
+- Rewrote `practiceTestWeekSet()`: now generates one practice test every 2 weeks (weeks 2, 4, 6… up to `totalWeeks − 1`).
+- Added `lastStudyDayOfWeek()` helper: returns Friday (5) for the default schedule; scans Mon→Sun in reverse for custom `daySchedule` overrides.
+- Updated `classifyDay()`: promotes the last study day (not the Saturday review day) to `'practice_test'` in biweekly weeks.
+- Added `prePracticeTestDate` = testDate − 2 days: this date is forced to `'practice_test'` in the loop regardless of biweekly rules.
+- Added `buildTestDayBlock()`.
+- After the main loop: appends a `test_day` entry for `input.testDate` itself.
+
+**`lib/study-plan-engine/plan-store.service.ts`**
+- Added `testDayToTask()`: creates a `'SAT Test Day'` calendar task.
+- Added cleanup step to delete old `'SAT Test Day'` tasks on plan regeneration.
+- Added `test_day` branch in the schedule loop.
+
+**`components/calendar/task-colors.ts`**
+- Added `'SAT Test Day'` color: amber/yellow so the test date stands out.
+
+**`types/index.ts`**
+- Added `practiceTestCount: number` to `OnboardingAnalysis`.
+
+**`components/onboarding/onboarding-wizard.tsx`**
+- Added `computePracticeTestCount(studyDays)` helper.
+- Wired into `computeAnalysis()`.
+
+**`components/onboarding/step-3-analysis.tsx`**
+- Added practice test count display: amber card with `ClipboardList` icon showing count and scheduling rationale.
+
+**TypeScript:** `npx tsc --noEmit` → 0 errors.
+
+---
+
+## Previously Done (summary)
+
+### Session 28 — UI Polish
+
+**Goal:** A series of focused visual improvements across the logged-in dashboard.
+
+**Home page — title card progress bar (`components/home/score-progress-bar.tsx`)**
+- Fill bar changed from white glow to **dark purple gradient** (`#3b0764 → #581c87 → #6b21a8`) with violet box-shadow glow.
+- Thumb (current score handle) changed to match: `#c084fc` fill, lavender border, purple glow.
+- Target score marker replaced from a gold vertical pill to a **gold Saturn SVG icon** (planet body + closed ellipse ring with back/front layering for depth). The same gold colors (`#ffe066 → #f5a623`) and `drop-shadow` glow are preserved. Saturn is 40×40px (rendered via `viewBox="0 0 18 18"` scaled up).
+
+**Home page — clickable score/error cards (`app/(dashboard)/home/page.tsx`)**
+- **Current Score** card now links to `/data`.
+- **Target Score** card now links to `/data`.
+- **Open Errors** card now links to `/error-log`.
+- Used the existing `href` prop on `ScoreCard` — no component changes needed.
+
+**Topic mastery cards — colored borders (`components/ai-coach/topic-mastery-cards.tsx`)**
+- Each card's border now reflects its mastery level:
+  - Mastered → `border-emerald-500/50`
+  - Proficient → `border-blue-500/50`
+  - Developing → `border-amber-500/50`
+  - Needs Work → `border-rose-500/50`
+- Proficient badge (`badgeClass`) and progress bar (`barClass`) also updated to explicit `blue-500` to be consistent (previously used CSS accent variables that could resolve to purple).
+
+**Page title icons — all dashboard pages**
+Added a violet icon badge (rounded square, `bg-violet-100 dark:bg-violet-900/30`, `text-violet-600 dark:text-violet-400`) matching the Inventory page pattern to:
+- `app/(dashboard)/calendar/page.tsx` → `Calendar` icon
+- `app/(dashboard)/error-log/page.tsx` → `ClipboardList` icon
+- `components/data/data-client.tsx` (Analytics header) → `BarChart3` icon
+- `components/tutorial/tutorial-client.tsx` → `GraduationCap` icon
+
+All four use the same violet color as the existing Inventory (`Package`) icon.
+
+---
+
+## Previously Done (summary)
 
 ### Session 22 — Legal Compliance (US-only)
 

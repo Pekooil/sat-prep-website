@@ -75,16 +75,15 @@ Practice tests use a fixed `priority_score` of **100**.
 ### Step 2 — Day Classification (scheduler.service.ts)
 
 ```
-Mon–Fri  → study day   (one domain per session)
-Saturday → review day  OR practice test (every N weeks)
+Mon–Fri  → study day   (two blocks per day: one R&W + one Math)
+Saturday → review day  (always; never promoted to practice test)
 Sunday   → rest
 ```
 
 Practice test scheduling:
-- < 3 weeks: none
-- 3–6 weeks: weeks 2 and (total - 1)
-- 7–16 weeks: every 3rd week
-- > 16 weeks: every 4th week + every 2nd week in the final quarter
+- **Biweekly cadence:** one practice test every 2 weeks, starting at week 2, placed on the **last study day** of that week (Friday by default; scan Mon→Sun in reverse for custom `daySchedule`). Stops at week `totalWeeks − 1` — the final week is handled by the mandatory pre-test rule below.
+- **Mandatory pre-test:** the day **2 calendar days before the test date** is always a practice test, regardless of biweekly interval or day of week.
+- **Test date marker:** the test date itself is appended to the schedule as a `test_day` entry, creating a `'SAT Test Day'` calendar task (no QB filters, amber color on the calendar).
 
 ### Step 3 — Phase Assignment (difficulty.service.ts)
 

@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { assertAdmin } from '@/lib/auth/is-admin'
 import type { QuestionInventory } from '@/types'
+
+export type InventoryMode = 'exclude_active' | 'include_active'
 
 // ─── Enriched type ────────────────────────────────────────────────────────────
 
@@ -25,9 +25,60 @@ function subjectToSection(subject: string): 'Reading and Writing' | 'Math' {
   return subject === 'math' ? 'Math' : 'Reading and Writing'
 }
 
+function inventoryTable(mode: InventoryMode): string {
+  return mode === 'include_active' ? 'question_inventory_with_active' : 'question_inventory'
+}
+
+// ─── User Mode Preference ─────────────────────────────────────────────────────
+
+export async function getUserInventoryMode(): Promise<{
+  mode: InventoryMode
+  practiceTestCount: number
+}> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { mode: 'exclude_active', practiceTestCount: 0 }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: profile } = await (supabase.from('users') as any)
+    .select('inventory_mode')
+    .eq('id', user.id)
+    .single()
+
+  const { count } = await supabase
+    .from('calendar_tasks')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('category', 'Practice Test')
+
+  return {
+    mode: (profile?.inventory_mode as InventoryMode | null) ?? 'exclude_active',
+    practiceTestCount: count ?? 0,
+  }
+}
+
+export async function setInventoryMode(
+  mode: InventoryMode,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('users') as any)
+    .update({ inventory_mode: mode })
+    .eq('id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/inventory')
+  return {}
+}
+
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
-export async function getInventoryWithStats(): Promise<{
+export async function getInventoryWithStats(
+  mode: InventoryMode = 'exclude_active',
+): Promise<{
   data?: InventoryItemWithStats[]
   error?: string
   lastUpdated?: string
@@ -36,10 +87,12 @@ export async function getInventoryWithStats(): Promise<{
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Unauthorized' }
 
+  const table = inventoryTable(mode)
+
   const [inventoryRes, tasksRes, sessionsRes] = await Promise.all([
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
-      .from('question_inventory')
+      .from(table)
       .select('*')
       .order('section')
       .order('domain')
@@ -100,146 +153,6 @@ export async function getInventoryWithStats(): Promise<{
   return { data: items, lastUpdated }
 }
 
-// ─── Mutations ────────────────────────────────────────────────────────────────
-
-export async function createInventoryItem(data: {
-  section: 'Reading and Writing' | 'Math'
-  domain: string
-  skill: string
-  difficulty: 'easy' | 'medium' | 'hard'
-  available_count: number
-}): Promise<{ data?: QuestionInventory; error?: string }> {
-  // Inventory is global shared state — only admins may mutate it.
-  const denied = await assertAdmin()
-  if (denied) return { error: denied }
-  const supabase = createAdminClient()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: item, error } = await (supabase as any)
-    .from('question_inventory')
-    .insert({ ...data, updated_at: new Date().toISOString() })
-    .select()
-    .single()
-
-  if (error) return { error: error.message }
-  revalidatePath('/inventory')
-  return { data: item }
-}
-
-export async function updateInventoryItem(
-  id: string,
-  data: {
-    section?: 'Reading and Writing' | 'Math'
-    domain?: string
-    skill?: string
-    difficulty?: 'easy' | 'medium' | 'hard'
-    available_count?: number
-  },
-): Promise<{ data?: QuestionInventory; error?: string }> {
-  const denied = await assertAdmin()
-  if (denied) return { error: denied }
-  const supabase = createAdminClient()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: item, error } = await (supabase as any)
-    .from('question_inventory')
-    .update({ ...data, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) return { error: error.message }
-  revalidatePath('/inventory')
-  return { data: item }
-}
-
-export async function deleteInventoryItem(id: string): Promise<{ error?: string }> {
-  const denied = await assertAdmin()
-  if (denied) return { error: denied }
-  const supabase = createAdminClient()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
-    .from('question_inventory')
-    .delete()
-    .eq('id', id)
-
-  if (error) return { error: error.message }
-  revalidatePath('/inventory')
-  return {}
-}
-
-export async function bulkImportInventory(
-  items: Array<{
-    section: string
-    domain: string
-    skill: string
-    difficulty: string
-    available_count: number
-  }>,
-): Promise<{ imported: number; errors: string[] }> {
-  const denied = await assertAdmin()
-  if (denied) return { imported: 0, errors: [denied] }
-  const supabase = createAdminClient()
-
-  const VALID_SECTIONS = ['Reading and Writing', 'Math']
-  const VALID_DIFFS = ['easy', 'medium', 'hard']
-  const errors: string[] = []
-  type InventoryInsert = {
-    section: 'Reading and Writing' | 'Math'
-    domain: string
-    skill: string
-    difficulty: 'easy' | 'medium' | 'hard'
-    available_count: number
-    updated_at: string
-  }
-  const valid: InventoryInsert[] = []
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i]
-    if (!VALID_SECTIONS.includes(item.section)) {
-      errors.push(`Row ${i + 1}: invalid section "${item.section}" (must be "Reading and Writing" or "Math")`)
-      continue
-    }
-    if (!VALID_DIFFS.includes(item.difficulty?.toLowerCase())) {
-      errors.push(`Row ${i + 1}: invalid difficulty "${item.difficulty}" (must be easy/medium/hard)`)
-      continue
-    }
-    if (!item.domain?.trim() || !item.skill?.trim()) {
-      errors.push(`Row ${i + 1}: domain and skill are required`)
-      continue
-    }
-    const count = Number(item.available_count)
-    if (!Number.isFinite(count) || count < 0) {
-      errors.push(`Row ${i + 1}: available_count must be a non-negative integer`)
-      continue
-    }
-    valid.push({
-      section: item.section as 'Reading and Writing' | 'Math',
-      domain: item.domain.trim(),
-      skill: item.skill.trim(),
-      difficulty: item.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
-      available_count: Math.floor(count),
-      updated_at: new Date().toISOString(),
-    })
-  }
-
-  if (valid.length === 0) return { imported: 0, errors }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
-    .from('question_inventory')
-    .upsert(valid, { onConflict: 'section,domain,skill,difficulty' })
-
-  if (error) {
-    errors.push(error.message)
-    return { imported: 0, errors }
-  }
-
-  revalidatePath('/inventory')
-  return { imported: valid.length, errors }
-}
-
 // ─── Planner helper ───────────────────────────────────────────────────────────
 
 /**
@@ -250,9 +163,11 @@ export async function bulkImportInventory(
 export async function getInventoryLimits(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
+  mode: InventoryMode = 'exclude_active',
 ): Promise<Map<string, number>> {
+  const table = inventoryTable(mode)
   const { data } = await supabase
-    .from('question_inventory')
+    .from(table)
     .select('domain, skill, difficulty, available_count')
 
   const map = new Map<string, number>()

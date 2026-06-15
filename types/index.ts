@@ -129,6 +129,7 @@ export interface OnboardingAnalysis {
   scoreGap: number
   studyDays: number
   estimatedImprovement: number
+  practiceTestCount: number
 }
 
 export interface AIOnboardingRec {

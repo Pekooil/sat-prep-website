@@ -198,6 +198,21 @@ const defaultStep2: OnboardingStep2Data = {
   },
 }
 
+// ─── Practice Test Count ─────────────────────────────────────────────────
+
+/**
+ * Estimate how many Bluebook practice tests will be in the plan.
+ * Mirrors the scheduler's practiceTestWeekSet() logic plus the mandatory
+ * 2-days-before test that is always added regardless of the biweekly cadence.
+ */
+function computePracticeTestCount(studyDays: number): number {
+  if (studyDays < 3) return 0
+  const totalWeeks = Math.ceil(studyDays / 7)
+  let biweeklyCount = 0
+  for (let w = 2; w <= totalWeeks - 1; w += 2) biweeklyCount++
+  return biweeklyCount + 1 // +1 for the mandatory 2-days-before test
+}
+
 // ─── Analysis Computation ─────────────────────────────────────────────────
 
 const DOMAIN_DEFS: Array<{
@@ -239,8 +254,9 @@ function computeAnalysis(step1: OnboardingStep1Data, step2: OnboardingStep2Data)
     : 90
 
   const estimatedImprovement = Math.min(scoreGap, weakDomains.length * 40 + Math.round(scoreGap * 0.3))
+  const practiceTestCount = computePracticeTestCount(studyDays)
 
-  return { domains, weakDomains, strongDomains, totalAttempted, totalCorrect, overallAccuracy, scoreGap, studyDays, estimatedImprovement }
+  return { domains, weakDomains, strongDomains, totalAttempted, totalCorrect, overallAccuracy, scoreGap, studyDays, estimatedImprovement, practiceTestCount }
 }
 
 // ─── Validation ───────────────────────────────────────────────────────────

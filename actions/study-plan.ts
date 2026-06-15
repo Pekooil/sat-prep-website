@@ -27,7 +27,7 @@ export async function generatePlanFromProfile(): Promise<{
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile, error: profileErr } = await (supabase.from('users') as any)
-    .select('current_score, target_score, test_date, daily_study_minutes')
+    .select('current_score, target_score, test_date, daily_study_minutes, inventory_mode')
     .eq('id', user.id)
     .single()
 
@@ -44,6 +44,7 @@ export async function generatePlanFromProfile(): Promise<{
     testDate: profile.test_date,
     dailyStudyMinutes: profile.daily_study_minutes ?? 60,
     topicPerformance,
+    inventoryMode: profile.inventory_mode ?? 'exclude_active',
   })
 }
 
@@ -66,6 +67,12 @@ export async function generatePlanFromForm(params: {
   if (!user) return { error: 'Unauthorized' }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: modeRow } = await (supabase.from('users') as any)
+    .select('inventory_mode')
+    .eq('id', user.id)
+    .single()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const topicPerformance = await fetchTopicPerformance(supabase as any, user.id, params.weakAreaKeys)
 
   return runEngine(supabase, {
@@ -76,6 +83,7 @@ export async function generatePlanFromForm(params: {
     dailyStudyMinutes: params.dailyStudyMinutes,
     topicPerformance,
     daySchedule: params.daySchedule,
+    inventoryMode: modeRow?.inventory_mode ?? 'exclude_active',
   })
 }
 

@@ -1,6 +1,6 @@
 # SAT Study Planner AI — Complete Handoff
 
-**Last updated:** 2026-06-14 (Session 27 — Resend email system: signup confirmation + daily reminders)
+**Last updated:** 2026-06-14 (Session 29 — Practice test scheduling overhaul: biweekly cadence on last study day, mandatory 2-days-before test, SAT test day calendar marker, onboarding count display)
 **Project root:** `/Users/darcywang/sat-prep-website`
 **Stack:** Next.js 16.2.7 (App Router), React 19, TypeScript 5 strict, Tailwind CSS v4, Supabase
 **No external AI API** — all planning logic is deterministic TypeScript.
@@ -222,7 +222,12 @@ lib/
 components/
   home/
     welcome-banner.tsx         Score progress bar, streak pill, test countdown. Lucide icons: Flame, CalendarDays, Target, PartyPopper.
+    score-progress-bar.tsx     Session 28: fill bar is dark purple gradient (#3b0764→#581c87→#6b21a8) with
+                               violet glow. Thumb is #c084fc with lavender border. Target score marker is
+                               a gold Saturn SVG (40px, viewBox 18×18) — closed ellipse ring (back half behind
+                               planet, front arc in front) with same gold colors/drop-shadow as original pill.
     score-card.tsx             Stat cards with colored accent stripe, Lucide icons, hover lift.
+                               Session 28: Current Score + Target Score link to /data; Open Errors links to /error-log.
     ai-planner-trigger.tsx     "AI Adaptive Replanner" card — scores + test date + hours/day + day schedule picker.
     quick-stats.tsx            Summary stats row.
     upcoming-tasks.tsx         Next 3 upcoming tasks preview.
@@ -259,6 +264,9 @@ components/
     stats-cards.tsx, score-timeline.tsx, accuracy-chart.tsx, category-stats.tsx  — LEGACY, not imported. Safe to delete.
   ai-coach/                   Components shared with Data tab (route /ai-coach was deleted in Session 8).
     topic-mastery-cards.tsx   8 domain cards sorted weakest→strongest, color-coded by mastery tier.
+                              Session 28: each card now has a colored border matching its mastery tier
+                              (emerald/blue/amber/rose at 50% opacity). Proficient badge + bar explicitly
+                              use blue-500 (no longer the accent CSS variable).
     predicted-score-widget.tsx Predicted score + CI + recharts trend line.
     plan-version-history.tsx  Version list with restore.
     ai-recommendations.tsx    AI coach message list with dismiss.
@@ -358,8 +366,11 @@ interface StudyPlanEngineInput {
 ```
 
 ### Day scheduling
-- Default: Mon–Fri=study, Sat=review (or practice_test in practice-test weeks), Sun=rest
-- With `daySchedule`: any DOW can be any type; practice test promotion is still automatic ('review' on practice-test week → 'practice_test')
+- Default: Mon–Fri=study, Sat=review, Sun=rest
+- Practice tests land on the **last study day** of the week (Friday by default) every 2 weeks, starting at week 2.
+- A mandatory practice test is always placed **2 calendar days before the test date**, bypassing the biweekly cadence.
+- The **test date itself** is appended to the schedule as a `test_day` entry → creates a `'SAT Test Day'` calendar task (amber color on the calendar).
+- With `daySchedule`: any DOW can be any type; the last DOW classified as `'study'` is the practice-test promotion slot.
 - Each study day produces **two** tasks: one R&W domain block + one Math domain block
 - Two independent rotation counters (`rwStudyDayGlobalIdx` / `mathStudyDayGlobalIdx`) drive separate 7-slot pools per subject
 - Each block gets `floor(dailyStudyMinutes / 2)` minutes; question count uses 90% efficiency factor
@@ -655,4 +666,5 @@ Still open (documented, not yet implemented): app-layer rate limiting / CAPTCHA 
 | 25 | **Onboarding UX overhaul.** Removed "Performance" tab (no more practice data entry). New 4-step flow: Goals (scores only) → Time (test date + daily commitment) → Overview (score journey visual, timeline, 8-domain list) → Your Plan (stat cards + "what happens next"). `step-2-performance.tsx` is obsolete (kept on disk, not imported). `step-2-time.tsx` is new. Wizard always passes `defaultStep2` (all zeros) to `saveOnboarding` — domains start with equal priority and adapt via practice sessions. No DB schema changes. |
 | 26 | **Error log charts + Data tab time trend + Session workflow dialog polish.** Error log: added `DomainPieChart` (toggleable domain/subject/type breakdown with matching domain hex colors) + `MistakeTrendChart` (violet line chart by date) in a 2-col grid. Subject colors: Math=#3b82f6, R&W=#7c3aed. Data tab: deleted Mistake Analysis section; added Time Trend section (`components/data/time-trend.tsx`) showing allocated vs actual time per domain as a horizontal grouped bar chart; `filteredTasks` computation added to `data-client.tsx`. Session workflow dialog: complete rewrite with 160ms fade+translateY phase transitions, A/B/C/D letter buttons (violet=your answer, emerald=correct answer), card-per-question missed_analysis layout, all tokens consistent (`bg-[var(--surface-sunken)]` etc.), emoji removed from "Time's up!" toast. |
 | 27 | **Resend email system.** Signup confirmation emails now sent via Resend with a branded template (`lib/email/confirmation-template.ts`). Both `signUp()` (`actions/auth.ts`) and `signUpAndSaveOnboarding()` (`actions/onboarding.ts`) now use `admin.auth.admin.generateLink({ type: 'signup' })` to get the confirmation URL without triggering Supabase's own SMTP, then send via Resend. Daily reminder emails were already code-complete (`/api/reminders/daily`, `lib/email/reminder-template.ts`, Vercel cron `0 13 * * *` in `vercel.json`). Fixed `RESEND_FROM_EMAIL` placeholder from `noreply@example.com` to `onboarding@resend.dev` for local dev. **Production requires a verified Resend domain** — add it at resend.com/domains and update `RESEND_FROM_EMAIL` in Vercel env. |
+| 28 | **UI polish — home dashboard + analytics cards.** `score-progress-bar.tsx`: fill bar → dark purple gradient (`#3b0764→#581c87→#6b21a8`) with violet glow; thumb → `#c084fc`; target marker → gold Saturn SVG (40px, closed ellipse ring with layered front/back arcs). `home/page.tsx`: Current Score + Target Score → `href="/data"`; Open Errors → `href="/error-log"`. `topic-mastery-cards.tsx`: per-card colored border (emerald/blue/amber/rose at 50%); Proficient badge + bar changed from accent CSS var to explicit `blue-500`. Page title icon badges (violet, matching Inventory): Calendar (`Calendar`), Error Log (`ClipboardList`), Analytics (`BarChart3` in `data-client.tsx`), Tutorial (`GraduationCap` in `tutorial-client.tsx`). No DB or schema changes. |
 | 18 | **Signup + email-confirmation fix** (review feedback: "signup link did nothing, probably a missing env var"). Added `lib/supabase/env.ts` with validated `getSupabaseUrl()`/`getSupabaseAnonKey()` (clear error instead of a silent hang on missing `NEXT_PUBLIC_SUPABASE_*`); wired into server/client/proxy. Added `lib/app-url.ts getAppUrl()` (empty-string-safe origin) — fixes prod `NEXT_PUBLIC_APP_URL=""` producing a relative `emailRedirectTo`; used by `actions/auth.ts` + `actions/onboarding.ts`. Wrapped login/signup/onboarding-wizard server-action calls in `try/catch` (re-throwing `NEXT_REDIRECT`) so failures surface instead of hanging the button. Reworked `app/auth/confirm/page.tsx`: clears any transient session and redirects to `/login?confirmed=1` (was `/home`, which bounced new users into `/onboarding`); login page shows a confirmed/error banner. **Eager signup persistence:** `signUpAndSaveOnboarding()` now writes profile+plan via the service-role admin client when confirmation is pending (upsert `has_completed_onboarding: true`), so a confirmed user lands straight on the dashboard instead of re-onboarding. |

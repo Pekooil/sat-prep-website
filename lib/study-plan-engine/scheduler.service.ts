@@ -51,6 +51,7 @@ import type {
   ReviewBlock,
   StudyBlock,
   StudyPlanEngineInput,
+  TestDayBlock,
 } from './types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -74,41 +75,51 @@ function totalCalendarDays(testDate: string): number {
 
 /**
  * Determine which calendar weeks (1-indexed) should have a practice test
- * on Saturday instead of a review session.
+ * on the last study day of the week (every 2 weeks).
  *
- * Strategy:
- *  < 3 weeks  → no full tests (not enough time to prepare)
- *  3–6 weeks  → week 2 and second-to-last week
- *  7–16 weeks → every 3rd week
- *  > 16 weeks → every 4th week, plus every 2nd week in the final quarter
+ * One practice test is always scheduled 2 days before the test date (handled
+ * separately in buildSchedule) — that mandatory test is NOT included here.
+ *
+ * Strategy: one test every 2 weeks, starting at week 2, stopping before the
+ * final week (week totalWeeks). The final biweekly slot is intentionally
+ * skipped because the 2-days-before mandatory test covers that window.
  */
 function practiceTestWeekSet(totalWeeks: number): Set<number> {
   const weeks = new Set<number>()
-  if (totalWeeks < 3) return weeks
-
-  if (totalWeeks <= 6) {
-    weeks.add(2)
-    if (totalWeeks > 3) weeks.add(totalWeeks - 1)
-    return weeks
-  }
-
-  const interval = totalWeeks <= 16 ? 3 : 4
-  for (let w = interval; w <= totalWeeks - 1; w += interval) weeks.add(w)
-
-  // Double frequency in the last quarter
-  const quarterStart = Math.floor(totalWeeks * 0.75)
-  for (let w = quarterStart; w <= totalWeeks - 1; w += 2) weeks.add(w)
-
+  for (let w = 2; w <= totalWeeks - 1; w += 2) weeks.add(w)
   return weeks
+}
+
+/**
+ * Return the day-of-week (JS getDay() convention: 0=Sun … 6=Sat) that is the
+ * last study day in a week. Used to promote that slot to a practice test in
+ * practice-test weeks.
+ *
+ * Default schedule (Mon–Fri=study, Sat=review, Sun=rest): last study day = Friday (5).
+ * Custom schedule: scan Mon→Sun in reverse, return the last day marked 'study'.
+ */
+function lastStudyDayOfWeek(daySchedule?: Record<number, 'study' | 'review' | 'rest'>): number {
+  if (!daySchedule) return 5 // Friday by default
+  const weekOrder = [1, 2, 3, 4, 5, 6, 0] // Mon through Sun
+  for (let i = weekOrder.length - 1; i >= 0; i--) {
+    const dow = weekOrder[i]
+    if ((daySchedule[dow] ?? 'rest') === 'study') return dow
+  }
+  return 5
 }
 
 // ─── Day Classification ───────────────────────────────────────────────────────
 
-/** Map a calendar day to its DayType. */
+/**
+ * Map a calendar day to its DayType.
+ * In practice-test weeks, the last study day of the week is promoted to
+ * 'practice_test' instead of keeping its normal 'study' classification.
+ */
 function classifyDay(
   dayOfWeek: number,
   weekNum: number,
   practiceTestWeeks: Set<number>,
+  lastStudyDow: number,
   daySchedule?: Record<number, 'study' | 'review' | 'rest'>,
 ): DayType {
   const base = daySchedule
@@ -117,8 +128,10 @@ function classifyDay(
     : dayOfWeek === 6 ? 'review'
     : 'study'
 
-  // Promote 'review' days in practice-test weeks to 'practice_test'
-  if (base === 'review' && practiceTestWeeks.has(weekNum)) return 'practice_test'
+  // Promote the last study day to 'practice_test' in practice-test weeks
+  if (base === 'study' && dayOfWeek === lastStudyDow && practiceTestWeeks.has(weekNum)) {
+    return 'practice_test'
+  }
   return base
 }
 
@@ -247,6 +260,19 @@ function buildPracticeTestBlock(testNumber: number): PracticeTestBlock {
   }
 }
 
+function buildTestDayBlock(): TestDayBlock {
+  return {
+    durationMinutes: 0,
+    description:
+      'Your SAT test day. Arrive at the test center early with a valid photo ID and your ' +
+      'admission ticket. No additional prep needed — trust the work you have put in.',
+    priorityScore: 0,
+    masteryTarget: 0,
+    estimatedScoreImpact: 0,
+    replanningWeight: 0,
+  }
+}
+
 // ─── Main Schedule Builder ────────────────────────────────────────────────────
 
 export interface ScheduleResult {
@@ -263,6 +289,9 @@ export function buildSchedule(
   const totalWeeks = Math.ceil(totalDays / 7)
   const practiceTestWeeks = practiceTestWeekSet(totalWeeks)
   const maxPriorityScore = ranked[0]?.priorityScore ?? 1
+  const lastStudyDow = lastStudyDayOfWeek(input.daySchedule)
+  // The day 2 calendar days before the test always gets a mandatory practice test
+  const prePracticeTestDate = isoDate(addDays(new Date(input.testDate + 'T00:00:00'), -2))
 
   // Each study day is split evenly between R&W and Math.
   // 90% of each half goes to questions (enforced in dailyQuestionTarget).
@@ -309,7 +338,10 @@ export function buildSchedule(
       }
     }
 
-    const dayType = classifyDay(dayOfWeek, weekNum, practiceTestWeeks, input.daySchedule)
+    // 2 days before the test is always a practice test (bypasses biweekly rules)
+    const dayType: DayType = date === prePracticeTestDate
+      ? 'practice_test'
+      : classifyDay(dayOfWeek, weekNum, practiceTestWeeks, lastStudyDow, input.daySchedule)
 
     if (dayType === 'rest') {
       schedule.push({
@@ -401,6 +433,18 @@ export function buildSchedule(
       totalQuestions:       studyBlocks.reduce((s, b) => s + b.questionCount, 0),
     })
   }
+
+  // Append the test date itself as a special test_day entry (not in the loop above)
+  schedule.push({
+    date: input.testDate,
+    dayOfWeek: new Date(input.testDate + 'T00:00:00').getDay(),
+    dayType: 'test_day',
+    weekNumber: totalWeeks + 1,
+    phase: 'strategy',
+    blocks: [buildTestDayBlock()],
+    totalDurationMinutes: 0,
+    totalQuestions: 0,
+  })
 
   // Build phase summaries
   const phases: PhaseSummary[] = []

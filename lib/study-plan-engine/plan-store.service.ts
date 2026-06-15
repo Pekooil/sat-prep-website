@@ -174,6 +174,30 @@ function bankCompleteToTask(
   }
 }
 
+function testDayToTask(
+  day: DaySchedule,
+  userId: string,
+  planId: string,
+): TaskInsertRow {
+  return {
+    user_id:       userId,
+    study_plan_id: planId,
+    title:         'SAT Test Day',
+    description:   'Your SAT test day. Arrive at the test center early with a valid photo ID and your admission ticket. Trust the preparation you have put in.',
+    task_date:     day.date,
+    duration_minutes: 0,
+    subject:       'both',
+    category:      'SAT Test Day',
+    is_completed:  false,
+    replan_locked: false,
+    priority_score:         0,
+    mastery_target:         0,
+    estimated_score_impact: 0,
+    replanning_weight:      0,
+    college_board_filters:  null,
+  }
+}
+
 function practiceTestToTask(
   day: DaySchedule,
   block: PracticeTestBlock,
@@ -246,6 +270,14 @@ export class PlanStoreService {
       .eq('is_completed', false)
       .eq('replan_locked', false)
 
+    // Also clear any previous SAT Test Day markers — they're always recreated fresh.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (this.supabase.from('calendar_tasks') as any)
+      .delete()
+      .eq('user_id', input.userId)
+      .eq('category', 'SAT Test Day')
+      .eq('is_completed', false)
+
     // ── 2. Insert study_plans row ────────────────────────────────────────────
     const planMeta = {
       totalDays, studyDays, reviewDays, practiceTestDays, restDays,
@@ -279,7 +311,7 @@ export class PlanStoreService {
     const planId = plan.id as string
 
     // ── 3a. Load inventory limits (non-blocking — plan proceeds even if empty) ─
-    const inventoryLimits   = await this.loadInventoryLimits()
+    const inventoryLimits   = await this.loadInventoryLimits(input.inventoryMode)
     const inventoryConfigured = inventoryLimits.size > 0
     // Cumulative question allocations within this plan: key → count used so far.
     const inventoryUsed = new Map<string, number>()
@@ -296,6 +328,11 @@ export class PlanStoreService {
 
     for (const day of schedule) {
       if (day.dayType === 'rest' || day.blocks.length === 0) continue
+
+      if (day.dayType === 'test_day') {
+        tasks.push(testDayToTask(day, input.userId, planId))
+        continue
+      }
 
       if (day.dayType === 'review') {
         // One unified Review Session task per review day — no domain-specific blocks
@@ -400,13 +437,18 @@ export class PlanStoreService {
 
   // ─── Private Helpers ──────────────────────────────────────────────────────
 
-  /** Load question_inventory as a map: `${domain}|||${skill}|||${difficulty}` → available_count */
-  private async loadInventoryLimits(): Promise<Map<string, number>> {
+  /** Load inventory as a map: `${domain}|||${skill}|||${difficulty}` → available_count */
+  private async loadInventoryLimits(
+    mode: 'exclude_active' | 'include_active' = 'exclude_active',
+  ): Promise<Map<string, number>> {
+    const tableName = mode === 'include_active'
+      ? 'question_inventory_with_active'
+      : 'question_inventory'
     const map = new Map<string, number>()
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (this.supabase as any)
-        .from('question_inventory')
+        .from(tableName)
         .select('domain, skill, difficulty, available_count')
       if (data) {
         for (const row of data) {
