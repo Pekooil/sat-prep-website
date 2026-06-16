@@ -48,6 +48,16 @@ This document is updated at the end of every session. It records current feature
 **`app/layout.tsx`, `app/robots.ts`, `app/sitemap.ts`**
 - Hardcoded fallback hosts changed from `sat-prep-website-gold.vercel.app` / `sat-planner.vercel.app` to `https://saturnpath.app`; robots/sitemap switched from `??` to truthy-trim so an empty env string can't slip through.
 
+### Session 31 (cont.) — Google OAuth landing-page dead-end fix
+
+**Symptom:** Users signing up / signing in with Google were dropped on the marketing landing page instead of `/home` (existing) or `/auth/google-consent` → `/onboarding` (new), for both sign-up and sign-in.
+
+**Cause:** Supabase was redirecting the OAuth response to its **Site URL (`/`)** with an unused PKCE `?code=` instead of hitting `/auth/callback` — so the session was never exchanged and the root page rendered the landing page (it correctly treats no-session as logged-out). This happens when `/auth/callback` isn't matched by Supabase's redirect allow-list.
+
+**Fix (`app/page.tsx`):** The root page now forwards an OAuth `?code=` to `/auth/callback` (and `?error=` to `/login`) before rendering, completing the session exchange regardless of Supabase allow-list config. A Server Component can't set auth cookies, so forwarding to the route handler is the correct mechanism. Verified: `/?code=<x>` → `/auth/callback?code=<x>` → PKCE exchange (the path a real code succeeds on). Normal landing visits (no `code`) are unaffected.
+
+**Recommended (cleaner) config fix:** add `https://saturnpath.app/auth/callback` (and any preview hosts) to Supabase → Auth → Redirect URLs so OAuth hits the callback directly without the extra hop. The code fix is a safety net either way.
+
 **Still required OUTSIDE the repo (authoritative for where auth actually lands):**
 - Vercel → Project → Settings → Environment Variables: set `NEXT_PUBLIC_APP_URL=https://saturnpath.app` (Production).
 - Supabase → Auth → URL Configuration: Site URL `https://saturnpath.app`; add `https://saturnpath.app/**` to Redirect URLs (Supabase ignores `redirect_to` and falls back to Site URL if the target isn't allow-listed).
