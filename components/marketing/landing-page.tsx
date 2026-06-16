@@ -166,7 +166,7 @@ function CountUp({
 
   return (
     <span ref={ref} className="sp-numeric">
-      {display}
+      {display.toLocaleString()}
       {suffix}
     </span>
   )
@@ -910,7 +910,7 @@ const STEPS = [
 export function LandingPage({ stats }: { stats: LandingStats }) {
   const STATS = [
     { value: stats.userCount,    suffix: '+', label: 'students already using SaturnPath' },
-    { value: stats.questionCount, suffix: '+', label: 'questions from College Board Question Bank' },
+    { value: 3400,                suffix: '+', label: 'questions from College Board Question Bank' },
     { value: 29,                 suffix: '',  label: 'different skills for practice' },
     { value: 100,                suffix: '%', label: 'free — no paywall, no tiers' },
   ]
