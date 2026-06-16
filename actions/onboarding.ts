@@ -229,7 +229,7 @@ export async function signUpAndSaveOnboarding(
   if (consentError) return { error: consentError }
 
   const admin = createAdminClient()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const appUrl = getAppUrl()
 
   // 1. Create the account via generateLink — this creates the user and returns
   //    the confirmation URL without triggering Supabase's own email service.

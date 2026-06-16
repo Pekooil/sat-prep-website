@@ -3,10 +3,12 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Loader2, Rocket, UserPlus, ShieldCheck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, Rocket, UserPlus, ShieldCheck, MailCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LEGAL, MIN_BIRTH_YEAR, ageFromBirthYear, validateAgeConsent } from '@/lib/legal/config'
-import { WizardProgress } from './wizard-progress'
+import { SaturnPathLogo } from '@/components/layout/saturn-path-logo'
+import { BrandRail } from './brand-rail'
+import { WizardProgressCompact } from './wizard-progress'
 import { Step1Basics } from './step-1-basics'
 import { Step2Time } from './step-2-time'
 import { Step3Analysis } from './step-3-analysis'
@@ -42,6 +44,9 @@ interface Step5AccountProps {
 const CURRENT_YEAR = new Date().getFullYear()
 const BIRTH_YEARS = Array.from({ length: CURRENT_YEAR - MIN_BIRTH_YEAR + 1 }, (_, i) => CURRENT_YEAR - i)
 
+const FIELD_CLASS =
+  'flex h-11 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-base)] px-3.5 py-2 text-sm text-[var(--text-heading)] shadow-[var(--shadow-xs)] transition-colors placeholder:text-[var(--text-muted)] focus-visible:outline-none focus-visible:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/30'
+
 function Step5Account({ data, onChange, errors }: Step5AccountProps) {
   function set(field: keyof Step5AccountData, value: string | boolean) {
     onChange({ ...data, [field]: value })
@@ -50,18 +55,18 @@ function Step5Account({ data, onChange, errors }: Step5AccountProps) {
   const needsParental = age !== null && age < LEGAL.parentalConsentBelowAge
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <UserPlus className="h-5 w-5 text-violet-600 dark:text-violet-400" />
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">Create your account</h2>
-        </div>
-        <p className="text-sm text-[var(--muted-foreground)]">
+      <div className="space-y-2">
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--accent-soft)] text-[var(--accent-soft-foreground)]">
+          <UserPlus className="h-6 w-6" />
+        </span>
+        <h2 className="sp-display text-2xl">Create your account</h2>
+        <p className="text-sm text-[var(--text-muted)]">
           Your plan is ready — create a free account to save it and start studying.
         </p>
       </div>
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <label htmlFor="s5-fullname" className="text-sm font-medium text-[var(--foreground)]">Full Name</label>
+          <label htmlFor="s5-fullname" className="text-sm font-medium text-[var(--text-heading)]">Full Name</label>
           <input
             id="s5-fullname"
             type="text"
@@ -69,12 +74,12 @@ function Step5Account({ data, onChange, errors }: Step5AccountProps) {
             autoComplete="name"
             value={data.fullName}
             onChange={e => set('fullName', e.target.value)}
-            className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm ring-offset-background placeholder:text-[var(--muted-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+            className={FIELD_CLASS}
           />
           {errors.fullName && <p className="text-xs text-red-600 dark:text-red-400">{errors.fullName}</p>}
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="s5-email" className="text-sm font-medium text-[var(--foreground)]">Email</label>
+          <label htmlFor="s5-email" className="text-sm font-medium text-[var(--text-heading)]">Email</label>
           <input
             id="s5-email"
             type="email"
@@ -82,45 +87,47 @@ function Step5Account({ data, onChange, errors }: Step5AccountProps) {
             autoComplete="email"
             value={data.email}
             onChange={e => set('email', e.target.value)}
-            className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm ring-offset-background placeholder:text-[var(--muted-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+            className={FIELD_CLASS}
           />
           {errors.email && <p className="text-xs text-red-600 dark:text-red-400">{errors.email}</p>}
         </div>
-        <div className="space-y-1.5">
-          <label htmlFor="s5-password" className="text-sm font-medium text-[var(--foreground)]">Password</label>
-          <input
-            id="s5-password"
-            type="password"
-            placeholder="At least 8 characters"
-            autoComplete="new-password"
-            value={data.password}
-            onChange={e => set('password', e.target.value)}
-            className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm ring-offset-background placeholder:text-[var(--muted-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
-          />
-          {errors.password && <p className="text-xs text-red-600 dark:text-red-400">{errors.password}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="s5-confirm" className="text-sm font-medium text-[var(--foreground)]">Confirm Password</label>
-          <input
-            id="s5-confirm"
-            type="password"
-            placeholder="Repeat password"
-            autoComplete="new-password"
-            value={data.confirmPassword}
-            onChange={e => set('confirmPassword', e.target.value)}
-            className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm ring-offset-background placeholder:text-[var(--muted-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
-          />
-          {errors.confirmPassword && <p className="text-xs text-red-600 dark:text-red-400">{errors.confirmPassword}</p>}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label htmlFor="s5-password" className="text-sm font-medium text-[var(--text-heading)]">Password</label>
+            <input
+              id="s5-password"
+              type="password"
+              placeholder="At least 8 characters"
+              autoComplete="new-password"
+              value={data.password}
+              onChange={e => set('password', e.target.value)}
+              className={FIELD_CLASS}
+            />
+            {errors.password && <p className="text-xs text-red-600 dark:text-red-400">{errors.password}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="s5-confirm" className="text-sm font-medium text-[var(--text-heading)]">Confirm Password</label>
+            <input
+              id="s5-confirm"
+              type="password"
+              placeholder="Repeat password"
+              autoComplete="new-password"
+              value={data.confirmPassword}
+              onChange={e => set('confirmPassword', e.target.value)}
+              className={FIELD_CLASS}
+            />
+            {errors.confirmPassword && <p className="text-xs text-red-600 dark:text-red-400">{errors.confirmPassword}</p>}
+          </div>
         </div>
 
         {/* Age gate */}
         <div className="space-y-1.5">
-          <label htmlFor="s5-birthyear" className="text-sm font-medium text-[var(--foreground)]">Birth year</label>
+          <label htmlFor="s5-birthyear" className="text-sm font-medium text-[var(--text-heading)]">Birth year</label>
           <select
             id="s5-birthyear"
             value={data.birthYear}
             onChange={e => set('birthYear', e.target.value)}
-            className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+            className={FIELD_CLASS}
           >
             <option value="" disabled>Select your birth year</option>
             {BIRTH_YEARS.map(y => (
@@ -131,31 +138,31 @@ function Step5Account({ data, onChange, errors }: Step5AccountProps) {
         </div>
 
         {/* Consent */}
-        <div className="space-y-2">
-          <label className="flex items-start gap-2.5 text-xs leading-relaxed text-[var(--muted-foreground)]">
+        <div className="space-y-2.5">
+          <label className="flex items-start gap-2.5 text-xs leading-relaxed text-[var(--text-muted)]">
             <input
               type="checkbox"
               checked={data.agreedToTerms}
               onChange={e => set('agreedToTerms', e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-violet-600"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
             />
             <span>
               I agree to the{' '}
-              <Link href="/terms" target="_blank" className="underline hover:text-[var(--foreground)]">Terms of Service</Link>
+              <Link href="/terms" target="_blank" className="underline hover:text-[var(--text-heading)]">Terms of Service</Link>
               {' '}and{' '}
-              <Link href="/privacy" target="_blank" className="underline hover:text-[var(--foreground)]">Privacy Policy</Link>.
+              <Link href="/privacy" target="_blank" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>.
             </span>
           </label>
           {errors.agreedToTerms && <p className="text-xs text-red-600 dark:text-red-400">{errors.agreedToTerms}</p>}
 
           {needsParental && (
             <>
-              <label className="flex items-start gap-2.5 text-xs leading-relaxed text-[var(--muted-foreground)]">
+              <label className="flex items-start gap-2.5 text-xs leading-relaxed text-[var(--text-muted)]">
                 <input
                   type="checkbox"
                   checked={data.parentalAck}
                   onChange={e => set('parentalAck', e.target.checked)}
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-violet-600"
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
                 />
                 <span>I am under 18 and have my parent or guardian's permission to use {LEGAL.appName}.</span>
               </label>
@@ -164,8 +171,8 @@ function Step5Account({ data, onChange, errors }: Step5AccountProps) {
           )}
         </div>
       </div>
-      <div className="flex items-start gap-2.5 rounded-xl bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800 p-3.5 text-xs text-violet-700 dark:text-violet-300">
-        <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-violet-500" />
+      <div className="flex items-start gap-2.5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--accent-soft)] p-3.5 text-xs text-[var(--accent-soft-foreground)]">
+        <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" />
         <span>Your study data, plan, and progress are saved securely to your account — free forever.</span>
       </div>
     </div>
@@ -447,141 +454,148 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
 
   if (needsConfirmation) {
     return (
-      <div className="flex flex-col min-h-full items-center justify-center px-6 py-12 text-center space-y-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 mx-auto">
-          <svg className="h-7 w-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-12">
+        {/* Quiet accent glow backdrop */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute left-1/2 top-[-8rem] h-80 w-80 -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.08] blur-[120px]" />
         </div>
-        <h2 className="text-xl font-semibold text-[var(--foreground)]">Check your email</h2>
-        <p className="text-sm text-[var(--muted-foreground)] max-w-xs">
-          We sent a confirmation link to <strong>{step5Data.email}</strong>. Click it to activate your account, then sign in.
-        </p>
-        <a
-          href="/login"
-          className="mt-2 text-sm font-medium text-violet-600 dark:text-violet-400 hover:underline"
-        >
-          Back to sign in
-        </a>
+        <div className="relative z-10 w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface-raised)] p-8 text-center shadow-[var(--shadow-lg)]">
+          <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+            <MailCheck className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+          </span>
+          <h2 className="sp-display text-2xl">Check your email</h2>
+          <p className="mx-auto mt-2 max-w-xs text-sm text-[var(--text-muted)]">
+            We sent a confirmation link to <strong className="text-[var(--text-heading)]">{step5Data.email}</strong>. Click it to activate your account, then sign in.
+          </p>
+          <Button asChild className="mt-6">
+            <a href="/login">Back to sign in</a>
+          </Button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col min-h-full">
-      {/* Progress */}
-      <div className="px-6 pt-6 pb-4 border-b border-[var(--border)]">
-        <WizardProgress currentStep={step} hideAccountStep={isAuthenticated} />
-      </div>
+    <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
+      {/* ── Left brand rail (desktop) — dark, step-aware ── */}
+      <BrandRail currentStep={step} hideAccountStep={isAuthenticated} />
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        <div
-          key={step}
-          className={cn(
-            'animate-in duration-300',
-            direction === 'forward' ? 'slide-in-from-right-4 fade-in-0' : 'slide-in-from-left-4 fade-in-0'
-          )}
-        >
-          {step === 1 && (
-            <Step1Basics
-              data={step1Data}
-              onChange={setStep1Data}
-              errors={step1Errors}
-            />
-          )}
-          {step === 2 && (
-            <Step2Time
-              data={step1Data}
-              onChange={setStep1Data}
-              errors={step1Errors}
-            />
-          )}
-          {step === 3 && analysis && (
-            <Step3Analysis
-              analysis={analysis}
-              step1CurrentScore={step1Data.currentScore}
-              step1TargetScore={step1Data.targetScore}
-              dailyStudyMinutes={step1Data.dailyStudyMinutes}
-            />
-          )}
-          {step === 4 && (
-            <Step4Recommendations
-              aiRecs={aiRecs}
-              loading={aiLoading}
-              error={aiError}
-              analysis={analysis ?? computeAnalysis(step1Data, defaultStep2)}
-              dailyStudyMinutes={step1Data.dailyStudyMinutes}
-              onRetry={handleRetryAI}
-            />
-          )}
-          {step === 5 && !isAuthenticated && (
-            <Step5Account
-              data={step5Data}
-              onChange={setStep5Data}
-              errors={step5Errors}
-            />
-          )}
+      {/* ── Right wizard panel ── */}
+      <div className="relative flex min-h-screen flex-1 flex-col bg-[var(--surface-base)] lg:h-screen lg:min-h-0">
+        {/* Quiet accent glow, top-right */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden lg:hidden" aria-hidden="true">
+          <div className="absolute right-[-6rem] top-[-8rem] h-72 w-72 rounded-full bg-[var(--accent)] opacity-[0.06] blur-[120px]" />
         </div>
-      </div>
 
-      {/* Footer navigation */}
-      <div className="px-6 pb-6 pt-4 border-t border-[var(--border)] bg-[var(--card)]">
-        <div className="flex items-center justify-between gap-3">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={!canGoBack || saving}
-            className={cn(!canGoBack && 'invisible')}
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
+        {/* Mobile header: logo + compact progress */}
+        <div className="relative z-10 space-y-4 border-b border-[var(--border)] px-5 py-5 sm:px-8 lg:hidden">
+          <SaturnPathLogo size="sm" asLink={false} />
+          <WizardProgressCompact currentStep={step} hideAccountStep={isAuthenticated} />
+        </div>
 
-          {/* Step indicator (mobile) */}
-          <div className="flex gap-1.5 sm:hidden">
-            {Array.from({ length: totalSteps }, (_, i) => i + 1).map(s => (
-              <div
-                key={s}
-                className={cn(
-                  'h-1.5 rounded-full transition-all duration-300',
-                  s === step ? 'w-6 bg-violet-600' : s < step ? 'w-1.5 bg-violet-300' : 'w-1.5 bg-slate-200 dark:bg-slate-700'
-                )}
-              />
-            ))}
-          </div>
-
-          {isLastStep ? (
-            <div className={cn('ai-planner-frame ai-planner-frame-sm inline-flex transition-opacity', (saving || aiLoading) && 'opacity-50')}>
-              <div className="ai-planner-frame-inner bg-transparent">
-                <Button
-                  onClick={handleComplete}
-                  disabled={saving || aiLoading}
-                  className="gap-2 bg-black text-violet-300 hover:bg-zinc-900 min-w-[140px] disabled:opacity-100"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Saving…
-                    </>
-                  ) : (
-                    <>
-                      <Rocket className="h-4 w-4" />
-                      {isAuthenticated ? 'Start My Journey' : 'Create Account & Start'}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Button
-              onClick={handleNext}
-              className="gap-1 min-w-[100px]"
+        {/* Content */}
+        <div className="relative z-10 flex-1 overflow-y-auto px-5 py-8 sm:px-8 lg:px-14 lg:py-12">
+          <div className="mx-auto w-full max-w-xl">
+            <div
+              key={step}
+              className={cn(
+                'animate-in duration-300',
+                direction === 'forward' ? 'slide-in-from-right-4 fade-in-0' : 'slide-in-from-left-4 fade-in-0'
+              )}
             >
-              {step === 3 ? 'Get My Plan' : step === 4 && !isAuthenticated ? 'Create Account' : 'Next'}
-              <ChevronRight className="h-4 w-4" />
+              {step === 1 && (
+                <Step1Basics
+                  data={step1Data}
+                  onChange={setStep1Data}
+                  errors={step1Errors}
+                />
+              )}
+              {step === 2 && (
+                <Step2Time
+                  data={step1Data}
+                  onChange={setStep1Data}
+                  errors={step1Errors}
+                />
+              )}
+              {step === 3 && analysis && (
+                <Step3Analysis
+                  analysis={analysis}
+                  step1CurrentScore={step1Data.currentScore}
+                  step1TargetScore={step1Data.targetScore}
+                  dailyStudyMinutes={step1Data.dailyStudyMinutes}
+                />
+              )}
+              {step === 4 && (
+                <Step4Recommendations
+                  aiRecs={aiRecs}
+                  loading={aiLoading}
+                  error={aiError}
+                  analysis={analysis ?? computeAnalysis(step1Data, defaultStep2)}
+                  dailyStudyMinutes={step1Data.dailyStudyMinutes}
+                  onRetry={handleRetryAI}
+                />
+              )}
+              {step === 5 && !isAuthenticated && (
+                <Step5Account
+                  data={step5Data}
+                  onChange={setStep5Data}
+                  errors={step5Errors}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer navigation */}
+        <div className="relative z-10 border-t border-[var(--border)] bg-[var(--surface-raised)] px-5 py-4 sm:px-8 lg:px-14">
+          <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-3">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={!canGoBack || saving}
+              className={cn(!canGoBack && 'invisible')}
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Back
             </Button>
-          )}
+
+            {/* Step counter (mobile) */}
+            <span className="sp-numeric text-xs font-medium text-[var(--text-muted)] sm:hidden">
+              {Math.min(step, totalSteps)} / {totalSteps}
+            </span>
+
+            {isLastStep ? (
+              <div className={cn('ai-planner-frame ai-planner-frame-sm inline-flex transition-opacity', (saving || aiLoading) && 'opacity-50')}>
+                <div className="ai-planner-frame-inner bg-transparent">
+                  <Button
+                    onClick={handleComplete}
+                    disabled={saving || aiLoading}
+                    className="min-w-[140px] gap-2 bg-black text-violet-300 hover:bg-zinc-900 disabled:opacity-100"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Saving…
+                      </>
+                    ) : (
+                      <>
+                        <Rocket className="h-4 w-4" />
+                        {isAuthenticated ? 'Start My Journey' : 'Create Account & Start'}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                onClick={handleNext}
+                className="min-w-[100px] gap-1"
+              >
+                {step === 3 ? 'Get My Plan' : step === 4 && !isAuthenticated ? 'Create Account' : 'Next'}
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

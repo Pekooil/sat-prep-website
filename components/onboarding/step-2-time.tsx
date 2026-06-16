@@ -25,21 +25,21 @@ export function Step2Time({ data, onChange, errors }: Step2TimeProps) {
   const weeklyHours = Math.round((data.dailyStudyMinutes * 7) / 60)
 
   return (
-    <div className="space-y-8">
-      <div className="text-center space-y-1">
-        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 mb-2">
-          <Clock className="h-7 w-7" />
-        </div>
-        <h2 className="text-xl font-bold">When & How Much</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+    <div className="space-y-7">
+      <div className="space-y-2">
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--accent-soft)] text-[var(--accent-soft-foreground)]">
+          <Clock className="h-6 w-6" />
+        </span>
+        <h2 className="sp-display text-2xl">When &amp; how much</h2>
+        <p className="text-sm text-[var(--text-muted)]">
           Set your test date and daily study commitment.
         </p>
       </div>
 
       {/* Test date */}
       <div className="space-y-2">
-        <Label htmlFor="test-date" className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-violet-500" />
+        <Label htmlFor="test-date" className="flex items-center gap-2 text-[var(--text-body)]">
+          <Calendar className="h-4 w-4 text-[var(--accent-soft-foreground)]" />
           SAT Test Date
         </Label>
         <Input
@@ -48,14 +48,14 @@ export function Step2Time({ data, onChange, errors }: Step2TimeProps) {
           min={todayStr}
           value={data.testDate}
           onChange={e => onChange({ ...data, testDate: e.target.value })}
-          className={cn(errors.testDate && 'border-red-400 ring-red-400')}
+          className={cn('h-11', errors.testDate && 'border-red-400 ring-red-400')}
         />
         {errors.testDate ? (
           <p className="text-xs text-red-500 flex items-center gap-1">
             <AlertCircle className="h-3 w-3" /> {errors.testDate}
           </p>
         ) : (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[var(--text-muted)]">
             Don't have a date yet? Pick a target date — you can change it later.
           </p>
         )}
@@ -63,8 +63,8 @@ export function Step2Time({ data, onChange, errors }: Step2TimeProps) {
 
       {/* Daily study minutes */}
       <div className="space-y-3">
-        <Label className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-violet-500" />
+        <Label className="flex items-center gap-2 text-[var(--text-body)]">
+          <Clock className="h-4 w-4 text-[var(--accent-soft-foreground)]" />
           Daily Study Time
         </Label>
         <div className="grid grid-cols-5 gap-2">
@@ -74,10 +74,10 @@ export function Step2Time({ data, onChange, errors }: Step2TimeProps) {
               type="button"
               onClick={() => onChange({ ...data, dailyStudyMinutes: p.value })}
               className={cn(
-                'py-2.5 px-1 rounded-xl text-xs font-semibold border-2 transition-all duration-150',
+                'rounded-[var(--radius)] border px-1 py-2.5 text-xs font-semibold transition-all duration-150',
                 data.dailyStudyMinutes === p.value
-                  ? 'bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-500/20'
-                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-violet-300 dark:hover:border-violet-600'
+                  ? 'border-[var(--accent)] bg-[var(--accent)] text-white shadow-[var(--shadow-accent)]'
+                  : 'border-[var(--border)] bg-[var(--surface-raised)] text-[var(--text-body)] hover:border-[var(--accent)]/40 hover:bg-[var(--accent-soft)]'
               )}
             >
               {p.label}
@@ -89,7 +89,7 @@ export function Step2Time({ data, onChange, errors }: Step2TimeProps) {
             <AlertCircle className="h-3 w-3" /> {errors.dailyStudyMinutes}
           </p>
         )}
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-[var(--text-muted)]">
           ≈ {weeklyHours} hrs/week · Consistency beats intensity — even 30 min/day compounds.
         </p>
       </div>

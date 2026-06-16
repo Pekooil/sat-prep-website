@@ -66,7 +66,7 @@ export async function signUp(formData: FormData) {
   if (consentError) return { error: consentError }
 
   const admin = createAdminClient()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const appUrl = getAppUrl()
 
   // generateLink creates the user and returns the confirmation URL without
   // triggering Supabase's own email service. We send the email via Resend so

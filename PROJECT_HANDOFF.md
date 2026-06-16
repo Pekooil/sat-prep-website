@@ -6,11 +6,52 @@ This document is updated at the end of every session. It records current feature
 
 ## Last Updated
 
-2026-06-15 (Session 30 — Inventory mode system, tutorial step variants, Desmos link for math)
+2026-06-16 (Session 31 — Onboarding wizard UI/UX redesign for landing-page parity)
 
 ---
 
 ## What Was Done This Session
+
+### Session 31 — Onboarding Wizard Redesign (UI/UX only — no logic/data changes)
+
+**Goal:** Bring the onboarding experience up to the same visual polish as the landing page and auth screens. All collected data, validation, server actions, and wizard flow are unchanged — this was a presentation-layer refactor onto the shared design-token system.
+
+**`app/onboarding/layout.tsx`**
+- Reduced to a minimal `min-h-screen` token-based wrapper. All brand chrome (logo header, card, glow) moved into the wizard so the presentation can be step-aware.
+
+**`components/onboarding/brand-rail.tsx`** (new)
+- Dark (`#0a0a0a`) split-screen brand rail mirroring the `(auth)` layout: hairline orbit texture, accent glow, glowing Saturn `logo.svg`, dynamic per-step headline (`RAIL_COPY`), trust line, and the vertical stepper. Desktop only (`lg:`).
+
+**`components/onboarding/wizard-progress.tsx`**
+- Replaced `WizardProgress` with two exports: `WizardStepsVertical` (dark-rail vertical stepper with completed/active/pending states) and `WizardProgressCompact` (mobile horizontal segment bar + step counter). Exported shared `ONBOARDING_STEPS`.
+
+**`components/onboarding/onboarding-wizard.tsx`**
+- Rebuilt the shell as a full-bleed `lg:flex-row` split: `BrandRail` + right panel (mobile logo/compact progress, scrollable content, sticky footer nav). Restyled `Step5Account` and the email-confirmation screen onto semantic tokens (`FIELD_CLASS`, `sp-display`, `--accent-soft`); password/confirm now a 2-col grid on `sm`. Footer CTA keeps the `ai-planner-frame` treatment.
+
+**`components/onboarding/step-1..4-*.tsx`**
+- Converted all hardcoded `violet-/slate-/indigo-/purple-` utilities to semantic tokens (`--accent`, `--accent-soft`, `--accent-soft-foreground`, `--text-heading/body/muted`, `--surface-raised/sunken`, `--border`), adopted `sp-display`/`sp-eyebrow`/`sp-numeric` typography, and unified card styling (`--radius-lg`, `--shadow-xs`). Status colors (emerald/amber for the score journey + est. gain) intentionally retained. No copy, fields, or behavior changed.
+
+**Layout polish (follow-up):** Constrained the desktop wizard to `lg:h-screen` with internal content scroll so the footer nav never drops below the fold; brand rail is `lg:h-screen lg:overflow-y-auto`. Repositioned the ambient Saturn mark to a deliberate bottom-right corner bleed.
+
+**Verification:** `tsc --noEmit` clean; walked all 5 steps + email-confirm state in the dev preview at desktop and mobile widths (temporary preview route used and removed); confirmed footer stays pinned on the tallest step.
+
+### Session 31 (cont.) — Canonical URL hardening (auth redirect domain)
+
+**Problem:** Email-confirmation links and OAuth redirects could resolve to the per-deployment `sat-prep-website-gold.vercel.app` host instead of `saturnpath.app`.
+
+**`lib/app-url.ts`**
+- Added `CANONICAL_APP_URL = 'https://saturnpath.app'`. `getAppUrl()` now returns the canonical URL whenever `VERCEL_ENV === 'production'` (before falling back to `VERCEL_URL`), so production never emits a `*.vercel.app` redirect even if `NEXT_PUBLIC_APP_URL` is unset. `VERCEL_URL` is still used for preview deployments.
+
+**`actions/auth.ts`, `actions/onboarding.ts`**
+- The `appUrl` passed to the branded confirmation email now uses `getAppUrl()` (was `process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'`, which would leak `localhost` into prod emails if the env var were missing).
+
+**`app/layout.tsx`, `app/robots.ts`, `app/sitemap.ts`**
+- Hardcoded fallback hosts changed from `sat-prep-website-gold.vercel.app` / `sat-planner.vercel.app` to `https://saturnpath.app`; robots/sitemap switched from `??` to truthy-trim so an empty env string can't slip through.
+
+**Still required OUTSIDE the repo (authoritative for where auth actually lands):**
+- Vercel → Project → Settings → Environment Variables: set `NEXT_PUBLIC_APP_URL=https://saturnpath.app` (Production).
+- Supabase → Auth → URL Configuration: Site URL `https://saturnpath.app`; add `https://saturnpath.app/**` to Redirect URLs (Supabase ignores `redirect_to` and falls back to Site URL if the target isn't allow-listed).
+- Vercel → Domains: make `saturnpath.app` the production domain and add a redirect from `sat-prep-website-gold.vercel.app` → `saturnpath.app`.
 
 ### Session 30 — Inventory Mode System + Tutorial Variants + Desmos Calculator Link
 

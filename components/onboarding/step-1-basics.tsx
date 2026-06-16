@@ -24,16 +24,16 @@ function ScoreSlider({
   const pct = ((value - min) / (max - min)) * 100
 
   return (
-    <div className="space-y-2">
+    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-[var(--shadow-xs)] space-y-3">
       <div className="flex items-center justify-between">
-        <Label htmlFor={id} className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-violet-500" />
+        <Label htmlFor={id} className="flex items-center gap-2 text-[var(--text-body)]">
+          <Icon className="h-4 w-4 text-[var(--accent-soft-foreground)]" />
           {label}
         </Label>
         <span className={cn(
-          'text-2xl font-bold tabular-nums tracking-tight',
+          'sp-numeric text-2xl font-semibold tracking-tight',
           value >= 1400 ? 'text-emerald-600 dark:text-emerald-400'
-          : value >= 1100 ? 'text-violet-600 dark:text-violet-400'
+          : value >= 1100 ? 'text-[var(--accent-soft-foreground)]'
           : 'text-amber-600 dark:text-amber-400'
         )}>
           {value.toLocaleString()}
@@ -49,16 +49,16 @@ function ScoreSlider({
           step={step}
           value={value}
           onChange={e => onChange(Number(e.target.value))}
-          className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-200 dark:bg-slate-700"
+          className="w-full h-2 rounded-lg appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #7c3aed ${pct}%, var(--border) ${pct}%)`
+            background: `linear-gradient(to right, var(--accent) ${pct}%, var(--surface-sunken) ${pct}%)`
           }}
         />
-        <div className="flex justify-between mt-1">
+        <div className="flex justify-between mt-1.5">
           {SCORE_MARKS.map(m => (
             <span key={m} className={cn(
-              'text-[10px] tabular-nums',
-              Math.abs(value - m) < 20 ? 'text-violet-500 font-medium' : 'text-slate-400'
+              'sp-numeric text-[10px]',
+              Math.abs(value - m) < 20 ? 'font-medium text-[var(--accent-soft-foreground)]' : 'text-[var(--text-muted)]'
             )}>
               {m}
             </span>
@@ -67,7 +67,7 @@ function ScoreSlider({
       </div>
 
       {helpText && !error && (
-        <p className="text-xs text-slate-500 dark:text-slate-400">{helpText}</p>
+        <p className="text-xs text-[var(--text-muted)]">{helpText}</p>
       )}
       {error && (
         <p className="text-xs text-red-500 flex items-center gap-1">
@@ -82,32 +82,32 @@ export function Step1Basics({ data, onChange, errors }: Step1Props) {
   const gap = data.targetScore - data.currentScore
 
   return (
-    <div className="space-y-8">
-      <div className="text-center space-y-1">
-        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 dark:bg-violet-900/30 text-violet-600 mb-2">
-          <Target className="h-7 w-7" />
-        </div>
-        <h2 className="text-xl font-bold">Set Your SAT Goals</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+    <div className="space-y-7">
+      <div className="space-y-2">
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--accent-soft)] text-[var(--accent-soft-foreground)]">
+          <Target className="h-6 w-6" />
+        </span>
+        <h2 className="sp-display text-2xl">Set your SAT goals</h2>
+        <p className="text-sm text-[var(--text-muted)]">
           Where are you now, and where do you want to be?
         </p>
       </div>
 
       {/* Score gap highlight */}
       {gap > 0 && (
-        <div className="rounded-xl bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/40 dark:to-purple-950/40 border border-violet-200 dark:border-violet-800 p-4">
-          <div className="flex items-center justify-between">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--accent)]/20 bg-[var(--accent-soft)] p-4">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-violet-800 dark:text-violet-200">Score Gap</p>
-              <p className="text-xs text-violet-600 dark:text-violet-400 mt-0.5">
+              <p className="text-sm font-semibold text-[var(--accent-soft-foreground)]">Score Gap</p>
+              <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                 {gap <= 100 ? 'Very achievable with consistent practice!' :
                  gap <= 200 ? 'Challenging but definitely doable.' :
                  'Ambitious goal — strong commitment required.'}
               </p>
             </div>
             <div className="text-right">
-              <span className="text-3xl font-bold text-violet-700 dark:text-violet-300">+{gap}</span>
-              <p className="text-xs text-violet-500">points to gain</p>
+              <span className="sp-numeric text-3xl font-semibold text-[var(--accent-soft-foreground)]">+{gap}</span>
+              <p className="text-xs text-[var(--text-muted)]">points to gain</p>
             </div>
           </div>
         </div>
