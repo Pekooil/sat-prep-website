@@ -295,7 +295,7 @@ export function TaskDrawer({
                 </div>
                 <button
                   onClick={() => onOpenChange(false)}
-                  className="rounded-sm p-1 opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+                  className="rounded-sm p-1 opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
                   aria-label="Close drawer"
                 >
                   <X className="h-4 w-4" />

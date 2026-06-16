@@ -3,7 +3,7 @@
 import * as React from 'react'
 import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import {
-  CheckCircle2, Circle, ChevronDown, ExternalLink,
+  Check, CheckCircle2, Circle, ChevronDown, ExternalLink,
   HelpCircle, ArrowRight, BookOpen, BarChart2,
   Download, PenLine, RotateCcw, ChevronRight, AlertTriangle, Send, GraduationCap,
 } from 'lucide-react'
@@ -443,7 +443,7 @@ function StepCard({
         <button
           onClick={onToggle}
           aria-label={completed ? `Mark step ${step.id} incomplete` : `Mark step ${step.id} complete`}
-          className="mt-0.5 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-full"
+          className="mt-0.5 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-full"
         >
           {completed ? (
             <CheckCircle2 className="h-6 w-6 text-emerald-500" />
@@ -530,13 +530,14 @@ function StepCard({
         <button
           onClick={onToggle}
           className={cn(
-            'w-full rounded-lg py-2.5 text-sm font-medium transition-colors border',
+            'flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-medium transition-colors border',
             completed
               ? 'border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-950/40'
               : 'border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]',
           )}
         >
-          {completed ? '✓ Marked as complete — click to undo' : 'Mark this step as complete'}
+          {completed && <Check className="h-4 w-4 shrink-0" />}
+          {completed ? 'Marked as complete — click to undo' : 'Mark this step as complete'}
         </button>
       </div>
     </div>

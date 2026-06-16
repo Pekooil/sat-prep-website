@@ -110,7 +110,7 @@ function LetterBtn({
     <button
       onClick={onClick}
       className={cn(
-        'h-8 w-8 rounded-[var(--radius-sm)] text-xs font-bold border transition-all shrink-0 select-none',
+        'h-11 w-11 rounded-[var(--radius-sm)] text-sm font-bold border transition-all shrink-0 select-none',
         selected
           ? color === 'accent'
             ? 'bg-[var(--accent)] text-white border-transparent'
@@ -132,7 +132,7 @@ function AnswerBadge({
 }) {
   return (
     <span className={cn(
-      'inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] text-xs font-bold border shrink-0',
+      'inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-sm)] text-sm font-bold border shrink-0',
       !letter
         ? 'text-[var(--muted-foreground)] border-dashed border-[var(--border)]'
         : variant === 'correct'
@@ -532,7 +532,7 @@ export function SessionWorkflowDialog({
                   {rows.map((row, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-4 py-2 border-b border-[var(--border)]/40 last:border-0"
+                      className="flex items-center gap-3 py-2 border-b border-[var(--border)]/40 last:border-0"
                     >
                       <span className="w-10 text-xs text-[var(--muted-foreground)] font-mono shrink-0 select-none">
                         Q{i + 1}
@@ -592,9 +592,9 @@ export function SessionWorkflowDialog({
 
               <div className="flex-1 overflow-y-auto px-6 py-3">
                 {/* Column labels */}
-                <div className="flex items-end gap-4 pb-1 border-b border-[var(--border)] mb-1">
+                <div className="flex items-end gap-3 pb-1 border-b border-[var(--border)] mb-1">
                   <span className="w-10 shrink-0" />
-                  <div className="w-8 shrink-0">
+                  <div className="w-11 shrink-0">
                     <ColLabel>Yours</ColLabel>
                   </div>
                   <div className="flex-1">
@@ -606,7 +606,7 @@ export function SessionWorkflowDialog({
                   {rows.map((row, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-4 py-2 border-b border-[var(--border)]/40 last:border-0"
+                      className="flex items-center gap-3 py-2 border-b border-[var(--border)]/40 last:border-0"
                     >
                       <span className="w-10 text-xs text-[var(--muted-foreground)] font-mono shrink-0 select-none">
                         Q{i + 1}
@@ -711,7 +711,7 @@ export function SessionWorkflowDialog({
                       <div
                         key={i}
                         className={cn(
-                          'flex items-center gap-4 py-2 rounded-lg px-2 -mx-2',
+                          'flex items-center gap-3 py-2 rounded-lg px-2 -mx-2',
                           isRight && 'bg-emerald-50/60 dark:bg-emerald-950/10',
                           isWrong && 'bg-red-50/60 dark:bg-red-950/10',
                         )}
@@ -794,14 +794,14 @@ export function SessionWorkflowDialog({
                     </div>
 
                     {/* Subtopic + mistake type selectors */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       <div>
                         <p className="text-[10px] text-[var(--muted-foreground)] mb-1 font-medium">Subtopic</p>
                         <Select
                           value={mr.subtopic ?? '__none__'}
                           onValueChange={v => updateMissedRow(mr.questionIndex, { subtopic: v === '__none__' ? null : v })}
                         >
-                          <SelectTrigger className="h-8 text-xs w-full">
+                          <SelectTrigger className="h-9 text-xs w-full">
                             <SelectValue placeholder="— subtopic —" />
                           </SelectTrigger>
                           <SelectContent>
@@ -818,7 +818,7 @@ export function SessionWorkflowDialog({
                           value={mr.mistakeType ?? '__none__'}
                           onValueChange={v => updateMissedRow(mr.questionIndex, { mistakeType: v === '__none__' ? null : v as MistakeType })}
                         >
-                          <SelectTrigger className="h-8 text-xs w-full">
+                          <SelectTrigger className="h-9 text-xs w-full">
                             <SelectValue placeholder="— type —" />
                           </SelectTrigger>
                           <SelectContent>
