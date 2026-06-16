@@ -416,7 +416,7 @@ export function SessionWorkflowDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className={cn(
         'flex flex-col gap-0 p-0 overflow-hidden transition-[max-width] duration-200',
-        isWidePhase ? 'sm:max-w-2xl max-h-[90vh]' : 'sm:max-w-md'
+        isWidePhase ? 'sm:max-w-2xl max-h-[90vh]' : 'sm:max-w-md max-h-[90vh]'
       )}>
         <div className="relative flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Phase animation wrapper */}

@@ -59,7 +59,7 @@ export function ErrorRow({ error, onReload }: ErrorRowProps) {
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             {/* Mastered toggle */}
-            <button onClick={handleToggleMastered} className="mt-0.5 shrink-0" title={error.mastered ? 'Unmark mastered' : 'Mark mastered'}>
+            <button onClick={handleToggleMastered} className="-ml-2 -mt-2 flex h-10 w-10 shrink-0 items-center justify-center" title={error.mastered ? 'Unmark mastered' : 'Mark mastered'} aria-label={error.mastered ? 'Unmark mastered' : 'Mark mastered'}>
               {error.mastered
                 ? <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                 : <Circle className="h-5 w-5 text-[var(--muted-foreground)]" />}
@@ -71,17 +71,17 @@ export function ErrorRow({ error, onReload }: ErrorRowProps) {
                 <p className={cn('text-sm font-medium leading-snug', error.mastered && 'line-through text-[var(--muted-foreground)]')}>
                   {error.description}
                 </p>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => setEditOpen(true)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--muted-foreground)]" title="Edit">
-                    <Pencil className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-0.5 shrink-0 -mr-1.5 -mt-1.5">
+                  <button onClick={() => setEditOpen(true)} className="flex h-9 w-9 items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--muted-foreground)]" title="Edit" aria-label="Edit">
+                    <Pencil className="h-4 w-4" />
                   </button>
-                  <button onClick={() => setExpanded(!expanded)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--muted-foreground)]">
+                  <button onClick={() => setExpanded(!expanded)} className="flex h-9 w-9 items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--muted-foreground)]" aria-label={expanded ? 'Collapse' : 'Expand'}>
                     {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
-                  <button onClick={handleArchive} className="p-1 rounded hover:bg-amber-50 dark:hover:bg-amber-900/20 text-[var(--muted-foreground)] hover:text-amber-600" title={isArchived ? 'Restore' : 'Archive'}>
+                  <button onClick={handleArchive} className="flex h-9 w-9 items-center justify-center rounded hover:bg-amber-50 dark:hover:bg-amber-900/20 text-[var(--muted-foreground)] hover:text-amber-600" title={isArchived ? 'Restore' : 'Archive'} aria-label={isArchived ? 'Restore' : 'Archive'}>
                     {isArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                   </button>
-                  <button onClick={handleDelete} className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-[var(--muted-foreground)] hover:text-red-500" title="Delete permanently">
+                  <button onClick={handleDelete} className="flex h-9 w-9 items-center justify-center rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-[var(--muted-foreground)] hover:text-red-500" title="Delete permanently" aria-label="Delete permanently">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>

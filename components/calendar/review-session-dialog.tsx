@@ -137,10 +137,10 @@ export function ReviewSessionDialog({
                 </div>
                 <button
                   onClick={() => onOpenChange(false)}
-                  className="rounded-sm p-1 opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+                  className="-mr-1.5 -mt-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-sm opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
                   aria-label="Close"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
             </div>
@@ -237,8 +237,9 @@ function ReviewErrorCard({
         {/* Mastered toggle */}
         <button
           onClick={() => onToggleMastered(error)}
-          className="mt-0.5 shrink-0 hover:scale-110 transition-transform"
+          className="-ml-2 -mt-2 flex h-10 w-10 shrink-0 items-center justify-center hover:scale-110 transition-transform"
           title="Mark mastered"
+          aria-label="Mark mastered"
         >
           <Circle className="h-5 w-5 text-[var(--muted-foreground)] hover:text-emerald-500 transition-colors" />
         </button>
@@ -248,22 +249,24 @@ function ReviewErrorCard({
             <p className="text-sm font-medium leading-snug text-[var(--foreground)]">
               {error.description}
             </p>
-            <div className="flex items-center gap-0.5 shrink-0 ml-1">
+            <div className="flex items-center gap-0.5 shrink-0 -mr-1.5 -mt-1.5">
               <button
                 onClick={() => onEdit(error)}
-                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--muted-foreground)]"
+                className="flex h-9 w-9 items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--muted-foreground)]"
                 title="Edit"
+                aria-label="Edit mistake"
               >
-                <Pencil className="h-3.5 w-3.5" />
+                <Pencil className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--muted-foreground)]"
+                className="flex h-9 w-9 items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--muted-foreground)]"
                 title={expanded ? 'Collapse' : 'Expand'}
+                aria-label={expanded ? 'Collapse' : 'Expand'}
               >
                 {expanded
-                  ? <ChevronUp className="h-3.5 w-3.5" />
-                  : <ChevronDown className="h-3.5 w-3.5" />}
+                  ? <ChevronUp className="h-4 w-4" />
+                  : <ChevronDown className="h-4 w-4" />}
               </button>
             </div>
           </div>

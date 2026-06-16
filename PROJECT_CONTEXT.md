@@ -80,6 +80,10 @@ All dashboard routes are protected by `proxy.ts` (Next.js 16's renamed Middlewar
 - **"Replan Now" button** — wired on the Home `AIPlannerTrigger` card → `triggerManualReplan()` (re-prioritizes existing future tasks from latest session data)
 - **Notifications unread badge** — already surfaced client-side in `notifications-dropdown.tsx` (red count badge on the bell); confirmed working
 
+### ✅ Done in Session 33 (mobile UX audit)
+
+- **Mobile touch-target + dialog pass.** `DialogContent` now caps height + scrolls on short phones (no off-screen clipping); icon-only buttons across the task drawer, review-session drawer, and error-log rows were enlarged from ~22–24px to 36–44px tap targets (with `aria-label`s); month-view calendar chips made taller/legible. See `AI_HANDOFF.md` → Session 33. No DB/schema changes.
+
 ### 🗑 Dead Code
 
 All previously-listed dead components were **deleted in Session 31** (`day-tasks-panel.tsx`,

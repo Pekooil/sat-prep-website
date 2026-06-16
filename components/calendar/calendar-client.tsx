@@ -90,7 +90,7 @@ function TaskChip({
       onClick={(e) => { e.stopPropagation(); onOpen(task) }}
       title={task.title}
       className={cn(
-        'w-full text-left text-[10px] leading-tight px-1.5 py-0.5 rounded',
+        'flex min-h-[24px] w-full items-center text-left text-[11px] leading-tight px-1.5 py-1 rounded',
         'border-l-2 truncate transition-opacity',
         c.bg, c.leftBar, c.text,
         task.is_completed && 'opacity-50 line-through',
@@ -98,7 +98,7 @@ function TaskChip({
         task.is_completed && 'cursor-default',
       )}
     >
-      <span className="font-medium truncate block">
+      <span className="font-medium truncate block w-full min-w-0">
         {label}
         {qCount ? ` · ${qCount}q` : ''}
       </span>
