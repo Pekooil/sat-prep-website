@@ -196,12 +196,13 @@ function SaturnIllustration({
   const back = `lpb-${uid}`
   const front = `lpf-${uid}`
   const glow = `lpg-${uid}`
+  const pg = `lpPG-${uid}`
+  const rg = `lpRG-${uid}`
   return (
     <svg
       viewBox="0 0 320 320"
       className={className}
       aria-hidden="true"
-      fill="currentColor"
     >
       <defs>
         <clipPath id={back}>
@@ -217,55 +218,74 @@ function SaturnIllustration({
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
+        <linearGradient id={pg} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#7c3aed" />
+          <stop offset="100%" stopColor="#a855f7" />
+        </linearGradient>
+        <linearGradient id={rg} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.3" />
+          <stop offset="35%" stopColor="#a855f7" />
+          <stop offset="65%" stopColor="#c084fc" />
+          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.3" />
+        </linearGradient>
       </defs>
 
-      {/* Ring — static base band, back half (behind the planet) */}
+      {/* Ring — static base band, back half */}
       <ellipse
         cx="160" cy="160" rx="148" ry="38"
-        fill="none" stroke="currentColor" strokeWidth="20"
+        fill="none" stroke={`url(#${rg})`} strokeWidth="20"
         clipPath={`url(#${back})`} opacity="0.25"
       />
 
-      {/* Planet body — fixed; the ring does all the moving */}
-      <circle cx="160" cy="160" r="88" filter={`url(#${glow})`} />
-      <ellipse cx="133" cy="132" rx="34" ry="22" fill="#ffffff" opacity="0.10" />
-      <ellipse cx="188" cy="190" rx="40" ry="26" fill="#000000" opacity="0.10" />
+      {/* Planet body */}
+      <circle cx="160" cy="160" r="88" fill={`url(#${pg})`} filter={`url(#${glow})`} />
+      <ellipse cx="133" cy="132" rx="34" ry="22" fill="white" opacity="0.10" />
+      <ellipse cx="188" cy="190" rx="40" ry="26" fill="black" opacity="0.10" />
 
-      {/* Ring — static base band, front half (in front of the planet) */}
+      {/* Ring — static base band, front half */}
       <ellipse
         cx="160" cy="160" rx="148" ry="38"
-        fill="none" stroke="currentColor" strokeWidth="20"
+        fill="none" stroke={`url(#${rg})`} strokeWidth="20"
         clipPath={`url(#${front})`} opacity="0.70"
       />
 
-      {/* Turning ring detail. One animated stroke-dashoffset on this group is
-          inherited by every child, so all of it orbits together. */}
+      {/* Turning ring detail — stroke-dashoffset inherited by all children */}
       <g ref={ringRef} className={ringIdle ? 'lp-ring-idle' : undefined}>
-        {/* fine ring segments — back half */}
+        {/* dashed ring segments — back half */}
         <ellipse
           cx="160" cy="160" rx="148" ry="38"
-          fill="none" stroke="currentColor" strokeWidth="20"
+          fill="none" stroke={`url(#${rg})`} strokeWidth="20"
           strokeDasharray="3.5 23.03" clipPath={`url(#${back})`} opacity="0.28"
         />
-        {/* the moon, dimmed while it rides behind the planet */}
+        {/* moon dot — back (dim) */}
         <ellipse
           cx="160" cy="160" rx="148" ry="38"
-          fill="none" stroke="currentColor" strokeWidth="14" strokeLinecap="round"
+          fill="none" stroke="#c084fc" strokeWidth="14" strokeLinecap="round"
           strokeDasharray="0.7 636" clipPath={`url(#${back})`} opacity="0.4"
         />
-        {/* fine ring segments — front half */}
+        {/* dashed ring segments — front half */}
         <ellipse
           cx="160" cy="160" rx="148" ry="38"
-          fill="none" stroke="currentColor" strokeWidth="20"
+          fill="none" stroke={`url(#${rg})`} strokeWidth="20"
           strokeDasharray="3.5 23.03" clipPath={`url(#${front})`} opacity="0.6"
         />
-        {/* the moon, bright as it swings in front of the planet */}
+        {/* moon dot — front (bright) */}
         <ellipse
           cx="160" cy="160" rx="148" ry="38"
-          fill="none" stroke="currentColor" strokeWidth="16" strokeLinecap="round"
+          fill="none" stroke="#c084fc" strokeWidth="16" strokeLinecap="round"
           strokeDasharray="0.7 636" clipPath={`url(#${front})`} opacity="1"
         />
       </g>
+
+      {/* Accent dots — logo.svg navigation markers on the upper ring arc */}
+      <circle cx="87" cy="127" r="8" fill="#c084fc" opacity="0.85" />
+      <circle cx="233" cy="127" r="8" fill="#c084fc" opacity="0.85" />
+
+      {/* Star accents from logo.svg identity */}
+      <circle cx="47" cy="93" r="7" fill="#a855f7" opacity="0.55" />
+      <circle cx="267" cy="67" r="8" fill="#c084fc" opacity="0.50" />
+      <circle cx="287" cy="213" r="5" fill="#a855f7" opacity="0.40" />
+      <circle cx="33" cy="240" r="6" fill="#c084fc" opacity="0.40" />
     </svg>
   )
 }
@@ -1072,7 +1092,7 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
                       <span className="lp-orbit-dot" />
                     </span>
                   </div>
-                  <div className="lp-float text-[var(--accent)] opacity-95 dark:text-[var(--accent-hover)]">
+                  <div className="lp-float opacity-95">
                     <SaturnIllustration
                       ringRef={ringRef}
                       className="h-56 w-56 sm:h-72 sm:w-72 lg:h-80 lg:w-80"
@@ -1242,7 +1262,7 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
         <section className="border-t border-[var(--border)]">
           <div className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-8 lg:py-28">
             <Reveal variant="scale">
-              <div className="mx-auto mb-6 text-[var(--accent)] dark:text-[var(--accent-hover)]">
+              <div className="mx-auto mb-6">
                 <SaturnIllustration ringIdle className="lp-float mx-auto h-20 w-20 opacity-90" />
               </div>
               <h2 className="sp-display text-3xl sm:text-4xl">

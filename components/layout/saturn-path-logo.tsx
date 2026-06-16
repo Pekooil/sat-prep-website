@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 interface SaturnPathLogoProps {
-  /** 'auto' CSS-switches between colored/white mark with dark mode; 'dark' forces the white mark (gradient panels). */
+  /** 'dark' forces white text (for dark brand panels); 'auto' adapts to light/dark mode. Mark is always logo.svg. */
   variant?: 'auto' | 'dark'
   size?: 'sm' | 'md' | 'lg'
   /** Override the "Path" text color. Defaults to violet-600 (auto light) / violet-500 (dark). */
@@ -26,18 +26,10 @@ export function SaturnPathLogo({
 }: SaturnPathLogoProps) {
   const { h, gap, text } = sizeMap[size]
 
-  const mark =
-    variant === 'dark' ? (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src="/saturn-mark-white.svg" alt="" width={h} height={h} className="shrink-0" />
-    ) : (
-      <>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/saturn-mark.svg"       alt="" width={h} height={h} className="shrink-0 dark:hidden" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/saturn-mark-white.svg" alt="" width={h} height={h} className="shrink-0 hidden dark:block" />
-      </>
-    )
+  const mark = (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/logo.svg" alt="" width={h} height={h} className="shrink-0" />
+  )
 
   /* "Saturn" portion */
   const saturnText =

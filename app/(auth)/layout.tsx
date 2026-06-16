@@ -7,53 +7,6 @@ const FEATURES = [
   'Real-time score prediction as you practice',
 ]
 
-function SaturnIllustration() {
-  return (
-    <svg
-      viewBox="0 0 320 320"
-      className="w-56 h-56 sm:w-64 sm:h-64 lg:w-72 lg:h-72 opacity-90"
-      aria-hidden="true"
-      fill="currentColor"
-    >
-      <defs>
-        <clipPath id="auth-ring-back">
-          <rect x="0" y="160" width="320" height="160" />
-        </clipPath>
-        <clipPath id="auth-ring-front">
-          <rect x="0" y="0" width="320" height="160" />
-        </clipPath>
-        {/* Subtle glow filter */}
-        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="8" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
-      {/* Ring — back half */}
-      <ellipse
-        cx="160" cy="160" rx="148" ry="38"
-        fill="none" stroke="currentColor" strokeWidth="22"
-        clipPath="url(#auth-ring-back)"
-        opacity="0.55"
-      />
-      {/* Planet body */}
-      <circle cx="160" cy="160" r="90" filter="url(#glow)" />
-      {/* Subtle surface highlight */}
-      <ellipse cx="135" cy="135" rx="35" ry="22" fill="white" opacity="0.08" />
-      {/* Ring — front half */}
-      <ellipse
-        cx="160" cy="160" rx="148" ry="38"
-        fill="none" stroke="currentColor" strokeWidth="22"
-        clipPath="url(#auth-ring-front)"
-        opacity="0.9"
-      />
-    </svg>
-  )
-}
-
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
@@ -75,9 +28,19 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <SaturnPathLogo variant="dark" size="lg" asLink={false} pathColor="var(--color-violet-400)" />
           </div>
 
-          {/* Saturn illustration */}
-          <div className="text-white/85 mb-10">
-            <SaturnIllustration />
+          {/* Logo illustration — white with soft glow */}
+          <div className="mb-10">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.svg"
+              alt=""
+              aria-hidden="true"
+              className="w-56 h-56 sm:w-64 sm:h-64 lg:w-72 lg:h-72 opacity-90"
+              style={{
+                filter:
+                  'brightness(0) invert(1) drop-shadow(0 0 14px rgba(255,255,255,0.45)) drop-shadow(0 0 38px rgba(196,132,252,0.28))',
+              }}
+            />
           </div>
 
           {/* Headline */}
