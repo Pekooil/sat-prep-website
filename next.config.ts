@@ -14,6 +14,7 @@ const scriptSrc = [
   "'self'",
   "'unsafe-inline'",
   'https://va.vercel-scripts.com',
+  'https://challenges.cloudflare.com',
   ...(isDev ? ["'unsafe-eval'"] : []),
 ].join(' ')
 
@@ -27,7 +28,8 @@ const CSP = [
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
   `script-src ${scriptSrc}`,
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+  "frame-src 'self' https://challenges.cloudflare.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com https://challenges.cloudflare.com",
   'upgrade-insecure-requests',
 ].join('; ')
 

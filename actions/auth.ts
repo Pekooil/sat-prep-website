@@ -1,11 +1,15 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppUrl } from '@/lib/app-url'
 import { buildConfirmationEmail } from '@/lib/email/confirmation-template'
+import { validateAgeConsent } from '@/lib/legal/config'
+import { verifyTurnstile } from '@/lib/security/turnstile'
+import { rateLimit } from '@/lib/security/rate-limit'
 
 export async function signIn(formData: FormData) {
   'use server'
@@ -34,9 +38,32 @@ export async function signIn(formData: FormData) {
 
 export async function signUp(formData: FormData) {
   'use server'
+
+  // ── Abuse protection ────────────────────────────────────────────────────────
+  // signUp() creates accounts via the service-role admin client, which bypasses
+  // Supabase's own auth rate-limit + CAPTCHA. Guard the endpoint ourselves:
+  // (1) per-IP rate limit, (2) Cloudflare Turnstile verification. Both are
+  // no-ops until their env vars are configured (see lib/security/*).
+  const hdrs = await headers()
+  const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() || '0.0.0.0'
+  const rl = rateLimit(`signup:${ip}`, 5, 10 * 60 * 1000)
+  if (!rl.allowed) {
+    return { error: `Too many sign-up attempts. Please try again in about ${Math.ceil(rl.retryAfterSec / 60)} minute(s).` }
+  }
+  const captcha = await verifyTurnstile(formData.get('cf_turnstile_token') as string | null, ip)
+  if (!captcha.ok) return { error: captcha.error ?? 'Captcha verification failed.' }
+
   const email    = formData.get('email')     as string
   const password = formData.get('password')  as string
   const fullName = formData.get('full_name') as string
+  const birthYear     = Number(formData.get('birth_year'))
+  const agreedToTerms = formData.get('agreed_to_terms') === 'on'
+  const parentalAck   = formData.get('parental_ack') === 'on'
+
+  // Age gate + consent (authoritative server-side check) — block before any
+  // account is created for under-13 / missing consent.
+  const consentError = validateAgeConsent({ birthYear, agreedToTerms, parentalAck })
+  if (consentError) return { error: consentError }
 
   const admin = createAdminClient()
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
@@ -62,7 +89,9 @@ export async function signUp(formData: FormData) {
       id: linkData.user.id,
       email,
       full_name: fullName,
+      birth_year: birthYear,
       terms_accepted_at: new Date().toISOString(),
+      parental_ack: parentalAck,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'id' },
@@ -116,8 +145,22 @@ export async function signOut() {
   redirect('/login')
 }
 
-export async function saveGoogleConsent() {
+export async function saveGoogleConsent(input: {
+  birthYear: number
+  agreedToTerms: boolean
+  parentalAck: boolean
+}) {
   'use server'
+  // Age gate + consent (authoritative server-side check) — same gate as email
+  // signup. A first-time Google user has an auth.users row but no profile
+  // consent yet; block them here until they pass the age gate.
+  const consentError = validateAgeConsent({
+    birthYear: input.birthYear,
+    agreedToTerms: input.agreedToTerms,
+    parentalAck: input.parentalAck,
+  })
+  if (consentError) return { error: consentError }
+
   const supabase = await createClient()
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) return { error: 'Session expired. Please sign in again.' }
@@ -132,7 +175,9 @@ export async function saveGoogleConsent() {
           (user.user_metadata?.full_name as string | undefined) ??
           (user.user_metadata?.name as string | undefined) ??
           '',
+        birth_year:        input.birthYear,
         terms_accepted_at: new Date().toISOString(),
+        parental_ack:      input.parentalAck,
         updated_at:        new Date().toISOString(),
       },
       { onConflict: 'id' },

@@ -8,6 +8,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { signUp } from '@/actions/auth'
 import { createClient } from '@/lib/supabase/client'
+import { LEGAL, MIN_BIRTH_YEAR, ageFromBirthYear, validateAgeConsent } from '@/lib/legal/config'
+import { TurnstileWidget } from '@/components/security/turnstile-widget'
+
+const CURRENT_YEAR = new Date().getFullYear()
+const BIRTH_YEARS = Array.from({ length: CURRENT_YEAR - MIN_BIRTH_YEAR + 1 }, (_, i) => CURRENT_YEAR - i)
+const CAPTCHA_ENABLED = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
 function GoogleIcon() {
   return (
@@ -35,6 +41,14 @@ export default function SignupPage() {
   const [googlePending, setGooglePending] = React.useState(false)
   const [error,         setError]         = React.useState<string | null>(null)
   const [confirmed,     setConfirmed]     = React.useState(false)
+  const [birthYear,     setBirthYear]     = React.useState('')
+  const [agreedToTerms, setAgreedToTerms] = React.useState(false)
+  const [parentalAck,   setParentalAck]   = React.useState(false)
+  const [captchaToken,  setCaptchaToken]  = React.useState('')
+
+  const needsParental = birthYear
+    ? ageFromBirthYear(Number(birthYear)) < LEGAL.parentalConsentBelowAge
+    : false
 
   async function handleGoogleSignUp() {
     setGooglePending(true)
@@ -57,6 +71,25 @@ export default function SignupPage() {
       setError('Passwords do not match')
       return
     }
+    // Age gate + consent — mirrors the authoritative server-side check for
+    // instant feedback; signUp() re-validates before the account is created.
+    const consentError = validateAgeConsent({
+      birthYear: birthYear ? Number(birthYear) : null,
+      agreedToTerms,
+      parentalAck,
+    })
+    if (consentError) {
+      setError(consentError)
+      return
+    }
+    if (CAPTCHA_ENABLED && !captchaToken) {
+      setError('Please complete the captcha to continue.')
+      return
+    }
+    fd.set('birth_year', birthYear)
+    fd.set('agreed_to_terms', agreedToTerms ? 'on' : '')
+    fd.set('parental_ack', parentalAck ? 'on' : '')
+    fd.set('cf_turnstile_token', captchaToken)
     setPending(true)
     setError(null)
     try {
@@ -165,6 +198,57 @@ export default function SignupPage() {
           />
         </div>
 
+        {/* Age gate */}
+        <div className="space-y-1.5">
+          <Label htmlFor="birth_year">Birth year</Label>
+          <select
+            id="birth_year"
+            value={birthYear}
+            onChange={e => setBirthYear(e.target.value)}
+            disabled={pending}
+            className="flex h-9 w-full rounded-md border border-[var(--border)] bg-[var(--surface-base)] px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          >
+            <option value="" disabled>Select your birth year</option>
+            {BIRTH_YEARS.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Consent */}
+        <div className="space-y-2">
+          <label className="flex items-start gap-2.5 text-xs leading-relaxed text-[var(--text-muted)]">
+            <input
+              type="checkbox"
+              checked={agreedToTerms}
+              onChange={e => setAgreedToTerms(e.target.checked)}
+              disabled={pending}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
+            />
+            <span>
+              I agree to the{' '}
+              <Link href="/terms" target="_blank" className="underline hover:text-[var(--text-heading)]">Terms of Service</Link>
+              {' '}and{' '}
+              <Link href="/privacy" target="_blank" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>.
+            </span>
+          </label>
+
+          {needsParental && (
+            <label className="flex items-start gap-2.5 text-xs leading-relaxed text-[var(--text-muted)]">
+              <input
+                type="checkbox"
+                checked={parentalAck}
+                onChange={e => setParentalAck(e.target.checked)}
+                disabled={pending}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
+              />
+              <span>I am under 18 and have my parent or guardian&apos;s permission to use {LEGAL.appName}.</span>
+            </label>
+          )}
+        </div>
+
+        <TurnstileWidget onVerify={setCaptchaToken} />
+
         {error && (
           <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/10 px-4 py-3">
             <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
@@ -175,13 +259,6 @@ export default function SignupPage() {
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {pending ? 'Creating account...' : 'Create free account'}
         </Button>
-
-        <p className="text-center text-xs text-[var(--text-muted)]">
-          By continuing you confirm you are at least 13 years old and agree to our{' '}
-          <Link href="/terms" className="underline hover:text-[var(--text-heading)]">Terms of Service</Link>
-          {' '}and{' '}
-          <Link href="/privacy" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>.
-        </p>
       </form>
 
       {/* Google sign-up */}

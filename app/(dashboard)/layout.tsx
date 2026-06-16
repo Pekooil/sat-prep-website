@@ -16,8 +16,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('id', user.id)
     .single()
 
-  // Google users must accept terms before accessing the app
-  if (profile && !profile.terms_accepted_at) {
+  // Age gate + consent must be on file before accessing the app. This catches
+  // first-time Google users (no terms_accepted_at yet) AND legacy accounts
+  // created before the age gate existed (birth_year IS NULL) — closing the
+  // COPPA gap for pre-existing users, not just new signups.
+  if (profile && (!profile.terms_accepted_at || profile.birth_year == null)) {
     redirect('/auth/google-consent')
   }
 

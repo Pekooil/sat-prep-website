@@ -11,11 +11,12 @@ export default async function RootPage() {
     // New users who haven't completed onboarding go directly to the wizard.
     const { data: profile } = await supabase
       .from('users')
-      .select('has_completed_onboarding, terms_accepted_at')
+      .select('has_completed_onboarding, terms_accepted_at, birth_year')
       .eq('id', user.id)
       .single()
 
-    if (!profile?.terms_accepted_at) {
+    // Age gate + consent must be on file before entering the app.
+    if (!profile?.terms_accepted_at || profile.birth_year == null) {
       redirect('/auth/google-consent')
     }
     redirect(profile?.has_completed_onboarding ? '/home' : '/onboarding')
