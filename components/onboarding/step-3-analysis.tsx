@@ -79,7 +79,7 @@ export function Step3Analysis({ analysis, step1CurrentScore, step1TargetScore, d
       {/* Key stats */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl bg-indigo-50 dark:bg-indigo-900/20 p-4">
-          <Calendar className="h-5 w-5 text-indigo-500 mb-2" />
+          <Calendar className="h-5 w-5 text-violet-500 mb-2" />
           <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">{studyDays}</p>
           <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Days until test</p>
           <p className="text-[10px] text-slate-400">≈ {estimatedWeeks} weeks</p>

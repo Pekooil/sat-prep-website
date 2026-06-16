@@ -3,7 +3,7 @@
 import * as React from 'react'
 import {
   Loader2, Timer, CheckCircle2, XCircle, AlertTriangle,
-  TrendingUp, ExternalLink,
+  TrendingUp, ExternalLink, ShieldAlert,
 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -209,6 +209,12 @@ export function SessionWorkflowDialog({
     predictedScore: number
   } | null>(null)
 
+  const [confirm, setConfirm] = React.useState<{
+    title:       string
+    description: string
+    onConfirm:   () => void
+  } | null>(null)
+
   const intervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null)
 
   // ── Animated phase transition ──────────────────────────────────────────────
@@ -237,6 +243,19 @@ export function SessionWorkflowDialog({
     }
   }, [timeElapsed, allocSecs, phase, timedOut, toast])
 
+  // ── Close guard ────────────────────────────────────────────────────────────
+  function handleOpenChange(next: boolean) {
+    if (!next && (phase === 'active' || phase === 'review' || phase === 'results' || phase === 'missed_analysis')) {
+      setConfirm({
+        title:       'Close session?',
+        description: 'Your progress will be lost and this session won\'t be recorded.',
+        onConfirm:   () => onOpenChange(false),
+      })
+      return
+    }
+    onOpenChange(next)
+  }
+
   // ── Reset on close ─────────────────────────────────────────────────────────
   React.useEffect(() => {
     if (!open) {
@@ -263,12 +282,22 @@ export function SessionWorkflowDialog({
   }
 
   function handleSubmit() {
-    if (intervalRef.current) clearInterval(intervalRef.current)
-    transitionTo('review')
+    setConfirm({
+      title:       'Submit answers?',
+      description: 'Make sure you\'ve closed the Question Bank window. You won\'t be able to change your answers after submitting.',
+      onConfirm:   () => {
+        if (intervalRef.current) clearInterval(intervalRef.current)
+        transitionTo('review')
+      },
+    })
   }
 
   function handleSeeResults() {
-    transitionTo('results')
+    setConfirm({
+      title:       'See results?',
+      description: 'Confirm you\'ve finished entering all correct answers from the Question Bank. You won\'t be able to go back.',
+      onConfirm:   () => transitionTo('results'),
+    })
   }
 
   async function handleContinueToMissedAnalysis() {
@@ -384,11 +413,12 @@ export function SessionWorkflowDialog({
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className={cn(
         'flex flex-col gap-0 p-0 overflow-hidden transition-[max-width] duration-200',
         isWidePhase ? 'sm:max-w-2xl max-h-[90vh]' : 'sm:max-w-md'
       )}>
+        <div className="relative flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Phase animation wrapper */}
         <div
           style={{
@@ -940,6 +970,40 @@ export function SessionWorkflowDialog({
           )}
 
         </div>{/* end animation wrapper */}
+
+        {/* ── In-app confirmation overlay ── */}
+        {confirm && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-[var(--radius-lg)] bg-[var(--surface-overlay)]/90 backdrop-blur-sm p-6">
+            <div className="w-full max-w-xs space-y-4">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-950/50">
+                  <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{confirm.title}</p>
+                  <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">{confirm.description}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setConfirm(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => { confirm.onConfirm(); setConfirm(null) }}
+                >
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        </div>{/* end relative wrapper */}
       </DialogContent>
     </Dialog>
   )

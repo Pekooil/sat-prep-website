@@ -96,7 +96,8 @@ function localDate(timezone: string, base: Date = new Date()): string {
 
 // ─── Route handler ────────────────────────────────────────────────────────────
 
-export async function POST(request: Request) {
+// Vercel Cron Jobs fire GET requests; POST is kept for manual/testing invocations.
+async function runDailyReminders(request: Request): Promise<NextResponse> {
   // ── Auth guard (fail CLOSED) ────────────────────────────────────────────────
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
@@ -286,7 +287,12 @@ export async function POST(request: Request) {
   })
 }
 
-// Minimal liveness check — does not disclose schedule or configuration.
-export async function GET() {
-  return NextResponse.json({ ok: true })
+// Vercel Cron Jobs fire GET — this is the primary entry point.
+export async function GET(request: Request) {
+  return runDailyReminders(request)
+}
+
+// POST is kept for manual/testing invocations (e.g. curl -X POST with Bearer token).
+export async function POST(request: Request) {
+  return runDailyReminders(request)
 }

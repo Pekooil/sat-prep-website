@@ -824,7 +824,7 @@ export function TutorialClient({ inventoryMode }: { inventoryMode?: 'exclude_act
             variant="outline"
             size="sm"
             asChild
-            className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
+            className="bg-white/10 border-white/30 !text-white hover:bg-white/20 hover:!text-white"
           >
             <a href={COLLEGE_BOARD_QB_URL} target="_blank" rel="noopener noreferrer">
               Open QB
