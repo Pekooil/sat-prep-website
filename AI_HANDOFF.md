@@ -579,7 +579,11 @@ Plain-text strings (toast titles) are also clean — no emoji.
 
 ---
 
-## Dead Code (safe to delete — no references anywhere)
+## Dead Code
+
+**All deleted in Session 31** (pre-launch audit). The 8 files below were confirmed
+unimported anywhere and removed from the tree. The `app/beta/` route + `actions/beta.ts`
+were also deleted (unreachable dead code that still shipped as a live public page).
 
 | File | Why dead |
 |---|---|
@@ -591,6 +595,11 @@ Plain-text strings (toast titles) are also clean — no emoji.
 | `components/data/accuracy-chart.tsx` | Legacy, not imported (data tab uses accuracy-trends.tsx) |
 | `components/data/category-stats.tsx` | Legacy, not imported |
 | `components/ai-coach/ai-coach-panel.tsx` | Route deleted in Session 8; component unused |
+| `app/beta/` (page + beta-gate-form) + `actions/beta.ts` | Beta gate removed in Session 24; self-contained, unlinked |
+
+> `components/data/mistake-frequency.tsx` is NOT deleted — its `ErrorSummary` type is still
+> referenced by `DataClientProps`. `components/onboarding/step-2-performance.tsx` is obsolete
+> but kept on disk (not imported).
 
 ---
 
@@ -668,4 +677,5 @@ Still open (documented, not yet implemented): app-layer rate limiting / CAPTCHA 
 | 27 | **Resend email system.** Signup confirmation emails now sent via Resend with a branded template (`lib/email/confirmation-template.ts`). Both `signUp()` (`actions/auth.ts`) and `signUpAndSaveOnboarding()` (`actions/onboarding.ts`) now use `admin.auth.admin.generateLink({ type: 'signup' })` to get the confirmation URL without triggering Supabase's own SMTP, then send via Resend. Daily reminder emails were already code-complete (`/api/reminders/daily`, `lib/email/reminder-template.ts`, Vercel cron `0 13 * * *` in `vercel.json`). Fixed `RESEND_FROM_EMAIL` placeholder from `noreply@example.com` to `onboarding@resend.dev` for local dev. **Production requires a verified Resend domain** — add it at resend.com/domains and update `RESEND_FROM_EMAIL` in Vercel env. |
 | 28 | **UI polish — home dashboard + analytics cards.** `score-progress-bar.tsx`: fill bar → dark purple gradient (`#3b0764→#581c87→#6b21a8`) with violet glow; thumb → `#c084fc`; target marker → gold Saturn SVG (40px, closed ellipse ring with layered front/back arcs). `home/page.tsx`: Current Score + Target Score → `href="/data"`; Open Errors → `href="/error-log"`. `topic-mastery-cards.tsx`: per-card colored border (emerald/blue/amber/rose at 50%); Proficient badge + bar changed from accent CSS var to explicit `blue-500`. Page title icon badges (violet, matching Inventory): Calendar (`Calendar`), Error Log (`ClipboardList`), Analytics (`BarChart3` in `data-client.tsx`), Tutorial (`GraduationCap` in `tutorial-client.tsx`). No DB or schema changes. |
 | 30 | **Brand logo update.** Replaced all `saturn-mark.svg`/`saturn-mark-white.svg` usages with `public/logo.svg`. `components/layout/saturn-path-logo.tsx`: mark is now always `logo.svg` (purple gradients work on both light and dark backgrounds). `components/marketing/landing-page.tsx` `SaturnIllustration`: upgraded to logo.svg visual style — explicit purple gradients (`#7c3aed→#a855f7` planet, `#7c3aed→#a855f7→#c084fc` ring), accent dots at ring arc positions, star decorations; all animation code and `ringRef`/`ringIdle` props unchanged. `app/(auth)/layout.tsx`: removed inline `SaturnIllustration` SVG, replaced with `<img src="/logo.svg">` styled with `brightness(0) invert(1)` + drop-shadow glow for the white-glowing brand panel illustration. No DB or schema changes. |
+| 31 | **Pre-launch UI/UX + workflow audit.** Added the SAT trademark disclaimer to the `/login` and `/signup` pages (previously only on the landing page; now on all three per the legal checklist). Wired the **"Replan now" button** on the Home `AIPlannerTrigger` card → `triggerManualReplan()` (re-prioritizes existing future tasks from latest session data, with toast + loading state) — closes the documented "no UI entry point" gap. Gated the Settings page's "Email setup required" dev note to `NODE_ENV !== 'production'` (it leaked internal env-var names incl. `SUPABASE_SERVICE_ROLE_KEY` to end users) and replaced its 📧 emoji with a Lucide `Mail` icon. Removed 3 stale `revalidatePath('/ai-coach')` calls (deleted route) from `actions/adaptive-replanner.ts`. **Deleted dead code:** 8 unimported legacy components + the unreachable `app/beta/` route and `actions/beta.ts`. Verified: build passes (0 type errors), no console errors on `/login`, all public routes (`/`, `/login`, `/signup`, `/privacy`, `/terms`) return 200, copyright year is dynamic (2026), nav (sidebar/mobile) matches `NAV_LINKS` (6 links incl. Inventory). Note: the notifications bell already surfaces an unread badge client-side, and the QB tutorial `ScreenshotPlaceholder` renders gracefully — both pre-existing, no change needed. |
 | 18 | **Signup + email-confirmation fix** (review feedback: "signup link did nothing, probably a missing env var"). Added `lib/supabase/env.ts` with validated `getSupabaseUrl()`/`getSupabaseAnonKey()` (clear error instead of a silent hang on missing `NEXT_PUBLIC_SUPABASE_*`); wired into server/client/proxy. Added `lib/app-url.ts getAppUrl()` (empty-string-safe origin) — fixes prod `NEXT_PUBLIC_APP_URL=""` producing a relative `emailRedirectTo`; used by `actions/auth.ts` + `actions/onboarding.ts`. Wrapped login/signup/onboarding-wizard server-action calls in `try/catch` (re-throwing `NEXT_REDIRECT`) so failures surface instead of hanging the button. Reworked `app/auth/confirm/page.tsx`: clears any transient session and redirects to `/login?confirmed=1` (was `/home`, which bounced new users into `/onboarding`); login page shows a confirmed/error banner. **Eager signup persistence:** `signUpAndSaveOnboarding()` now writes profile+plan via the service-role admin client when confirmation is pending (upsert `has_completed_onboarding: true`), so a confirmed user lands straight on the dashboard instead of re-onboarding. |

@@ -1,4 +1,4 @@
-import { Bell } from 'lucide-react'
+import { Bell, Mail } from 'lucide-react'
 import { NotificationPrefs } from '@/components/settings/notification-prefs'
 import { DeleteAccount } from '@/components/settings/delete-account'
 import { getNotificationPreferences } from '@/actions/notification-preferences'
@@ -21,10 +21,12 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      {/* ── Setup note (shown when RESEND_API_KEY not yet configured) ────── */}
-      {!process.env.RESEND_API_KEY && (
+      {/* ── Setup note (dev only — never shown to end users in production) ── */}
+      {process.env.NODE_ENV !== 'production' && !process.env.RESEND_API_KEY && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20 p-4 text-sm">
-          <p className="font-semibold text-amber-800 dark:text-amber-300">📧 Email setup required</p>
+          <p className="flex items-center gap-1.5 font-semibold text-amber-800 dark:text-amber-300">
+            <Mail className="h-4 w-4" /> Email setup required
+          </p>
           <p className="text-amber-700 dark:text-amber-400 mt-1">
             To enable email reminders, add the following to your{' '}
             <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">.env.local</code>:

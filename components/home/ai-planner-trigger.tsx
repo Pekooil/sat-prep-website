@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { generateAIStudyPlan } from '@/actions/ai-planner'
+import { triggerManualReplan } from '@/actions/adaptive-replanner'
 import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 import type { User } from '@/types'
@@ -109,8 +110,30 @@ function DaySchedulePicker({
 export function AIPlannerTrigger({ profile }: AIPlannerTriggerProps) {
   const [loading,  setLoading]  = React.useState(false)
   const [success,  setSuccess]  = React.useState(false)
+  const [replanning, setReplanning] = React.useState(false)
   const [schedule, setSchedule] = React.useState<DaySchedule>(DEFAULT_SCHEDULE)
   const { toast } = useToast()
+
+  async function handleReplanNow() {
+    setReplanning(true)
+    try {
+      const result = await triggerManualReplan()
+      if (result.error) {
+        toast({ title: 'Replan failed', description: result.error, variant: 'destructive' })
+      } else {
+        toast({
+          title: 'Plan updated',
+          description: result.tasksUpdated > 0
+            ? `${result.tasksUpdated} upcoming ${result.tasksUpdated === 1 ? 'task' : 'tasks'} re-prioritized from your latest data.`
+            : 'Your plan is already up to date with your latest data.',
+        })
+      }
+    } catch {
+      toast({ title: 'Replan failed', description: 'Something went wrong. Please try again.', variant: 'destructive' })
+    } finally {
+      setReplanning(false)
+    }
+  }
 
   const defaultCurrent = profile?.current_score ?? 1100
   const defaultTarget  = profile?.target_score  ?? 1400
@@ -156,6 +179,18 @@ export function AIPlannerTrigger({ profile }: AIPlannerTriggerProps) {
             <p className="text-xs text-[var(--muted-foreground)]">
               Generates a personalized week-by-week plan. Domain priorities are set automatically from your session data.
             </p>
+            {profile && (
+              <button
+                type="button"
+                onClick={handleReplanNow}
+                disabled={replanning}
+                className="mt-2 inline-flex items-center gap-1.5 self-start text-xs font-medium text-[var(--accent)] hover:underline disabled:opacity-60"
+              >
+                {replanning
+                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Replanning…</>
+                  : <><RefreshCw className="h-3.5 w-3.5" />Replan now — re-prioritize my existing tasks</>}
+              </button>
+            )}
           </CardHeader>
 
           <CardContent className="pt-0 flex-1 flex flex-col justify-center">

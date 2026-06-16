@@ -28,7 +28,6 @@ export async function triggerManualReplan(): Promise<ManualReplanResult> {
   revalidatePath('/calendar')
   revalidatePath('/home')
   revalidatePath('/data')
-  revalidatePath('/ai-coach')
 
   return {
     success:           true,
@@ -62,7 +61,6 @@ export async function recoverMissedAndReplan(): Promise<RecoverMissedResult> {
   revalidatePath('/calendar')
   revalidatePath('/home')
   revalidatePath('/data')
-  revalidatePath('/ai-coach')
 
   return {
     success:        true,
@@ -94,7 +92,6 @@ export async function restoreVersion(versionId: string): Promise<RestoreVersionR
 
   revalidatePath('/calendar')
   revalidatePath('/home')
-  revalidatePath('/ai-coach')
 
   return { success: true, restored: result.restored }
 }

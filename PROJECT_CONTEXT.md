@@ -73,15 +73,19 @@ All dashboard routes are protected by `proxy.ts` (Next.js 16's renamed Middlewar
 
 ### 🔜 Not Yet Built
 
-- **"Replan Now" button** — `triggerManualReplan()` action exists; no UI entry point yet
-- **Notifications real-time badge** — `notifications` table is populated but unread count is not surfaced in the navbar bell in real time
-- **QB Tutorial screenshots** — `ScreenshotPlaceholder` components in `tutorial-client.tsx` await real `<Image>` tags pointing to `public/tutorial/step-{1–7}.png`
+- **QB Tutorial screenshots** — `ScreenshotPlaceholder` components in `tutorial-client.tsx` await real `<Image>` tags pointing to `public/tutorial/step-{1–7}.png` (renders a graceful "Screenshot coming soon" placeholder until then)
 
-### 🗑 Dead Code (safe to delete)
+### ✅ Done in Session 31 (pre-launch audit)
 
-- `components/calendar/day-tasks-panel.tsx` + `log-session-dialog.tsx` — legacy, never rendered
-- `components/data/topic-rankings.tsx`, `stats-cards.tsx`, `score-timeline.tsx`, `accuracy-chart.tsx`, `category-stats.tsx` — legacy, not imported
-- `components/ai-coach/ai-coach-panel.tsx` — route deleted in Session 8, component unused
+- **"Replan Now" button** — wired on the Home `AIPlannerTrigger` card → `triggerManualReplan()` (re-prioritizes existing future tasks from latest session data)
+- **Notifications unread badge** — already surfaced client-side in `notifications-dropdown.tsx` (red count badge on the bell); confirmed working
+
+### 🗑 Dead Code
+
+All previously-listed dead components were **deleted in Session 31** (`day-tasks-panel.tsx`,
+`log-session-dialog.tsx`, `topic-rankings.tsx`, `stats-cards.tsx`, `score-timeline.tsx`,
+`accuracy-chart.tsx`, `category-stats.tsx`, `ai-coach-panel.tsx`), along with the unreachable
+`app/beta/` route + `actions/beta.ts`. See `AI_HANDOFF.md` → Dead Code.
 
 > **Note:** QB workflow instructions appear in two places: (1) the task drawer on the Calendar page (concise 7-step quick guide per session), and (2) the dedicated `/tutorial` page (full interactive tutorial with help accordions, progress tracking, and FAQ).
 

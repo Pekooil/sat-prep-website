@@ -288,6 +288,11 @@ export default function SignupPage() {
           Sign in
         </Link>
       </p>
+
+      <p className="text-center text-[11px] leading-relaxed text-[var(--text-muted)]">
+        SAT is a trademark of the College Board, which is not affiliated with and does not
+        endorse SaturnPath. SaturnPath is an independent study aid.
+      </p>
     </div>
   )
 }
