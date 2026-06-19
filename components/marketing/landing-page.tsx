@@ -1048,7 +1048,7 @@ export function LandingPage({ stats }: { stats: LandingStats }) {
                 <h1 className="sp-display mt-4 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
                   <WordsReveal text="SAT tutors charge $100/hr." className="whitespace-nowrap" />
                   <br />
-                  <WordsReveal text="SaturnPath charges nothing." />
+                  <WordsReveal text="SaturnPath charges $0/forever." />
                 </h1>
                 <p className="mt-5 text-lg leading-relaxed text-[var(--text-muted)]">
                   SaturnPath is a data-driven SAT prep planner that learns your weak
