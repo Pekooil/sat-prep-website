@@ -1,7 +1,15 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { Manrope } from 'next/font/google'
 import { createClient } from '@/lib/supabase/server'
 import { LandingPage } from '@/components/marketing/landing-page'
-import { getLandingStats } from '@/actions/waitlist'
+
+const manrope = Manrope({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Free Adaptive SAT Prep',
+  description: 'Short, adaptive SAT practice sessions that change after every answer. Personalized planning, review, and progress—completely free.',
+}
 
 export default async function RootPage({
   searchParams,
@@ -42,6 +50,9 @@ export default async function RootPage({
     redirect(profile?.has_completed_onboarding ? '/home' : '/onboarding')
   }
 
-  const stats = await getLandingStats()
-  return <LandingPage stats={stats} />
+  return (
+    <div className={manrope.className}>
+      <LandingPage />
+    </div>
+  )
 }
