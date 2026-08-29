@@ -1,0 +1,336 @@
+{
+  "version": 1,
+  "status": "approved",
+  "approvedOn": "2026-08-26",
+  "approvedBy": "Darcy Wang",
+  "taxonomySource": "College Board SAT content domains",
+  "targets": {
+    "total": 200,
+    "readingWriting": 100,
+    "math": 100
+  },
+  "countingRule": "Only the current version of a question that has passed both human-review passes and is approved or published counts toward quota.",
+  "difficultyPolicy": "Authoring labels are provisional until replaced by empirical performance data.",
+  "sections": [
+    {
+      "id": "reading_writing",
+      "label": "Reading and Writing",
+      "quota": 100,
+      "difficulty": { "easy": 30, "medium": 45, "hard": 25 },
+      "responseTypes": { "mcq": 100, "spr": 0 },
+      "domains": [
+        {
+          "id": "information_and_ideas",
+          "label": "Information and Ideas",
+          "officialWeightPercent": 26,
+          "quota": 26,
+          "subskills": [
+            {
+              "id": "central_ideas_and_details",
+              "label": "Central Ideas and Details",
+              "quota": 7,
+              "difficulty": { "easy": 2, "medium": 3, "hard": 2 },
+              "responseTypes": { "mcq": 7, "spr": 0 }
+            },
+            {
+              "id": "command_of_evidence_textual",
+              "label": "Command of Evidence — Textual",
+              "quota": 7,
+              "difficulty": { "easy": 2, "medium": 3, "hard": 2 },
+              "responseTypes": { "mcq": 7, "spr": 0 }
+            },
+            {
+              "id": "command_of_evidence_quantitative",
+              "label": "Command of Evidence — Quantitative",
+              "quota": 5,
+              "difficulty": { "easy": 1, "medium": 3, "hard": 1 },
+              "responseTypes": { "mcq": 5, "spr": 0 }
+            },
+            {
+              "id": "inferences",
+              "label": "Inferences",
+              "quota": 7,
+              "difficulty": { "easy": 2, "medium": 3, "hard": 2 },
+              "responseTypes": { "mcq": 7, "spr": 0 }
+            }
+          ]
+        },
+        {
+          "id": "craft_and_structure",
+          "label": "Craft and Structure",
+          "officialWeightPercent": 28,
+          "quota": 28,
+          "subskills": [
+            {
+              "id": "words_in_context",
+              "label": "Words in Context",
+              "quota": 10,
+              "difficulty": { "easy": 3, "medium": 5, "hard": 2 },
+              "responseTypes": { "mcq": 10, "spr": 0 }
+            },
+            {
+              "id": "text_structure_and_purpose",
+              "label": "Text Structure and Purpose",
+              "quota": 10,
+              "difficulty": { "easy": 3, "medium": 4, "hard": 3 },
+              "responseTypes": { "mcq": 10, "spr": 0 }
+            },
+            {
+              "id": "cross_text_connections",
+              "label": "Cross-Text Connections",
+              "quota": 8,
+              "difficulty": { "easy": 2, "medium": 4, "hard": 2 },
+              "responseTypes": { "mcq": 8, "spr": 0 }
+            }
+          ]
+        },
+        {
+          "id": "expression_of_ideas",
+          "label": "Expression of Ideas",
+          "officialWeightPercent": 20,
+          "quota": 20,
+          "subskills": [
+            {
+              "id": "rhetorical_synthesis",
+              "label": "Rhetorical Synthesis",
+              "quota": 10,
+              "difficulty": { "easy": 3, "medium": 5, "hard": 2 },
+              "responseTypes": { "mcq": 10, "spr": 0 }
+            },
+            {
+              "id": "transitions",
+              "label": "Transitions",
+              "quota": 10,
+              "difficulty": { "easy": 4, "medium": 4, "hard": 2 },
+              "responseTypes": { "mcq": 10, "spr": 0 }
+            }
+          ]
+        },
+        {
+          "id": "standard_english_conventions",
+          "label": "Standard English Conventions",
+          "officialWeightPercent": 26,
+          "quota": 26,
+          "subskills": [
+            {
+              "id": "boundaries",
+              "label": "Boundaries",
+              "quota": 13,
+              "difficulty": { "easy": 4, "medium": 6, "hard": 3 },
+              "responseTypes": { "mcq": 13, "spr": 0 }
+            },
+            {
+              "id": "form_structure_and_sense",
+              "label": "Form, Structure, and Sense",
+              "quota": 13,
+              "difficulty": { "easy": 4, "medium": 5, "hard": 4 },
+              "responseTypes": { "mcq": 13, "spr": 0 }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "math",
+      "label": "Math",
+      "quota": 100,
+      "difficulty": { "easy": 30, "medium": 45, "hard": 25 },
+      "responseTypes": { "mcq": 75, "spr": 25 },
+      "contextualQuestionQuota": 30,
+      "domains": [
+        {
+          "id": "algebra",
+          "label": "Algebra",
+          "officialWeightPercent": 35,
+          "quota": 35,
+          "subskills": [
+            {
+              "id": "linear_equations_one_variable",
+              "label": "Linear Equations in One Variable",
+              "quota": 7,
+              "difficulty": { "easy": 3, "medium": 3, "hard": 1 },
+              "responseTypes": { "mcq": 5, "spr": 2 },
+              "contextualQuestionQuota": 1
+            },
+            {
+              "id": "linear_equations_two_variables",
+              "label": "Linear Equations in Two Variables",
+              "quota": 7,
+              "difficulty": { "easy": 2, "medium": 3, "hard": 2 },
+              "responseTypes": { "mcq": 5, "spr": 2 },
+              "contextualQuestionQuota": 1
+            },
+            {
+              "id": "linear_functions",
+              "label": "Linear Functions",
+              "quota": 8,
+              "difficulty": { "easy": 2, "medium": 4, "hard": 2 },
+              "responseTypes": { "mcq": 6, "spr": 2 },
+              "contextualQuestionQuota": 3
+            },
+            {
+              "id": "systems_two_linear_equations",
+              "label": "Systems of Two Linear Equations in Two Variables",
+              "quota": 7,
+              "difficulty": { "easy": 2, "medium": 3, "hard": 2 },
+              "responseTypes": { "mcq": 5, "spr": 2 },
+              "contextualQuestionQuota": 1
+            },
+            {
+              "id": "linear_inequalities",
+              "label": "Linear Inequalities in One or Two Variables",
+              "quota": 6,
+              "difficulty": { "easy": 2, "medium": 3, "hard": 1 },
+              "responseTypes": { "mcq": 5, "spr": 1 },
+              "contextualQuestionQuota": 1
+            }
+          ]
+        },
+        {
+          "id": "advanced_math",
+          "label": "Advanced Math",
+          "officialWeightPercent": 35,
+          "quota": 35,
+          "subskills": [
+            {
+              "id": "equivalent_expressions",
+              "label": "Equivalent Expressions",
+              "quota": 9,
+              "difficulty": { "easy": 2, "medium": 4, "hard": 3 },
+              "responseTypes": { "mcq": 7, "spr": 2 },
+              "contextualQuestionQuota": 1
+            },
+            {
+              "id": "nonlinear_equations_one_variable",
+              "label": "Nonlinear Equations in One Variable",
+              "quota": 9,
+              "difficulty": { "easy": 2, "medium": 4, "hard": 3 },
+              "responseTypes": { "mcq": 6, "spr": 3 },
+              "contextualQuestionQuota": 2
+            },
+            {
+              "id": "systems_equations_two_variables",
+              "label": "Systems of Equations in Two Variables",
+              "quota": 8,
+              "difficulty": { "easy": 2, "medium": 4, "hard": 2 },
+              "responseTypes": { "mcq": 6, "spr": 2 },
+              "contextualQuestionQuota": 2
+            },
+            {
+              "id": "nonlinear_functions",
+              "label": "Nonlinear Functions",
+              "quota": 9,
+              "difficulty": { "easy": 2, "medium": 4, "hard": 3 },
+              "responseTypes": { "mcq": 7, "spr": 2 },
+              "contextualQuestionQuota": 2
+            }
+          ]
+        },
+        {
+          "id": "problem_solving_and_data_analysis",
+          "label": "Problem-Solving and Data Analysis",
+          "officialWeightPercent": 15,
+          "quota": 15,
+          "subskills": [
+            {
+              "id": "ratios_rates_proportions_units",
+              "label": "Ratios, Rates, Proportional Relationships, and Units",
+              "quota": 3,
+              "difficulty": { "easy": 1, "medium": 1, "hard": 1 },
+              "responseTypes": { "mcq": 2, "spr": 1 },
+              "contextualQuestionQuota": 3
+            },
+            {
+              "id": "percentages",
+              "label": "Percentages",
+              "quota": 2,
+              "difficulty": { "easy": 1, "medium": 1, "hard": 0 },
+              "responseTypes": { "mcq": 2, "spr": 0 },
+              "contextualQuestionQuota": 2
+            },
+            {
+              "id": "one_variable_data",
+              "label": "One-Variable Data: Distributions and Measures of Center and Spread",
+              "quota": 2,
+              "difficulty": { "easy": 1, "medium": 1, "hard": 0 },
+              "responseTypes": { "mcq": 2, "spr": 0 },
+              "contextualQuestionQuota": 1
+            },
+            {
+              "id": "two_variable_data",
+              "label": "Two-Variable Data: Models and Scatterplots",
+              "quota": 2,
+              "difficulty": { "easy": 1, "medium": 1, "hard": 0 },
+              "responseTypes": { "mcq": 1, "spr": 1 },
+              "contextualQuestionQuota": 2
+            },
+            {
+              "id": "probability_and_conditional_probability",
+              "label": "Probability and Conditional Probability",
+              "quota": 2,
+              "difficulty": { "easy": 0, "medium": 1, "hard": 1 },
+              "responseTypes": { "mcq": 2, "spr": 0 },
+              "contextualQuestionQuota": 2
+            },
+            {
+              "id": "inference_and_margin_of_error",
+              "label": "Inference from Sample Statistics and Margin of Error",
+              "quota": 2,
+              "difficulty": { "easy": 1, "medium": 1, "hard": 0 },
+              "responseTypes": { "mcq": 1, "spr": 1 },
+              "contextualQuestionQuota": 1
+            },
+            {
+              "id": "evaluating_statistical_claims",
+              "label": "Evaluating Statistical Claims: Observational Studies and Experiments",
+              "quota": 2,
+              "difficulty": { "easy": 1, "medium": 0, "hard": 1 },
+              "responseTypes": { "mcq": 2, "spr": 0 },
+              "contextualQuestionQuota": 1
+            }
+          ]
+        },
+        {
+          "id": "geometry_and_trigonometry",
+          "label": "Geometry and Trigonometry",
+          "officialWeightPercent": 15,
+          "quota": 15,
+          "subskills": [
+            {
+              "id": "area_and_volume",
+              "label": "Area and Volume",
+              "quota": 4,
+              "difficulty": { "easy": 2, "medium": 1, "hard": 1 },
+              "responseTypes": { "mcq": 3, "spr": 1 },
+              "contextualQuestionQuota": 1
+            },
+            {
+              "id": "lines_angles_triangles",
+              "label": "Lines, Angles, and Triangles",
+              "quota": 4,
+              "difficulty": { "easy": 1, "medium": 2, "hard": 1 },
+              "responseTypes": { "mcq": 3, "spr": 1 },
+              "contextualQuestionQuota": 1
+            },
+            {
+              "id": "right_triangles_and_trigonometry",
+              "label": "Right Triangles and Trigonometry",
+              "quota": 4,
+              "difficulty": { "easy": 1, "medium": 2, "hard": 1 },
+              "responseTypes": { "mcq": 3, "spr": 1 },
+              "contextualQuestionQuota": 1
+            },
+            {
+              "id": "circles",
+              "label": "Circles",
+              "quota": 3,
+              "difficulty": { "easy": 1, "medium": 2, "hard": 0 },
+              "responseTypes": { "mcq": 2, "spr": 1 },
+              "contextualQuestionQuota": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
