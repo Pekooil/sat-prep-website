@@ -24,6 +24,14 @@
 .DS_Store
 *.pem
 
+# xcode local state
+**/xcuserdata/
+*.xcuserstate
+**/DerivedData/
+
+# codex local worktrees
+/.codex/worktrees/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

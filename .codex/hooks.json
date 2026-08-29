@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"\nimport json, os, sys\nsys.stdin.read()\nfiles = ['CLAUDE.md', 'PROJECT_CONTEXT.md', 'AI_HANDOFF.md', 'DATABASE_SCHEMA.md', 'PLANNER_ALGORITHM.md', 'COPYRIGHT_COMPLIANCE.md']\nparts = []\nfor f in files:\n    path = '/Users/darcywang/sat-prep-website/' + f\n    if os.path.exists(path):\n        with open(path) as fh:\n            content = fh.read()[:3000]\n        parts.append('=== ' + f + ' ===\\n' + content)\ncontext = 'PROJECT DOCUMENTATION LOADED AT SESSION START:\\n\\n' + '\\n\\n'.join(parts)\nprint(json.dumps({'hookSpecificOutput': {'hookEventName': 'SessionStart', 'additionalContext': context}}))\n\"",
+            "timeout": 10,
+            "statusMessage": "Loading project documentation..."
+          }
+        ]
+      }
+    ]
+  }
+}
