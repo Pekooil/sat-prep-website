@@ -1,0 +1,912 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SaturnPath V2 API",
+    "version": "0.1.0",
+    "description": "Authoritative contract for the SaturnPath native iOS app and V2 admin console. Student question payloads never contain answer keys before submission."
+  },
+  "servers": [
+    { "url": "https://saturnpath.app/api/v2", "description": "Production" },
+    { "url": "http://localhost:3000/api/v2", "description": "Local development" }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "tags": [
+    { "name": "Bootstrap" },
+    { "name": "Practice" },
+    { "name": "Progress" },
+    { "name": "Review" },
+    { "name": "Profile" },
+    { "name": "Admin Questions" }
+  ],
+  "paths": {
+    "/bootstrap": {
+      "get": {
+        "operationId": "getBootstrap",
+        "tags": ["Bootstrap"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/BootstrapResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/home": {
+      "get": {
+        "operationId": "getHome",
+        "tags": ["Bootstrap"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/HomeResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/sessions": {
+      "post": {
+        "operationId": "startOrResumeSession",
+        "tags": ["Practice"],
+        "parameters": [
+          { "$ref": "#/components/parameters/IdempotencyKey" },
+          { "$ref": "#/components/parameters/ClientVersion" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/StartSessionRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/SessionResponse" },
+          "201": { "$ref": "#/components/responses/SessionResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/sessions/{sessionId}/next": {
+      "get": {
+        "operationId": "getNextQuestion",
+        "tags": ["Practice"],
+        "parameters": [{ "$ref": "#/components/parameters/SessionId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/NextQuestionResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/sessions/{sessionId}/attempts": {
+      "post": {
+        "operationId": "submitAttempt",
+        "tags": ["Practice"],
+        "parameters": [
+          { "$ref": "#/components/parameters/SessionId" },
+          { "$ref": "#/components/parameters/IdempotencyKey" },
+          { "$ref": "#/components/parameters/ClientVersion" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SubmitAttemptRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AttemptFeedbackResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/attempts/{attemptId}/classification": {
+      "post": {
+        "operationId": "classifyAttempt",
+        "tags": ["Practice"],
+        "parameters": [
+          { "$ref": "#/components/parameters/AttemptId" },
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ClassificationRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/ClassificationResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/sessions/{sessionId}/end": {
+      "post": {
+        "operationId": "endSession",
+        "tags": ["Practice"],
+        "parameters": [
+          { "$ref": "#/components/parameters/SessionId" },
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/EndSessionRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/SessionSummaryResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/progress": {
+      "get": {
+        "operationId": "getProgress",
+        "tags": ["Progress"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/ProgressResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/review": {
+      "get": {
+        "operationId": "getReviewItems",
+        "tags": ["Review"],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/ReviewState" }
+          }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/ReviewListResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/review/{reviewItemId}/action": {
+      "post": {
+        "operationId": "actOnReviewItem",
+        "tags": ["Review"],
+        "parameters": [
+          { "$ref": "#/components/parameters/ReviewItemId" },
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ReviewActionRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/ReviewItemResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/profile": {
+      "patch": {
+        "operationId": "updateProfile",
+        "tags": ["Profile"],
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ProfilePatch" } }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/ProfileResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/account": {
+      "delete": {
+        "operationId": "deleteAccount",
+        "tags": ["Profile"],
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/DeleteAccountRequest" } }
+          }
+        },
+        "responses": {
+          "202": { "$ref": "#/components/responses/DeleteAccountResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/admin/questions": {
+      "get": {
+        "operationId": "listAdminQuestions",
+        "tags": ["Admin Questions"],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "$ref": "#/components/schemas/QuestionStatus" } },
+          { "name": "subskillKey", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/AdminQuestionListResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "post": {
+        "operationId": "createQuestionDraft",
+        "tags": ["Admin Questions"],
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateQuestionDraftRequest" } }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/AdminQuestionResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/admin/questions/{questionId}": {
+      "get": {
+        "operationId": "getAdminQuestion",
+        "tags": ["Admin Questions"],
+        "parameters": [{ "$ref": "#/components/parameters/QuestionId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/AdminQuestionResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/admin/questions/{questionId}/reviews": {
+      "post": {
+        "operationId": "reviewQuestionVersion",
+        "tags": ["Admin Questions"],
+        "parameters": [
+          { "$ref": "#/components/parameters/QuestionId" },
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/QuestionReviewRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AdminQuestionResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/admin/questions/{questionId}/publish": {
+      "post": {
+        "operationId": "publishQuestion",
+        "tags": ["Admin Questions"],
+        "parameters": [
+          { "$ref": "#/components/parameters/QuestionId" },
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/PublishQuestionRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AdminQuestionResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/admin/questions/{questionId}/quarantine": {
+      "post": {
+        "operationId": "quarantineQuestion",
+        "tags": ["Admin Questions"],
+        "parameters": [
+          { "$ref": "#/components/parameters/QuestionId" },
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/QuarantineQuestionRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AdminQuestionResponse" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Supabase Auth access token. Server secrets are never accepted from clients."
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string", "minLength": 16, "maxLength": 128 }
+      },
+      "ClientVersion": {
+        "name": "X-Client-Version",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string", "minLength": 1, "maxLength": 64 }
+      },
+      "SessionId": { "$ref": "#/components/parameters/UuidSessionId" },
+      "UuidSessionId": {
+        "name": "sessionId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "AttemptId": {
+        "name": "attemptId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "ReviewItemId": {
+        "name": "reviewItemId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "QuestionId": {
+        "name": "questionId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      }
+    },
+    "responses": {
+      "BootstrapResponse": { "description": "Bootstrap state", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Bootstrap" } } } },
+      "HomeResponse": { "description": "Home state", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Home" } } } },
+      "SessionResponse": { "description": "Started or resumed session", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PracticeSession" } } } },
+      "NextQuestionResponse": { "description": "Next safe question payload", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NextQuestion" } } } },
+      "AttemptFeedbackResponse": { "description": "Server-validated answer feedback", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AttemptFeedback" } } } },
+      "ClassificationResponse": { "description": "Stored classification", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AttemptClassification" } } } },
+      "SessionSummaryResponse": { "description": "Final session summary", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SessionSummary" } } } },
+      "ProgressResponse": { "description": "Progress state", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Progress" } } } },
+      "ReviewListResponse": { "description": "Review items", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ReviewItem" } } } } },
+      "ReviewItemResponse": { "description": "Updated review item", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReviewItem" } } } },
+      "ProfileResponse": { "description": "Updated profile", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Profile" } } } },
+      "DeleteAccountResponse": { "description": "Deletion accepted", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteAccountAccepted" } } } },
+      "AdminQuestionListResponse": { "description": "Admin question list", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/AdminQuestion" } } } } },
+      "AdminQuestionResponse": { "description": "Admin question detail", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminQuestion" } } } },
+      "Unauthorized": { "$ref": "#/components/responses/Error401" },
+      "Forbidden": { "$ref": "#/components/responses/Error403" },
+      "NotFound": { "$ref": "#/components/responses/Error404" },
+      "Conflict": { "$ref": "#/components/responses/Error409" },
+      "ValidationError": { "$ref": "#/components/responses/Error422" },
+      "RateLimited": { "$ref": "#/components/responses/Error429" },
+      "Error401": { "description": "Authentication required", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiError" } } } },
+      "Error403": { "description": "Admin authorization required", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiError" } } } },
+      "Error404": { "description": "Resource not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiError" } } } },
+      "Error409": { "description": "State or idempotency conflict", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiError" } } } },
+      "Error422": { "description": "Validation failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiError" } } } },
+      "Error429": { "description": "Rate limit exceeded", "headers": { "Retry-After": { "schema": { "type": "integer", "minimum": 1 } } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiError" } } } }
+    },
+    "schemas": {
+      "ApiError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "message", "requestId"],
+        "properties": {
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "requestId": { "type": "string" },
+          "fieldErrors": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } }
+        }
+      },
+      "Profile": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "onboardingComplete", "scratchAnalysisEnabled"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "fullName": { "type": ["string", "null"] },
+          "currentScore": { "type": ["integer", "null"], "minimum": 400, "maximum": 1600 },
+          "targetScore": { "type": ["integer", "null"], "minimum": 400, "maximum": 1600 },
+          "testDate": { "type": ["string", "null"], "format": "date" },
+          "onboardingComplete": { "type": "boolean" },
+          "scratchAnalysisEnabled": { "type": "boolean" },
+          "timingAccommodationMultiplier": { "type": "number", "minimum": 1, "maximum": 3, "default": 1 }
+        }
+      },
+      "FeatureFlags": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["practiceEnabled", "scratchAnalysisEnabled", "pushNotificationsEnabled"],
+        "properties": {
+          "practiceEnabled": { "type": "boolean" },
+          "scratchAnalysisEnabled": { "type": "boolean" },
+          "pushNotificationsEnabled": { "type": "boolean" }
+        }
+      },
+      "Bootstrap": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profile", "featureFlags"],
+        "properties": {
+          "profile": { "$ref": "#/components/schemas/Profile" },
+          "featureFlags": { "$ref": "#/components/schemas/FeatureFlags" },
+          "recommendation": { "oneOf": [{ "$ref": "#/components/schemas/DailyRecommendation" }, { "type": "null" }] },
+          "resumableSession": { "oneOf": [{ "$ref": "#/components/schemas/PracticeSession" }, { "type": "null" }] }
+        }
+      },
+      "Ring": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "completedValue", "targetValue", "progress"],
+        "properties": {
+          "id": { "type": "string", "enum": ["score_growth", "weakness_removed", "time_saved"] },
+          "label": { "type": "string" },
+          "completedValue": { "type": "number", "minimum": 0 },
+          "targetValue": { "type": "number", "exclusiveMinimum": 0 },
+          "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+          "unit": { "type": "string" }
+        }
+      },
+      "Home": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rings", "targetScore", "minutesSaved", "recommendation"],
+        "properties": {
+          "scoreEstimate": { "type": ["integer", "null"], "minimum": 400, "maximum": 1600 },
+          "scoreEstimateLow": { "type": ["integer", "null"] },
+          "scoreEstimateHigh": { "type": ["integer", "null"] },
+          "targetScore": { "type": "integer", "minimum": 400, "maximum": 1600 },
+          "testDate": { "type": ["string", "null"], "format": "date" },
+          "minutesSaved": { "type": "integer", "minimum": 0 },
+          "rings": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/components/schemas/Ring" } },
+          "recommendation": { "$ref": "#/components/schemas/DailyRecommendation" }
+        }
+      },
+      "DailyRecommendation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "date", "totalMinutes", "newMinutes", "reviewMinutes", "whySelected"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "date": { "type": "string", "format": "date" },
+          "totalMinutes": { "type": "integer", "minimum": 0 },
+          "newMinutes": { "type": "integer", "minimum": 0 },
+          "reviewMinutes": { "type": "integer", "minimum": 0 },
+          "whySelected": { "type": "array", "minItems": 1, "maxItems": 3, "items": { "type": "string" } }
+        }
+      },
+      "StartSessionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "dailyRecommendationId": { "type": ["string", "null"], "format": "uuid" },
+          "resumeIfAvailable": { "type": "boolean", "default": true }
+        }
+      },
+      "PracticeSession": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "state", "recommendedMinutes", "actualMinutes", "currentMicroSet", "startedAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "state": { "type": "string", "enum": ["active", "paused", "completed", "abandoned"] },
+          "recommendedMinutes": { "type": "integer", "minimum": 0 },
+          "actualMinutes": { "type": "integer", "minimum": 0 },
+          "currentMicroSet": { "type": "integer", "minimum": 1 },
+          "startedAt": { "type": "string", "format": "date-time" },
+          "endedAt": { "type": ["string", "null"], "format": "date-time" }
+        }
+      },
+      "QuestionChoice": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "content"],
+        "properties": {
+          "id": { "type": "string" },
+          "content": { "type": "string" },
+          "accessibilityLabel": { "type": ["string", "null"] }
+        }
+      },
+      "QuestionPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["questionId", "versionId", "section", "domainKey", "subskillKey", "responseType", "stem", "expectedSeconds", "choices", "whySelected"],
+        "properties": {
+          "questionId": { "type": "string", "format": "uuid" },
+          "versionId": { "type": "string", "format": "uuid" },
+          "section": { "type": "string", "enum": ["math", "reading_writing"] },
+          "domainKey": { "type": "string" },
+          "subskillKey": { "type": "string" },
+          "responseType": { "type": "string", "enum": ["mcq", "spr"] },
+          "stimulus": { "type": ["string", "null"] },
+          "stem": { "type": "string" },
+          "choices": { "type": "array", "items": { "$ref": "#/components/schemas/QuestionChoice" } },
+          "responseConfig": { "type": "object", "additionalProperties": true },
+          "visualAssets": { "type": "array", "items": { "$ref": "#/components/schemas/VisualAsset" } },
+          "accessibilityText": { "type": ["string", "null"] },
+          "expectedSeconds": { "type": "integer", "minimum": 15, "maximum": 900 },
+          "whySelected": { "$ref": "#/components/schemas/SelectionReason" }
+        }
+      },
+      "VisualAsset": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url", "altText"],
+        "properties": {
+          "url": { "type": "string", "format": "uri" },
+          "altText": { "type": "string", "minLength": 1 },
+          "drawnToScale": { "type": ["boolean", "null"] }
+        }
+      },
+      "SelectionReason": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["primaryLabel", "metrics"],
+        "properties": {
+          "primaryLabel": { "type": "string" },
+          "metrics": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["label", "value"],
+              "properties": { "label": { "type": "string" }, "value": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "NextQuestion": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sessionId", "microSetNumber", "question"],
+        "properties": {
+          "sessionId": { "type": "string", "format": "uuid" },
+          "microSetNumber": { "type": "integer", "minimum": 1 },
+          "question": { "$ref": "#/components/schemas/QuestionPayload" }
+        }
+      },
+      "AttemptEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "sequenceNumber", "occurredAt"],
+        "properties": {
+          "type": { "type": "string", "enum": ["question_presented", "answer_selected", "answer_changed", "scratch_opened", "scratch_tool_changed", "calculator_opened", "submitted", "explanation_viewed", "skipped", "paused", "resumed"] },
+          "sequenceNumber": { "type": "integer", "minimum": 1 },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "clientElapsedMs": { "type": ["integer", "null"], "minimum": 0 },
+          "choiceId": { "type": ["string", "null"] },
+          "scratchTool": { "type": ["string", "null"], "enum": ["pen", "pencil", "marker", "eraser", "text", "lasso", null] },
+          "calculatorMode": { "type": ["string", "null"], "enum": ["scientific", "graphing", "official_link", null] }
+        }
+      },
+      "SubmitAttemptRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["questionId", "versionId", "selectedAnswer", "clientResponseSeconds", "answerChangeCount", "events"],
+        "properties": {
+          "questionId": { "type": "string", "format": "uuid" },
+          "versionId": { "type": "string", "format": "uuid" },
+          "selectedAnswer": {},
+          "clientResponseSeconds": { "type": "integer", "minimum": 0, "maximum": 7200 },
+          "answerChangeCount": { "type": "integer", "minimum": 0 },
+          "hintUsed": { "type": "boolean", "default": false },
+          "events": { "type": "array", "maxItems": 100, "items": { "$ref": "#/components/schemas/AttemptEvent" } },
+          "scratchSummary": { "oneOf": [{ "$ref": "#/components/schemas/ScratchSummary" }, { "type": "null" }] }
+        }
+      },
+      "ScratchSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["scratchUsed", "strokeCount", "textBlockCount", "eraseActionCount", "calculatorOpenCount", "graphOpenCount"],
+        "properties": {
+          "scratchUsed": { "type": "boolean" },
+          "strokeCount": { "type": "integer", "minimum": 0 },
+          "textBlockCount": { "type": "integer", "minimum": 0 },
+          "eraseActionCount": { "type": "integer", "minimum": 0 },
+          "calculatorOpenCount": { "type": "integer", "minimum": 0 },
+          "graphOpenCount": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "Pacing": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["actualSeconds", "targetSeconds", "ratio", "status"],
+        "properties": {
+          "actualSeconds": { "type": "integer", "minimum": 0 },
+          "targetSeconds": { "type": "integer", "minimum": 1 },
+          "ratio": { "type": "number", "minimum": 0 },
+          "status": { "type": "string", "enum": ["faster", "on_target", "slower"] }
+        }
+      },
+      "PathChange": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["beforeLabel", "afterLabel", "impactMinutes", "impactQuestions", "impactDirection", "visualKind"],
+        "properties": {
+          "beforeLabel": { "type": "string" },
+          "afterLabel": { "type": "string" },
+          "impactMinutes": { "type": "integer" },
+          "impactQuestions": { "type": "integer" },
+          "impactDirection": { "type": "string", "enum": ["added", "removed", "reordered", "unchanged"] },
+          "visualKind": { "type": "string", "enum": ["route_swap", "time_delta", "review_added", "work_removed", "no_change"] }
+        }
+      },
+      "AttemptFeedback": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attemptId", "outcome", "correctAnswer", "explanation", "pacing", "pathChange", "nextAction"],
+        "properties": {
+          "attemptId": { "type": "string", "format": "uuid" },
+          "outcome": { "type": "string", "enum": ["correct", "incorrect"] },
+          "correctAnswer": {},
+          "explanation": { "type": "string" },
+          "pacing": { "$ref": "#/components/schemas/Pacing" },
+          "pathChange": { "$ref": "#/components/schemas/PathChange" },
+          "scratchSignal": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["label", "confidence"],
+                "properties": { "label": { "type": "string" }, "confidence": { "type": "number", "minimum": 0, "maximum": 1 } }
+              },
+              { "type": "null" }
+            ]
+          },
+          "reviewItemId": { "type": ["string", "null"], "format": "uuid" },
+          "nextAction": { "type": "string", "enum": ["continue", "micro_set_summary", "recommended_stop", "session_complete"] }
+        }
+      },
+      "ClassificationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["classification"],
+        "properties": { "classification": { "type": "string", "enum": ["concept", "careless", "pacing", "strategy", "other"] } }
+      },
+      "AttemptClassification": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attemptId", "classification", "classifiedAt"],
+        "properties": {
+          "attemptId": { "type": "string", "format": "uuid" },
+          "classification": { "type": "string", "enum": ["concept", "careless", "pacing", "strategy", "other"] },
+          "classifiedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "EndSessionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reason"],
+        "properties": { "reason": { "type": "string", "enum": ["recommended_stop", "user_stop", "time_limit", "completed", "interrupted"] } }
+      },
+      "SessionSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sessionId", "questionsAttempted", "questionsCorrect", "minutesPracticed", "minutesSaved", "workRemoved", "rings"],
+        "properties": {
+          "sessionId": { "type": "string", "format": "uuid" },
+          "questionsAttempted": { "type": "integer", "minimum": 0 },
+          "questionsCorrect": { "type": "integer", "minimum": 0 },
+          "minutesPracticed": { "type": "integer", "minimum": 0 },
+          "minutesSaved": { "type": "integer", "minimum": 0 },
+          "workRemoved": { "type": "array", "items": { "type": "string" } },
+          "rings": { "type": "array", "items": { "$ref": "#/components/schemas/Ring" } }
+        }
+      },
+      "Progress": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["skills", "minutesSaved", "resolvedErrors"],
+        "properties": {
+          "scoreEstimate": { "type": ["integer", "null"] },
+          "scoreEstimateLow": { "type": ["integer", "null"] },
+          "scoreEstimateHigh": { "type": ["integer", "null"] },
+          "minutesSaved": { "type": "integer", "minimum": 0 },
+          "resolvedErrors": { "type": "integer", "minimum": 0 },
+          "skills": { "type": "array", "items": { "$ref": "#/components/schemas/SkillProgress" } }
+        }
+      },
+      "SkillProgress": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["section", "domainKey", "subskillKey", "mastery", "confidence", "attempts"],
+        "properties": {
+          "section": { "type": "string", "enum": ["math", "reading_writing"] },
+          "domainKey": { "type": "string" },
+          "subskillKey": { "type": "string" },
+          "mastery": { "type": "number", "minimum": 0, "maximum": 1 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "attempts": { "type": "integer", "minimum": 0 },
+          "dueAt": { "type": ["string", "null"], "format": "date-time" }
+        }
+      },
+      "ReviewState": { "type": "string", "enum": ["due", "learning", "retesting", "resolved"] },
+      "ReviewItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "state", "subskillKey", "nextDueAt", "lapseCount"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "state": { "$ref": "#/components/schemas/ReviewState" },
+          "subskillKey": { "type": "string" },
+          "nextDueAt": { "type": "string", "format": "date-time" },
+          "lapseCount": { "type": "integer", "minimum": 0 },
+          "summary": { "type": "string" }
+        }
+      },
+      "ReviewActionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action"],
+        "properties": { "action": { "type": "string", "enum": ["resume", "save", "defer", "practice_now"] } }
+      },
+      "ProfilePatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "fullName": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "currentScore": { "type": "integer", "minimum": 400, "maximum": 1600 },
+          "targetScore": { "type": "integer", "minimum": 400, "maximum": 1600 },
+          "testDate": { "type": "string", "format": "date" },
+          "scratchAnalysisEnabled": { "type": "boolean" },
+          "timingAccommodationMultiplier": { "type": "number", "minimum": 1, "maximum": 3 }
+        }
+      },
+      "DeleteAccountRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["confirmation"],
+        "properties": { "confirmation": { "type": "string", "const": "DELETE" } }
+      },
+      "DeleteAccountAccepted": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["deletionId", "status", "requestedAt"],
+        "properties": {
+          "deletionId": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "const": "pending" },
+          "requestedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "QuestionStatus": { "type": "string", "enum": ["draft", "needs_review", "approved", "published", "quarantined", "retired"] },
+      "CreateQuestionDraftRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["section", "domainKey", "skillKey", "subskillKey", "responseType", "difficulty", "expectedSeconds", "version", "answerKey", "provenance"],
+        "properties": {
+          "section": { "type": "string", "enum": ["math", "reading_writing"] },
+          "domainKey": { "type": "string" },
+          "skillKey": { "type": "string" },
+          "subskillKey": { "type": "string" },
+          "responseType": { "type": "string", "enum": ["mcq", "spr"] },
+          "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+          "expectedSeconds": { "type": "integer", "minimum": 15, "maximum": 900 },
+          "version": { "$ref": "#/components/schemas/AdminQuestionVersionInput" },
+          "answerKey": { "$ref": "#/components/schemas/AdminAnswerKeyInput" },
+          "provenance": { "$ref": "#/components/schemas/QuestionProvenance" }
+        }
+      },
+      "AdminQuestionVersionInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["stem", "choices", "responseConfig", "visualAssets", "changeReason"],
+        "properties": {
+          "stimulus": { "type": ["string", "null"] },
+          "stem": { "type": "string" },
+          "choices": { "type": "array", "items": { "$ref": "#/components/schemas/QuestionChoice" } },
+          "responseConfig": { "type": "object", "additionalProperties": true },
+          "visualAssets": { "type": "array", "items": { "$ref": "#/components/schemas/VisualAsset" } },
+          "accessibilityText": { "type": ["string", "null"] },
+          "changeReason": { "type": "string" }
+        }
+      },
+      "AdminAnswerKeyInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["correctAnswer", "explanation", "distractorRationales", "validationEvidence"],
+        "properties": {
+          "correctAnswer": {},
+          "explanation": { "type": "string" },
+          "distractorRationales": { "type": "object", "additionalProperties": { "type": "string" } },
+          "validationEvidence": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "QuestionProvenance": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sourceType", "rightsStatus"],
+        "properties": {
+          "sourceType": { "type": "string", "enum": ["original", "public_domain", "licensed"] },
+          "sourceReference": { "type": ["string", "null"] },
+          "rightsStatus": { "type": "string", "enum": ["pending", "verified", "rejected"] },
+          "generatorProvider": { "type": ["string", "null"] },
+          "generatorModel": { "type": ["string", "null"] },
+          "promptVersion": { "type": ["string", "null"] }
+        }
+      },
+      "QuestionReviewRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["versionId", "reviewPass", "decision", "rubricResults", "validationFailures"],
+        "properties": {
+          "versionId": { "type": "string", "format": "uuid" },
+          "reviewPass": { "type": "string", "enum": ["content_correctness", "proof_rendering"] },
+          "decision": { "type": "string", "enum": ["approved", "revision_requested", "rejected"] },
+          "rubricResults": { "type": "object", "additionalProperties": { "type": "string", "enum": ["pass", "revise", "reject"] } },
+          "validationFailures": { "type": "array", "items": { "type": "string" } },
+          "notes": { "type": ["string", "null"] }
+        }
+      },
+      "PublishQuestionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["versionId", "confirmation"],
+        "properties": {
+          "versionId": { "type": "string", "format": "uuid" },
+          "confirmation": { "type": "string", "const": "PUBLISH" }
+        }
+      },
+      "QuarantineQuestionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reason"],
+        "properties": { "reason": { "type": "string", "minLength": 1, "maxLength": 1000 } }
+      },
+      "AdminQuestion": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "section", "domainKey", "skillKey", "subskillKey", "responseType", "difficulty", "expectedSeconds", "currentVersion", "answerKey", "reviews", "provenance"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "status": { "$ref": "#/components/schemas/QuestionStatus" },
+          "section": { "type": "string", "enum": ["math", "reading_writing"] },
+          "domainKey": { "type": "string" },
+          "skillKey": { "type": "string" },
+          "subskillKey": { "type": "string" },
+          "responseType": { "type": "string", "enum": ["mcq", "spr"] },
+          "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+          "expectedSeconds": { "type": "integer" },
+          "currentVersion": { "$ref": "#/components/schemas/AdminQuestionVersionInput" },
+          "answerKey": { "$ref": "#/components/schemas/AdminAnswerKeyInput" },
+          "reviews": { "type": "array", "items": { "$ref": "#/components/schemas/QuestionReviewRequest" } },
+          "provenance": { "$ref": "#/components/schemas/QuestionProvenance" }
+        }
+      }
+    }
+  }
+}
