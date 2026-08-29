@@ -1,0 +1,72 @@
+{
+  "capturedAt": "2026-08-26T17:20:42.473363+00:00",
+  "captureMethod": "read-only PostgreSQL catalog queries in Supabase SQL Editor",
+  "containsRowData": false,
+  "containsSecrets": false,
+  "publicTables": [
+    "adaptive_recommendations",
+    "calendar_tasks",
+    "diagnostic_tests",
+    "error_logs",
+    "notification_preferences",
+    "notifications",
+    "plan_versions",
+    "question_inventory",
+    "question_inventory_with_active",
+    "question_sessions",
+    "replan_audit_logs",
+    "score_history",
+    "score_predictions",
+    "study_plans",
+    "topic_mastery",
+    "user",
+    "user_achievements",
+    "users",
+    "waitlist_signups"
+  ],
+  "rlsDisabledPublicTables": [],
+  "usersColumns": [
+    "id",
+    "full_name",
+    "email",
+    "target_score",
+    "current_score",
+    "test_date",
+    "study_hours_per_week",
+    "created_at",
+    "updated_at",
+    "daily_study_minutes",
+    "has_completed_onboarding",
+    "current_streak",
+    "longest_streak",
+    "last_activity_date",
+    "birth_year",
+    "terms_accepted_at",
+    "parental_ack",
+    "inventory_mode"
+  ],
+  "authUserTriggers": [
+    {
+      "name": "on_auth_user_created",
+      "definition": "CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_user()"
+    }
+  ],
+  "publicFunctions": [
+    {
+      "name": "handle_new_user",
+      "securityDefiner": true,
+      "config": ["search_path=public"]
+    }
+  ],
+  "knownLiveOnlyTables": [
+    "question_inventory_with_active",
+    "user",
+    "user_achievements"
+  ],
+  "knownLiveOnlyUsersColumns": [
+    "current_streak",
+    "longest_streak",
+    "last_activity_date",
+    "inventory_mode"
+  ]
+}
