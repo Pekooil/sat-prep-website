@@ -1,0 +1,1749 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f7ff">
+  <title>SaturnPath V2 — Mobile Practice Prototype</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      color-scheme: light;
+      --sp-canvas: #f5f7ff;
+      --sp-canvas-deep: #edf0ff;
+      --sp-surface: rgba(255, 255, 255, 0.76);
+      --sp-surface-solid: #ffffff;
+      --sp-surface-tint: rgba(104, 87, 246, 0.08);
+      --sp-ink: #17324d;
+      --sp-muted: #60758a;
+      --sp-soft: #8da0b3;
+      --sp-line: rgba(83, 99, 133, 0.14);
+      --sp-primary: #6857f6;
+      --sp-primary-deep: #5643ea;
+      --sp-primary-soft: #e9e6ff;
+      --sp-mint: #35cfa4;
+      --sp-mint-soft: #daf8ee;
+      --sp-coral: #ff7a70;
+      --sp-coral-soft: #ffe7e4;
+      --sp-sky: #70b9ff;
+      --sp-sky-soft: #e0f0ff;
+      --sp-shadow: 0 28px 70px rgba(69, 66, 138, 0.16);
+      --sp-shadow-soft: 0 10px 30px rgba(68, 73, 118, 0.09);
+      --sp-radius-xl: 30px;
+      --sp-radius-lg: 22px;
+      --sp-radius-md: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: var(--sp-canvas); }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      font-family: "Manrope", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--sp-ink);
+      background:
+        radial-gradient(circle at 8% 10%, rgba(112, 185, 255, 0.28), transparent 28rem),
+        radial-gradient(circle at 88% 18%, rgba(255, 122, 112, 0.16), transparent 25rem),
+        linear-gradient(145deg, #f9fbff 0%, var(--sp-canvas-deep) 100%);
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: contain;
+    }
+
+    button, input { font: inherit; }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(104, 87, 246, 0.32);
+      outline-offset: 3px;
+    }
+
+    .prototype-stage {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .phone {
+      position: relative;
+      width: min(100%, 410px);
+      height: min(890px, calc(100vh - 48px));
+      min-height: 680px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 42px;
+      background: rgba(248, 250, 255, 0.78);
+      box-shadow: var(--sp-shadow), inset 0 0 0 6px rgba(255,255,255,0.46);
+      backdrop-filter: blur(28px) saturate(135%);
+      -webkit-backdrop-filter: blur(28px) saturate(135%);
+      isolation: isolate;
+    }
+
+    .phone::before,
+    .phone::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      border-radius: 999px;
+      filter: blur(2px);
+      pointer-events: none;
+    }
+
+    .phone::before {
+      width: 260px;
+      height: 260px;
+      top: -110px;
+      right: -100px;
+      background: radial-gradient(circle, rgba(104,87,246,0.2), transparent 68%);
+    }
+
+    .phone::after {
+      width: 230px;
+      height: 230px;
+      bottom: 90px;
+      left: -140px;
+      background: radial-gradient(circle, rgba(53,207,164,0.16), transparent 70%);
+    }
+
+    .status-bar {
+      height: 38px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      padding: 0 26px 7px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .status-icons { display: flex; align-items: center; gap: 6px; }
+    .status-icons svg { width: 14px; height: 14px; }
+
+    .screen-stack {
+      position: absolute;
+      inset: 38px 0 0;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .screen.is-active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+      animation: screen-in 280ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    @keyframes screen-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 20px 118px;
+      scrollbar-width: none;
+    }
+
+    .scroll-area::-webkit-scrollbar { display: none; }
+
+    .app-header,
+    .practice-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 22px 6px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--sp-ink);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-mark {
+      position: relative;
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #8a7cff, var(--sp-primary));
+      box-shadow: 0 8px 18px rgba(104,87,246,0.3);
+    }
+
+    .brand-mark::before {
+      content: "";
+      position: absolute;
+      width: 17px;
+      height: 7px;
+      top: 10px;
+      left: 6px;
+      border: 1.8px solid white;
+      border-radius: 50%;
+      transform: rotate(-18deg);
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      right: 4px;
+      top: 6px;
+      border-radius: 50%;
+      background: #baffeb;
+    }
+
+    .avatar,
+    .icon-button {
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      color: var(--sp-ink);
+      background: rgba(255,255,255,0.72);
+      box-shadow: var(--sp-shadow-soft);
+      border: 1px solid rgba(255,255,255,0.8);
+      transition: background 180ms ease, color 180ms ease;
+    }
+
+    .avatar {
+      color: white;
+      background: linear-gradient(145deg, #ff948d, var(--sp-coral));
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .icon-button:hover { background: white; color: var(--sp-primary); }
+    .icon-button svg { width: 20px; height: 20px; }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--sp-primary);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .page-title {
+      margin: 0;
+      font-size: 27px;
+      line-height: 1.15;
+      letter-spacing: -0.045em;
+    }
+
+    .page-copy {
+      margin: 6px 0 0;
+      color: var(--sp-muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .home-intro {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 2px 2px 14px;
+    }
+
+    .date-pill,
+    .subject-pill,
+    .pace-pill,
+    .count-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 30px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .date-pill { color: #43647c; background: rgba(255,255,255,0.7); }
+    .subject-pill { color: var(--sp-primary-deep); background: var(--sp-primary-soft); }
+    .pace-pill { color: #13795b; background: var(--sp-mint-soft); }
+    .count-pill { color: var(--sp-muted); background: rgba(255,255,255,0.7); }
+
+    .glass-card {
+      border: 1px solid rgba(255,255,255,0.86);
+      background: var(--sp-surface);
+      box-shadow: var(--sp-shadow-soft);
+      backdrop-filter: blur(20px) saturate(125%);
+      -webkit-backdrop-filter: blur(20px) saturate(125%);
+    }
+
+    .rings-card {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 322px;
+      padding: 18px;
+      overflow: hidden;
+      border-radius: var(--sp-radius-xl);
+    }
+
+    .rings-card::before {
+      content: "";
+      position: absolute;
+      inset: 12% 18%;
+      border-radius: 50%;
+      background: rgba(104,87,246,0.11);
+      filter: blur(30px);
+      pointer-events: none;
+    }
+
+    .rings {
+      position: relative;
+      width: 244px;
+      height: 244px;
+    }
+
+    .rings svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      transform: rotate(-90deg);
+    }
+
+    .ring-track,
+    .ring-value {
+      fill: none;
+      stroke-linecap: round;
+    }
+
+    .ring-track { stroke: rgba(93, 108, 135, 0.1); }
+    .ring-value {
+      transition: stroke-dashoffset 700ms cubic-bezier(.2,.8,.2,1);
+      filter: drop-shadow(0 5px 7px rgba(61, 67, 125, 0.14));
+    }
+
+    .ring-overall { stroke: var(--sp-primary); }
+    .ring-math { stroke: var(--sp-mint); }
+    .ring-rw { stroke: var(--sp-coral); }
+
+    .score-center {
+      position: absolute;
+      inset: 68px;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.74);
+      box-shadow: inset 0 0 24px rgba(104,87,246,0.05), 0 10px 30px rgba(90,93,150,0.08);
+      backdrop-filter: blur(12px);
+    }
+
+    .score-label { color: var(--sp-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+    .score-number { margin: 3px 0 0; font-size: 34px; line-height: 1; font-weight: 800; letter-spacing: -0.06em; }
+    .score-range { margin-top: 5px; color: var(--sp-muted); font-size: 11px; font-weight: 700; }
+
+    .ring-legend {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px 15px;
+      margin-top: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--sp-muted);
+    }
+
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 7px; height: 7px; border-radius: 99px; }
+
+    .goal-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .metric-card {
+      padding: 14px 15px;
+      border-radius: 19px;
+    }
+
+    .metric-label { display: block; margin-bottom: 5px; color: var(--sp-muted); font-size: 11px; font-weight: 700; }
+    .metric-value { font-size: 17px; font-weight: 800; letter-spacing: -0.03em; }
+    .metric-note { margin-left: 5px; color: var(--sp-primary); font-size: 10px; font-weight: 800; }
+
+    .today-card {
+      margin-top: 12px;
+      padding: 16px;
+      border-radius: 21px;
+    }
+
+    .today-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .today-title { margin: 0; font-size: 14px; font-weight: 800; }
+    .today-time { color: var(--sp-primary); font-size: 13px; font-weight: 800; }
+    .allocation { display: grid; grid-template-columns: 2fr 1fr; gap: 5px; height: 8px; margin: 13px 0 8px; }
+    .allocation span { border-radius: 99px; }
+    .allocation span:first-child { background: var(--sp-primary); }
+    .allocation span:last-child { background: var(--sp-mint); }
+    .allocation-labels { display: flex; justify-content: space-between; color: var(--sp-muted); font-size: 10px; font-weight: 700; }
+
+    .primary-button,
+    .secondary-button,
+    .text-button {
+      min-height: 54px;
+      border-radius: 18px;
+      font-weight: 800;
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .primary-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      width: 100%;
+      padding: 0 20px;
+      color: white;
+      background: linear-gradient(135deg, #7b6bff 0%, var(--sp-primary-deep) 100%);
+      box-shadow: 0 14px 28px rgba(86,67,234,0.28);
+    }
+
+    .primary-button:hover { transform: translateY(-1px); box-shadow: 0 17px 32px rgba(86,67,234,0.34); }
+    .primary-button:active { transform: translateY(1px); }
+    .primary-button:disabled { cursor: not-allowed; color: #8b98a7; background: #e4e7ef; box-shadow: none; transform: none; }
+    .primary-button svg { width: 18px; height: 18px; }
+
+    .secondary-button {
+      width: 100%;
+      padding: 0 18px;
+      color: var(--sp-primary-deep);
+      background: var(--sp-primary-soft);
+    }
+
+    .text-button {
+      min-height: 44px;
+      padding: 0 12px;
+      color: var(--sp-muted);
+      background: transparent;
+    }
+
+    .launch-card {
+      position: relative;
+      margin-top: 12px;
+      padding: 12px;
+      overflow: hidden;
+      border-radius: 24px;
+    }
+
+    .launch-card::after {
+      content: "";
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      right: -65px;
+      bottom: -90px;
+      border-radius: 50%;
+      background: rgba(104,87,246,0.14);
+      filter: blur(16px);
+      pointer-events: none;
+    }
+
+    .launch-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 2px 5px 10px;
+    }
+
+    .launch-plan { min-width: 0; }
+    .launch-recommendation { display: flex; align-items: baseline; gap: 6px; }
+    .launch-recommendation strong { font-size: 13px; }
+    .launch-recommendation span { color: var(--sp-primary); font-size: 12px; font-weight: 800; }
+    .launch-allocation { display: block; margin-top: 2px; color: var(--sp-muted); font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .launch-savings { display: grid; grid-template-columns: auto auto; align-items: center; gap: 0 5px; min-width: 82px; padding: 7px 9px; border-radius: 14px; color: #13795b; background: var(--sp-mint-soft); }
+    .launch-savings strong { grid-row: 1 / 3; font-size: 18px; letter-spacing: -0.05em; }
+    .launch-savings span { font-size: 8px; font-weight: 800; line-height: 1.2; }
+    .launch-savings small { color: #4e7568; font-size: 7px; font-weight: 700; line-height: 1.2; }
+
+    .home-cta {
+      position: relative;
+      z-index: 1;
+      min-height: 64px;
+      border-radius: 20px;
+      font-size: 15px;
+      letter-spacing: -0.015em;
+    }
+
+    .home-cta .start-icon {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      margin-left: 2px;
+      border-radius: 11px;
+      background: rgba(255,255,255,0.18);
+    }
+
+    .bottom-nav {
+      position: absolute;
+      z-index: 20;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      min-height: 72px;
+      padding: 7px;
+      border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 24px;
+      background: rgba(255,255,255,0.82);
+      box-shadow: 0 16px 34px rgba(59,68,105,0.15);
+      backdrop-filter: blur(24px) saturate(150%);
+      -webkit-backdrop-filter: blur(24px) saturate(150%);
+    }
+
+    .nav-button {
+      min-height: 56px;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 4px;
+      border-radius: 17px;
+      color: #77899a;
+      background: transparent;
+      font-size: 9px;
+      font-weight: 800;
+      transition: color 180ms ease, background 180ms ease;
+    }
+
+    .nav-button svg { width: 21px; height: 21px; }
+    .nav-button:hover { color: var(--sp-primary); background: var(--sp-surface-tint); }
+    .nav-button.is-active { color: var(--sp-primary-deep); background: var(--sp-primary-soft); }
+
+    .section-header { margin: 4px 2px 18px; }
+
+    .trend-card,
+    .mastery-card,
+    .review-card,
+    .profile-card,
+    .summary-card {
+      border-radius: var(--sp-radius-lg);
+      padding: 18px;
+    }
+
+    .trend-card { overflow: hidden; }
+    .card-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .card-heading h3 { margin: 0; font-size: 14px; }
+    .card-heading span { color: var(--sp-primary); font-size: 11px; font-weight: 800; }
+    .trend-score { font-size: 34px; font-weight: 800; letter-spacing: -0.06em; }
+    .trend-range { margin-left: 6px; color: var(--sp-muted); font-size: 11px; font-weight: 700; }
+    .trend-chart { width: 100%; height: 116px; margin-top: 4px; overflow: visible; }
+    .trend-chart .area { fill: url(#trendGradient); }
+    .trend-chart .line { fill: none; stroke: var(--sp-primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .trend-chart .grid { stroke: rgba(91,106,132,0.1); stroke-width: 1; }
+    .trend-chart .dot { fill: white; stroke: var(--sp-primary); stroke-width: 3; }
+
+    .subsection-title { margin: 18px 2px 10px; font-size: 13px; }
+    .mastery-card { padding: 10px 16px; }
+    .mastery-row { padding: 13px 0; border-bottom: 1px solid var(--sp-line); }
+    .mastery-row:last-child { border-bottom: 0; }
+    .mastery-meta { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; font-size: 12px; font-weight: 700; }
+    .mastery-meta span:last-child { color: var(--sp-muted); }
+    .bar { height: 7px; overflow: hidden; border-radius: 99px; background: rgba(96,117,138,0.11); }
+    .bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--sp-primary), #9c91ff); }
+    .bar.mint span { background: linear-gradient(90deg, var(--sp-mint), #75e4c5); }
+    .bar.coral span { background: linear-gradient(90deg, var(--sp-coral), #ffaca5); }
+
+    .filter-row { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-button {
+      min-height: 42px;
+      padding: 0 15px;
+      border-radius: 14px;
+      color: var(--sp-muted);
+      background: rgba(255,255,255,0.64);
+      border: 1px solid rgba(255,255,255,0.82);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .filter-button.is-active { color: var(--sp-primary-deep); background: var(--sp-primary-soft); }
+
+    .review-list { display: grid; gap: 10px; }
+    .review-card { padding: 15px; }
+    .review-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .review-type { display: flex; align-items: center; gap: 10px; }
+    .review-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 13px; color: var(--sp-primary); background: var(--sp-primary-soft); }
+    .review-icon svg { width: 18px; height: 18px; }
+    .review-name { margin: 0; font-size: 12px; font-weight: 800; }
+    .review-skill { margin: 2px 0 0; color: var(--sp-muted); font-size: 10px; }
+    .state-label { padding: 5px 8px; border-radius: 999px; color: #a1463e; background: var(--sp-coral-soft); font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+    .state-label.learning { color: #13795b; background: var(--sp-mint-soft); }
+
+    .review-start { margin-bottom: 12px; }
+    .review-start .primary-button { min-height: 50px; }
+
+    .profile-hero { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .profile-avatar { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 20px; color: white; background: linear-gradient(145deg, #ff948d, var(--sp-coral)); font-weight: 800; box-shadow: 0 12px 24px rgba(255,122,112,0.22); }
+    .profile-name { margin: 0 0 3px; font-size: 18px; }
+    .profile-email { margin: 0; color: var(--sp-muted); font-size: 11px; }
+    .profile-card { padding: 5px 16px; }
+    .profile-row { width: 100%; min-height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0; color: var(--sp-ink); background: transparent; border-bottom: 1px solid var(--sp-line); text-align: left; }
+    .profile-row:last-child { border-bottom: 0; }
+    .profile-row-main { display: flex; align-items: center; gap: 11px; }
+    .profile-row svg { width: 18px; height: 18px; color: var(--sp-primary); }
+    .profile-label { font-size: 12px; font-weight: 700; }
+    .profile-value { color: var(--sp-muted); font-size: 11px; font-weight: 700; }
+
+    .practice-screen { background: rgba(248,250,255,0.5); }
+    .practice-header { padding-top: 8px; }
+    .practice-header-center { flex: 1; text-align: center; }
+    .practice-header-title { margin: 0; font-size: 12px; font-weight: 800; }
+    .session-time { margin: 2px 0 0; color: var(--sp-muted); font-size: 10px; font-weight: 700; }
+    .end-button { min-height: 44px; padding: 0 8px; color: var(--sp-muted); background: transparent; font-size: 11px; font-weight: 800; }
+
+    .question-progress { display: flex; gap: 5px; padding: 8px 22px 2px; }
+    .question-progress span { flex: 1; height: 5px; border-radius: 99px; background: rgba(96,117,138,0.12); transition: background 220ms ease; }
+    .question-progress span.is-complete { background: var(--sp-primary); }
+    .question-progress span.is-current { background: linear-gradient(90deg, var(--sp-primary) 52%, rgba(104,87,246,0.14) 52%); }
+
+    .practice-body { flex: 1; overflow-y: auto; padding: 16px 20px 122px; scrollbar-width: none; }
+    .practice-body::-webkit-scrollbar { display: none; }
+    .question-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+    .question-card { padding: 19px; border-radius: 24px; }
+    .question-context { margin-bottom: 12px; color: var(--sp-muted); font-size: 11px; line-height: 1.55; }
+    .question-prompt { margin: 0; font-size: 15px; line-height: 1.6; letter-spacing: -0.015em; }
+    .math-line { display: block; margin: 15px 0 2px; text-align: center; font-size: 19px; font-weight: 800; color: var(--sp-primary-deep); }
+
+    .why-card {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding: 11px 12px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(233,230,255,0.92), rgba(255,255,255,0.78));
+      border: 1px solid rgba(104,87,246,0.12);
+    }
+
+    .why-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 12px; color: var(--sp-primary); background: white; box-shadow: 0 7px 16px rgba(78,73,147,0.08); }
+    .why-icon svg { width: 17px; height: 17px; }
+    .why-copy { min-width: 0; }
+    .why-label { display: block; margin-bottom: 3px; color: var(--sp-primary-deep); font-size: 7px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+    .why-title { display: block; font-size: 10px; line-height: 1.25; }
+    .why-stats { display: grid; grid-template-columns: repeat(2, minmax(44px, 1fr)); gap: 5px; }
+    .why-stat { min-width: 44px; padding: 6px 7px; border-radius: 11px; text-align: center; background: rgba(255,255,255,0.72); }
+    .why-stat:first-child { color: var(--sp-primary-deep); background: rgba(255,255,255,0.95); box-shadow: 0 5px 12px rgba(78,73,147,0.06); }
+    .why-stat strong { display: block; font-size: 10px; line-height: 1; }
+    .why-stat span { display: block; margin-top: 3px; color: var(--sp-muted); font-size: 6px; line-height: 1; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+
+    .answers { display: grid; gap: 9px; margin-top: 13px; }
+    .answer-button {
+      width: 100%;
+      min-height: 56px;
+      display: grid;
+      grid-template-columns: 34px 1fr 20px;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 13px;
+      border-radius: 18px;
+      color: var(--sp-ink);
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(255,255,255,0.9);
+      box-shadow: 0 7px 18px rgba(67,74,112,0.06);
+      text-align: left;
+      transition: border 180ms ease, background 180ms ease, transform 180ms ease;
+    }
+    .answer-button:hover { transform: translateY(-1px); border-color: rgba(104,87,246,0.35); }
+    .answer-button.is-selected { border-color: rgba(104,87,246,0.55); background: var(--sp-primary-soft); }
+    .answer-button.is-correct { border-color: rgba(53,207,164,0.5); background: var(--sp-mint-soft); }
+    .answer-button.is-wrong { border-color: rgba(255,122,112,0.55); background: var(--sp-coral-soft); }
+    .answer-letter { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 12px; color: var(--sp-muted); background: rgba(255,255,255,0.8); font-size: 11px; font-weight: 800; }
+    .answer-text { font-size: 12px; line-height: 1.45; font-weight: 700; }
+    .answer-check { width: 18px; height: 18px; opacity: 0; color: var(--sp-primary); }
+    .answer-button.is-selected .answer-check,
+    .answer-button.is-correct .answer-check,
+    .answer-button.is-wrong .answer-check { opacity: 1; }
+
+    .practice-action {
+      position: absolute;
+      z-index: 10;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 14px 20px calc(18px + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, rgba(248,250,255,0), rgba(248,250,255,0.96) 26%);
+    }
+
+    .feedback-panel {
+      display: none;
+      margin-top: 12px;
+      padding: 17px;
+      border-radius: 21px;
+      background: var(--sp-mint-soft);
+      border: 1px solid rgba(53,207,164,0.16);
+    }
+    .feedback-panel.is-visible { display: block; animation: feedback-in 240ms ease-out; }
+    .feedback-panel.is-wrong { background: var(--sp-coral-soft); border-color: rgba(255,122,112,0.2); }
+    @keyframes feedback-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .feedback-title { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; font-weight: 800; }
+    .feedback-title svg { width: 20px; height: 20px; }
+    .feedback-copy { margin: 0; color: #3f596c; font-size: 11px; line-height: 1.55; }
+    .pace-visual { margin-top: 13px; padding-top: 11px; border-top: 1px solid rgba(23,50,77,0.08); }
+    .pace-head, .pace-values { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .pace-head { margin-bottom: 8px; color: var(--sp-muted); font-size: 8px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+    .pacing-verdict { color: #13795b; font-size: 10px; font-weight: 800; letter-spacing: 0; text-transform: none; }
+    .pace-visual.is-slow .pacing-verdict { color: #a1463e; }
+    .pace-track { position: relative; height: 12px; overflow: visible; border-radius: 99px; background: rgba(23,50,77,0.09); }
+    .pace-target-zone { position: absolute; top: 0; bottom: 0; left: 60%; width: 14%; border-radius: 99px; background: rgba(53,207,164,0.3); }
+    .pace-fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 99px; background: linear-gradient(90deg, #8a7cff, var(--sp-primary)); transition: width 420ms cubic-bezier(.2,.8,.2,1); }
+    .pace-visual.is-slow .pace-fill { background: linear-gradient(90deg, #ffb08c, var(--sp-coral)); }
+    .pace-marker { position: absolute; z-index: 2; top: 50%; left: 0; width: 17px; height: 17px; border: 3px solid white; border-radius: 50%; background: var(--sp-primary); box-shadow: 0 3px 8px rgba(50,47,105,0.22); transform: translate(-50%, -50%); transition: left 420ms cubic-bezier(.2,.8,.2,1); }
+    .pace-visual.is-slow .pace-marker { background: var(--sp-coral); }
+    .pace-target-marker { position: absolute; z-index: 1; top: -3px; bottom: -3px; left: 67%; width: 2px; border-radius: 99px; background: #1a9c79; }
+    .pace-values { margin-top: 8px; }
+    .pace-values strong { font-size: 12px; }
+    .pace-values span { color: var(--sp-muted); font-size: 9px; font-weight: 700; }
+
+    .path-update-pin {
+      position: relative;
+      display: none;
+      margin-top: 11px;
+      padding: 15px;
+      border-radius: 21px;
+      background: linear-gradient(135deg, rgba(233,230,255,0.92), rgba(224,240,255,0.88));
+      border: 1px solid rgba(104,87,246,0.13);
+      box-shadow: 0 9px 22px rgba(83,74,166,0.08);
+    }
+
+    .path-update-pin.is-visible { display: block; animation: feedback-in 240ms ease-out; }
+
+    .path-visual-head { display: flex; align-items: center; gap: 9px; }
+
+    .path-pin-icon {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      color: white;
+      background: linear-gradient(145deg, #8a7cff, var(--sp-primary));
+      box-shadow: 0 8px 18px rgba(104,87,246,0.2);
+    }
+
+    .path-pin-icon::after {
+      content: "";
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      right: -2px;
+      bottom: -2px;
+      border: 2px solid #eef1ff;
+      border-radius: 50%;
+      background: var(--sp-mint);
+    }
+
+    .path-pin-icon svg { width: 16px; height: 16px; }
+    .path-visual-title { font-size: 12px; }
+
+    .path-route {
+      display: grid;
+      grid-template-columns: 1fr 18px 1fr;
+      align-items: center;
+      gap: 5px;
+      margin-top: 11px;
+      padding: 7px;
+      border-radius: 15px;
+      background: rgba(255,255,255,0.62);
+    }
+
+    .route-stop { min-height: 48px; display: flex; align-items: center; gap: 7px; padding: 8px; border-radius: 11px; }
+    .route-stop.is-old { color: var(--sp-muted); background: rgba(241,244,250,0.72); }
+    .route-stop.is-new { color: var(--sp-primary-deep); background: linear-gradient(135deg, rgba(233,230,255,0.95), rgba(255,255,255,0.88)); box-shadow: inset 0 0 0 1px rgba(104,87,246,0.12); }
+    .route-symbol { width: 22px; height: 22px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 8px; color: var(--sp-soft); background: white; }
+    .route-stop.is-new .route-symbol { color: white; background: var(--sp-primary); }
+    .route-symbol svg { width: 12px; height: 12px; }
+    .route-stop strong { display: block; font-size: 9px; line-height: 1.25; }
+    .route-arrow { display: grid; place-items: center; color: var(--sp-primary); }
+    .route-arrow svg { width: 16px; height: 16px; }
+    .impact-badge { display: inline-flex; align-items: center; min-height: 26px; margin-left: auto; padding: 4px 9px; border-radius: 999px; color: #13795b; background: var(--sp-mint-soft); font-size: 9px; font-weight: 800; }
+    .impact-badge.added { color: #a1463e; background: var(--sp-coral-soft); }
+
+    .scratch-signal {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 9px;
+      padding: 7px 9px;
+      border-radius: 12px;
+      color: var(--sp-primary-deep);
+      background: rgba(255,255,255,0.62);
+    }
+
+    .scratch-signal-icon { width: 24px; height: 24px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 8px; color: var(--sp-primary); background: white; }
+    .scratch-signal-icon svg { width: 14px; height: 14px; }
+    .scratch-signal > strong { color: var(--sp-ink); font-size: 9px; line-height: 1.3; font-weight: 700; }
+
+    .adaptation-toast {
+      position: absolute;
+      z-index: 30;
+      top: 58px;
+      left: 20px;
+      right: 20px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 14px;
+      border-radius: 18px;
+      color: var(--sp-ink);
+      background: rgba(255,255,255,0.94);
+      border: 1px solid rgba(255,255,255,0.96);
+      box-shadow: 0 15px 32px rgba(61,68,109,0.18);
+      backdrop-filter: blur(18px);
+    }
+    .adaptation-toast.is-visible { display: flex; animation: toast-in 320ms cubic-bezier(.2,.8,.2,1); }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .adaptation-icon { width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 13px; color: var(--sp-primary); background: var(--sp-primary-soft); }
+    .adaptation-icon svg { width: 19px; height: 19px; }
+    .adaptation-copy strong { display: block; margin-bottom: 2px; font-size: 11px; }
+    .adaptation-copy span { color: var(--sp-muted); font-size: 9px; line-height: 1.35; }
+
+    .scratch-tab {
+      position: absolute;
+      z-index: 18;
+      top: 122px;
+      right: 0;
+      width: 50px;
+      min-height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px 0 0 18px;
+      color: white;
+      background: linear-gradient(145deg, #8a7cff, var(--sp-primary));
+      box-shadow: 0 12px 26px rgba(86,67,234,0.24);
+      border: 1px solid rgba(255,255,255,0.34);
+      transition: width 180ms ease, background 180ms ease;
+    }
+
+    .scratch-tab:hover { width: 54px; background: linear-gradient(145deg, #978cff, var(--sp-primary-deep)); }
+    .scratch-tab svg { width: 21px; height: 21px; }
+
+    .scratch-overlay {
+      position: absolute;
+      z-index: 45;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      background: transparent;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 220ms ease, visibility 220ms ease;
+    }
+
+    .scratch-overlay.is-open { opacity: 1; visibility: visible; pointer-events: auto; }
+
+    .scratch-sheet {
+      width: 100%;
+      height: 50%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: 26px 26px 0 0;
+      background: rgba(250,251,255,0.985);
+      border: 1px solid rgba(255,255,255,0.96);
+      box-shadow: 0 -18px 45px rgba(56,61,100,0.18);
+      transform: translateY(24px);
+      transition: transform 260ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    .scratch-overlay.is-open .scratch-sheet { transform: translateY(0); }
+
+    .scratch-handle { width: 38px; height: 4px; margin: 6px auto 0; border-radius: 99px; background: rgba(96,117,138,0.2); }
+
+    .scratch-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 14px 4px 18px;
+    }
+
+    .scratch-title { margin: 0; font-size: 15px; letter-spacing: -0.03em; }
+    .scratch-close { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 15px; color: var(--sp-muted); background: rgba(255,255,255,0.78); }
+    .scratch-close svg { width: 19px; height: 19px; }
+
+    .scratch-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 0 14px 6px; }
+    .scratch-tab-button { min-height: 44px; border-radius: 14px; color: var(--sp-muted); background: rgba(255,255,255,0.66); font-size: 11px; font-weight: 800; }
+    .scratch-tab-button.is-active { color: var(--sp-primary-deep); background: var(--sp-primary-soft); }
+
+    .scratch-analysis { display: flex; align-items: center; gap: 7px; margin: 0 14px 7px; padding: 7px 9px; border-radius: 12px; color: #33596a; background: var(--sp-mint-soft); font-size: 8px; font-weight: 700; line-height: 1.35; }
+    .scratch-analysis svg { width: 14px; height: 14px; flex: 0 0 auto; color: #13795b; }
+    .scratch-analysis strong { color: #13795b; }
+    .scratch-content { flex: 1; min-height: 0; overflow-y: auto; padding: 0 14px 12px; scrollbar-width: none; }
+    .scratch-content::-webkit-scrollbar { display: none; }
+    .tool-panel { display: none; height: 100%; }
+    .tool-panel.is-active { display: flex; flex-direction: column; }
+
+    .draw-toolbar { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; overflow-x: auto; scrollbar-width: none; }
+    .draw-toolbar::-webkit-scrollbar { display: none; }
+    .tool-button { min-width: 44px; min-height: 44px; display: grid; place-items: center; padding: 0 11px; border-radius: 14px; color: var(--sp-muted); background: white; border: 1px solid var(--sp-line); font-size: 10px; font-weight: 800; white-space: nowrap; }
+    .tool-button.is-active { color: var(--sp-primary-deep); background: var(--sp-primary-soft); border-color: rgba(104,87,246,0.22); }
+    .color-swatch { width: 17px; height: 17px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 1px rgba(23,50,77,0.12); }
+
+    .scratch-canvas {
+      width: 100%;
+      flex: 1;
+      min-height: 86px;
+      border-radius: 19px;
+      background:
+        linear-gradient(rgba(104,87,246,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(104,87,246,0.05) 1px, transparent 1px),
+        white;
+      background-size: 24px 24px;
+      box-shadow: inset 0 0 0 1px rgba(89,104,132,0.11);
+      touch-action: none;
+    }
+
+    .scratch-notes {
+      width: 100%;
+      height: 100%;
+      min-height: 110px;
+      resize: none;
+      padding: 17px;
+      border: 1px solid rgba(89,104,132,0.12);
+      border-radius: 19px;
+      color: var(--sp-ink);
+      background: white;
+      font-size: 14px;
+      line-height: 1.65;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.8);
+    }
+
+    .calculator { display: flex; flex-direction: column; gap: 6px; height: 100%; min-height: 238px; }
+    .calc-topbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .calc-topbar span { color: var(--sp-muted); font-size: 8px; font-weight: 700; }
+    .desmos-link { min-height: 44px; display: inline-flex; align-items: center; gap: 5px; padding: 0 10px; border-radius: 12px; color: white; background: var(--sp-primary); text-decoration: none; font-size: 8px; font-weight: 800; }
+    .desmos-link svg { width: 12px; height: 12px; }
+    .graph-workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: 112px 1fr; overflow: hidden; border-radius: 16px; background: white; border: 1px solid var(--sp-line); }
+    .graph-expressions { padding: 7px; border-right: 1px solid var(--sp-line); background: #fbfcff; }
+    .graph-expression { display: grid; grid-template-columns: 9px 1fr; gap: 6px; align-items: center; min-height: 39px; padding: 5px; border-radius: 10px; background: white; box-shadow: 0 3px 10px rgba(68,73,118,0.05); }
+    .expression-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sp-primary); }
+    .graph-expression label { color: var(--sp-soft); font-size: 7px; }
+    .graph-expression input { width: 100%; padding: 0; border: 0; color: var(--sp-ink); background: transparent; font-size: 11px; font-weight: 700; }
+    .graph-plane { position: relative; overflow: hidden; background: linear-gradient(rgba(96,117,138,.11) 1px, transparent 1px), linear-gradient(90deg, rgba(96,117,138,.11) 1px, transparent 1px), #fff; background-size: 20px 20px; }
+    .graph-plane::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(23,50,77,.38); }
+    .graph-plane::after { content: ""; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(23,50,77,.38); }
+    .graph-plane svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+    .graph-curve { fill: none; stroke: var(--sp-primary); stroke-width: 3; stroke-linecap: round; }
+    .graph-zoom { position: absolute; z-index: 2; top: 7px; right: 7px; display: grid; gap: 4px; }
+    .graph-zoom span { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; color: var(--sp-muted); background: rgba(255,255,255,.92); border: 1px solid var(--sp-line); font-size: 13px; font-weight: 800; }
+    .graph-tools { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .graph-tool { min-height: 34px; display: grid; place-items: center; border-radius: 10px; color: var(--sp-ink); background: white; border: 1px solid var(--sp-line); font-size: 10px; font-weight: 800; }
+
+    .classification-panel { display: none; margin-top: 13px; }
+    .classification-panel.is-visible { display: block; }
+    .classification-panel h3 { margin: 0 0 5px; font-size: 14px; }
+    .classification-panel p { margin: 0 0 10px; color: var(--sp-muted); font-size: 10px; }
+    .classification-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+    .classification-button { min-height: 40px; padding: 0 11px; border-radius: 13px; color: var(--sp-muted); background: rgba(255,255,255,0.76); border: 1px solid rgba(255,255,255,0.9); font-size: 10px; font-weight: 700; }
+    .classification-button.is-selected { color: var(--sp-primary-deep); background: var(--sp-primary-soft); border-color: rgba(104,87,246,0.25); }
+
+    .completion-wrap,
+    .summary-wrap {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 22px 22px 34px;
+      text-align: center;
+      scrollbar-width: none;
+    }
+    .completion-icon,
+    .summary-icon { width: 74px; height: 74px; display: grid; place-items: center; margin: 0 auto 18px; border-radius: 26px; color: white; background: linear-gradient(145deg, #8a7cff, var(--sp-primary)); box-shadow: 0 18px 36px rgba(104,87,246,0.26); }
+    .completion-icon svg,
+    .summary-icon svg { width: 34px; height: 34px; }
+    .completion-title,
+    .summary-title { margin-bottom: 9px; font-size: 29px; letter-spacing: -0.05em; }
+    .completion-copy { max-width: 290px; margin: 0 auto 18px; color: var(--sp-muted); font-size: 13px; line-height: 1.6; }
+    .saved-time { display: inline-flex; align-items: center; align-self: center; min-height: 32px; padding: 6px 11px; border-radius: 999px; color: #13795b; background: var(--sp-mint-soft); font-size: 10px; font-weight: 800; }
+    .completion-actions { display: grid; gap: 9px; margin-top: 26px; }
+
+    .summary-wrap { justify-content: flex-start; padding-top: 38px; }
+    .summary-icon { width: 60px; height: 60px; margin-bottom: 14px; border-radius: 21px; background: linear-gradient(145deg, #5fddba, var(--sp-mint)); box-shadow: 0 16px 30px rgba(53,207,164,0.24); }
+    .summary-icon svg { width: 28px; height: 28px; }
+    .summary-title { margin-bottom: 16px; }
+    .summary-card { width: 100%; margin-bottom: 12px; }
+    .summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .summary-stat strong { display: block; font-size: 19px; letter-spacing: -0.04em; }
+    .summary-stat span { color: var(--sp-muted); font-size: 9px; font-weight: 700; }
+    .summary-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--sp-line); font-size: 11px; }
+    .summary-row:last-child { border-bottom: 0; }
+    .summary-row span { color: var(--sp-muted); }
+    .summary-row strong { font-size: 12px; }
+    .summary-highlight { color: var(--sp-primary-deep); }
+
+    .toast-note {
+      position: absolute;
+      z-index: 50;
+      left: 50%;
+      bottom: 100px;
+      transform: translate(-50%, 8px);
+      width: max-content;
+      max-width: calc(100% - 40px);
+      padding: 10px 14px;
+      border-radius: 14px;
+      color: white;
+      background: rgba(23,50,77,0.92);
+      box-shadow: var(--sp-shadow-soft);
+      font-size: 10px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .toast-note.is-visible { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 460px) {
+      .prototype-stage { padding: 0; }
+      .phone { width: 100%; height: 100svh; min-height: 620px; border: 0; border-radius: 0; box-shadow: none; }
+      .status-bar { padding-top: env(safe-area-inset-top); height: calc(38px + env(safe-area-inset-top)); }
+      .screen-stack { top: calc(38px + env(safe-area-inset-top)); }
+    }
+
+    @media (max-height: 900px) {
+      .rings-card { min-height: 300px; }
+      .rings { width: 222px; height: 222px; }
+      .score-center { inset: 62px; }
+      .home-cta { margin-bottom: 8px; }
+    }
+
+    @media (max-height: 760px) {
+      .scroll-area { padding-top: 2px; }
+      .home-intro { margin-bottom: 8px; }
+      .home-intro .page-title { font-size: 24px; }
+      .rings-card { min-height: 228px; padding: 10px; }
+      .rings { width: 178px; height: 178px; }
+      .score-center { inset: 49px; }
+      .score-number { font-size: 25px; }
+      .score-range { margin-top: 3px; font-size: 9px; }
+      .ring-legend { gap: 6px 12px; margin-top: 1px; font-size: 9px; }
+      .goal-row { gap: 8px; margin-top: 8px; }
+      .metric-card { padding: 10px 12px; }
+      .metric-label { margin-bottom: 3px; font-size: 9px; }
+      .metric-value { font-size: 15px; }
+      .launch-card { margin-top: 8px; padding: 8px; }
+      .launch-meta { padding-bottom: 7px; }
+      .home-cta { min-height: 56px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="prototype-stage">
+    <section class="phone" aria-label="SaturnPath V2 mobile app prototype">
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span class="status-icons">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 20V4"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+          <svg viewBox="0 0 26 14" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="1" y="1" width="21" height="12" rx="3"/><path d="M24 5v4"/><rect x="3.5" y="3.5" width="15" height="7" rx="1.5" fill="currentColor" stroke="none"/></svg>
+        </span>
+      </div>
+
+      <div class="screen-stack" id="screen-stack">
+        <section class="screen is-active" data-screen="home" aria-labelledby="home-title">
+          <header class="app-header">
+            <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>SaturnPath</span></div>
+            <button class="avatar" type="button" data-go="profile" aria-label="Open profile">DW</button>
+          </header>
+          <div class="scroll-area">
+            <div class="home-intro">
+              <div>
+                <p class="eyebrow">Sunday, August 23</p>
+                <h1 class="page-title" id="home-title">Ready when you are.</h1>
+              </div>
+              <span class="date-pill">42 days</span>
+            </div>
+
+            <article class="glass-card rings-card" aria-label="Daily practice progress: overall 36 percent, Math 45 percent, Reading and Writing 25 percent">
+              <div>
+                <div class="rings">
+                  <svg viewBox="0 0 244 244" aria-hidden="true">
+                    <circle class="ring-track" cx="122" cy="122" r="105" stroke-width="20"/>
+                    <circle class="ring-value ring-overall" data-ring="overall" cx="122" cy="122" r="105" stroke-width="20" pathLength="100" stroke-dasharray="100" stroke-dashoffset="64"/>
+                    <circle class="ring-track" cx="122" cy="122" r="80" stroke-width="19"/>
+                    <circle class="ring-value ring-math" data-ring="math" cx="122" cy="122" r="80" stroke-width="19" pathLength="100" stroke-dasharray="100" stroke-dashoffset="55"/>
+                    <circle class="ring-track" cx="122" cy="122" r="56" stroke-width="18"/>
+                    <circle class="ring-value ring-rw" data-ring="rw" cx="122" cy="122" r="56" stroke-width="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="75"/>
+                  </svg>
+                  <div class="score-center">
+                    <span class="score-label">Estimated</span>
+                    <strong class="score-number">1430</strong>
+                    <span class="score-range">± 30 points</span>
+                  </div>
+                </div>
+                <div class="ring-legend" aria-hidden="true">
+                  <span class="legend-item"><span class="legend-dot" style="background:#6857f6"></span>Overall 36%</span>
+                  <span class="legend-item"><span class="legend-dot" style="background:#35cfa4"></span>Math 45%</span>
+                  <span class="legend-item"><span class="legend-dot" style="background:#ff7a70"></span>R&amp;W 25%</span>
+                </div>
+              </div>
+            </article>
+
+            <div class="goal-row">
+              <article class="glass-card metric-card">
+                <span class="metric-label">Target score</span>
+                <strong class="metric-value">1500</strong><span class="metric-note">70 to go</span>
+              </article>
+              <article class="glass-card metric-card">
+                <span class="metric-label">Next SAT</span>
+                <strong class="metric-value">Oct 4</strong><span class="metric-note">On track</span>
+              </article>
+            </div>
+
+            <article class="glass-card launch-card">
+              <div class="launch-meta">
+                <div class="launch-plan"><div class="launch-recommendation"><strong>Recommended today</strong><span>30 min</span></div><span class="launch-allocation">20 practice · 10 review</span></div>
+                <span class="launch-savings"><strong>6</strong><span>min saved</span><small>12 low-value skipped</small></span>
+              </div>
+              <button class="primary-button home-cta" type="button" data-start-practice>
+                Start Practicing
+                <span class="start-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
+              </button>
+            </article>
+          </div>
+          <nav class="bottom-nav" aria-label="Main navigation">
+            <button class="nav-button is-active" type="button" data-go="home" aria-current="page">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Home</span>
+            </button>
+            <button class="nav-button" type="button" data-go="progress">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19V2"/></svg><span>Progress</span>
+            </button>
+            <button class="nav-button" type="button" data-go="review">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg><span>Review</span>
+            </button>
+            <button class="nav-button" type="button" data-go="profile">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Profile</span>
+            </button>
+          </nav>
+        </section>
+
+        <section class="screen" data-screen="progress" aria-labelledby="progress-title">
+          <header class="app-header">
+            <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>SaturnPath</span></div>
+            <button class="avatar" type="button" data-go="profile" aria-label="Open profile">DW</button>
+          </header>
+          <div class="scroll-area">
+            <div class="section-header">
+              <p class="eyebrow">Your trajectory</p>
+              <h1 class="page-title" id="progress-title">Progress</h1>
+              <p class="page-copy">Clear signals, not more homework.</p>
+            </div>
+            <article class="glass-card trend-card">
+              <div class="card-heading"><h2>Predicted score</h2><span>+40 this month</span></div>
+              <div><strong class="trend-score">1430</strong><span class="trend-range">± 30</span></div>
+              <svg class="trend-chart" viewBox="0 0 320 116" role="img" aria-label="Predicted score trend rising from 1360 to 1430">
+                <defs><linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6857f6" stop-opacity=".24"/><stop offset="1" stop-color="#6857f6" stop-opacity="0"/></linearGradient></defs>
+                <path class="grid" d="M0 92H320M0 55H320M0 18H320"/>
+                <path class="area" d="M4 88C38 82 45 81 72 78S118 65 144 67s45-15 73-13 48-19 99-32V112H4Z"/>
+                <path class="line" d="M4 88C38 82 45 81 72 78S118 65 144 67s45-15 73-13 48-19 99-32"/>
+                <circle class="dot" cx="316" cy="22" r="5"/>
+              </svg>
+            </article>
+            <h2 class="subsection-title">Skill momentum</h2>
+            <article class="glass-card mastery-card">
+              <div class="mastery-row"><div class="mastery-meta"><span>Transitions</span><span>84% mastery</span></div><div class="bar"><span style="width:84%"></span></div></div>
+              <div class="mastery-row"><div class="mastery-meta"><span>Linear equations</span><span>76% mastery</span></div><div class="bar mint"><span style="width:76%"></span></div></div>
+              <div class="mastery-row"><div class="mastery-meta"><span>Words in context</span><span>62% mastery</span></div><div class="bar coral"><span style="width:62%"></span></div></div>
+            </article>
+            <div class="goal-row">
+              <article class="glass-card metric-card"><span class="metric-label">Accuracy</span><strong class="metric-value">82%</strong><span class="metric-note">+6%</span></article>
+              <article class="glass-card metric-card"><span class="metric-label">Avg. pace</span><strong class="metric-value">63 sec</strong><span class="metric-note">On target</span></article>
+            </div>
+          </div>
+          <nav class="bottom-nav" aria-label="Main navigation">
+            <button class="nav-button" type="button" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></button>
+            <button class="nav-button is-active" type="button" data-go="progress" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19V2"/></svg><span>Progress</span></button>
+            <button class="nav-button" type="button" data-go="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg><span>Review</span></button>
+            <button class="nav-button" type="button" data-go="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Profile</span></button>
+          </nav>
+        </section>
+
+        <section class="screen" data-screen="review" aria-labelledby="review-title">
+          <header class="app-header">
+            <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>SaturnPath</span></div>
+            <button class="avatar" type="button" data-go="profile" aria-label="Open profile">DW</button>
+          </header>
+          <div class="scroll-area">
+            <div class="section-header">
+              <p class="eyebrow">Scheduled for you</p>
+              <h1 class="page-title" id="review-title">Review</h1>
+              <p class="page-copy">Four mistakes are ready to strengthen.</p>
+            </div>
+            <div class="review-start"><button class="primary-button" type="button" data-start-review>Review 4 due mistakes</button></div>
+            <div class="filter-row" aria-label="Review filters">
+              <button class="filter-button is-active" type="button">Due 4</button>
+              <button class="filter-button" type="button">Learning 7</button>
+              <button class="filter-button" type="button">Resolved 28</button>
+              <button class="filter-button" type="button">Saved 3</button>
+            </div>
+            <div class="review-list">
+              <article class="glass-card review-card"><div class="review-top"><div class="review-type"><span class="review-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19 19 4M4 4h6v6M14 14h6v6"/></svg></span><div><p class="review-name">Linear equations</p><p class="review-skill">Math · Medium · 2 days ago</p></div></div><span class="state-label">Due</span></div></article>
+              <article class="glass-card review-card"><div class="review-top"><div class="review-type"><span class="review-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v16H5zM8 8h8M8 12h6"/></svg></span><div><p class="review-name">Transitions</p><p class="review-skill">R&amp;W · Hard · 4 days ago</p></div></div><span class="state-label">Due</span></div></article>
+              <article class="glass-card review-card"><div class="review-top"><div class="review-type"><span class="review-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></span><div><p class="review-name">Percent change</p><p class="review-skill">Math · Medium · 6 days ago</p></div></div><span class="state-label learning">Learning</span></div></article>
+            </div>
+          </div>
+          <nav class="bottom-nav" aria-label="Main navigation">
+            <button class="nav-button" type="button" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></button>
+            <button class="nav-button" type="button" data-go="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19V2"/></svg><span>Progress</span></button>
+            <button class="nav-button is-active" type="button" data-go="review" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg><span>Review</span></button>
+            <button class="nav-button" type="button" data-go="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Profile</span></button>
+          </nav>
+        </section>
+
+        <section class="screen" data-screen="profile" aria-labelledby="profile-title">
+          <header class="app-header">
+            <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>SaturnPath</span></div>
+            <button class="icon-button" type="button" data-note="Notifications are all caught up." aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></button>
+          </header>
+          <div class="scroll-area">
+            <div class="section-header"><p class="eyebrow">Preferences</p><h1 class="page-title" id="profile-title">Profile</h1></div>
+            <div class="profile-hero"><div class="profile-avatar">DW</div><div><h2 class="profile-name">Darcy Wang</h2><p class="profile-email">darcy@example.com</p></div></div>
+            <article class="glass-card profile-card">
+              <button class="profile-row" type="button" data-note="Test date editor opened."><span class="profile-row-main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span class="profile-label">SAT date</span></span><span class="profile-value">Oct 4, 2026</span></button>
+              <button class="profile-row" type="button" data-note="Target score editor opened."><span class="profile-row-main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="m15 9 6-6"/></svg><span class="profile-label">Target score</span></span><span class="profile-value">1500</span></button>
+              <button class="profile-row" type="button" data-note="Official scores opened."><span class="profile-row-main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span class="profile-label">Official scores</span></span><span class="profile-value">1 connected</span></button>
+              <button class="profile-row" type="button" data-note="Accommodation settings opened."><span class="profile-row-main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M8 8h8M12 6v7M9 21l3-8 3 8"/></svg><span class="profile-label">Accommodations</span></span><span class="profile-value">None</span></button>
+              <button class="profile-row" type="button" data-note="Notification settings opened."><span class="profile-row-main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="profile-label">Notifications</span></span><span class="profile-value">Daily</span></button>
+            </article>
+          </div>
+          <nav class="bottom-nav" aria-label="Main navigation">
+            <button class="nav-button" type="button" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></button>
+            <button class="nav-button" type="button" data-go="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19V2"/></svg><span>Progress</span></button>
+            <button class="nav-button" type="button" data-go="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg><span>Review</span></button>
+            <button class="nav-button is-active" type="button" data-go="profile" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Profile</span></button>
+          </nav>
+        </section>
+
+        <section class="screen practice-screen" data-screen="practice" aria-labelledby="practice-title">
+          <header class="practice-header">
+            <button class="icon-button" type="button" data-end-session aria-label="Close practice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 6-12 12M6 6l12 12"/></svg></button>
+            <div class="practice-header-center"><h1 class="practice-header-title" id="practice-title">Adaptive practice</h1><p class="session-time" id="session-time">0:24</p></div>
+            <button class="end-button" type="button" data-end-session>End</button>
+          </header>
+          <div class="question-progress" id="question-progress" aria-label="Question progress"></div>
+          <div class="practice-body" id="practice-body">
+            <div class="question-meta"><span class="subject-pill" id="question-subject"></span><span class="count-pill" id="question-count"></span></div>
+            <aside class="why-card" aria-live="polite">
+              <span class="why-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3 14 8.5 20 10l-4.5 4 1.3 6-4.8-3-4.8 3 1.3-6L4 10l6-1.5L12 3Z"/></svg></span>
+              <span class="why-copy"><span class="why-label">Selected for impact</span><strong class="why-title" id="why-title"></strong></span>
+              <span class="why-stats" aria-label="Selection signals"><span class="why-stat"><strong id="why-stat-a"></strong><span id="why-stat-a-label"></span></span><span class="why-stat"><strong id="why-stat-b"></strong><span id="why-stat-b-label"></span></span></span>
+            </aside>
+            <article class="glass-card question-card">
+              <p class="question-context" id="question-context"></p>
+              <h2 class="question-prompt" id="question-prompt"></h2>
+            </article>
+            <div class="answers" id="answers"></div>
+            <aside class="feedback-panel" id="feedback-panel" aria-live="polite">
+              <div class="feedback-title" id="feedback-title"></div>
+              <p class="feedback-copy" id="feedback-copy"></p>
+              <div class="pace-visual" id="pace-visual"><div class="pace-head"><span>Pace</span><strong class="pacing-verdict" id="pace-verdict"></strong></div><div class="pace-track"><span class="pace-target-zone"></span><span class="pace-fill" id="pace-fill"></span><span class="pace-target-marker"></span><span class="pace-marker" id="pace-marker"></span></div><div class="pace-values"><strong id="pace-time"></strong><span id="pace-target"></span></div></div>
+            </aside>
+            <aside class="path-update-pin" id="path-update-pin" aria-live="polite">
+              <div class="path-visual-head"><span class="path-pin-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span><strong class="path-visual-title">Path changed</strong><span class="impact-badge" id="path-impact"></span></div>
+              <div class="path-route"><span class="route-stop is-old"><span class="route-symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></span><strong id="path-before"></strong></span><span class="route-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg></span><span class="route-stop is-new"><span class="route-symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span><strong id="path-after"></strong></span></div>
+              <div class="scratch-signal"><span class="scratch-signal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/><path d="m13.5 7.5 3 3"/></svg></span><strong id="scratch-insight"></strong></div>
+            </aside>
+            <section class="classification-panel" id="classification-panel" aria-labelledby="classification-title">
+              <h3 id="classification-title">What went wrong last time?</h3>
+              <p>One tap helps SaturnPath schedule a better review.</p>
+              <div class="classification-grid" id="classification-grid"></div>
+            </section>
+          </div>
+          <div class="practice-action"><button class="primary-button" type="button" id="practice-action" disabled>Check answer</button></div>
+          <button class="scratch-tab" type="button" id="open-scratchpad" aria-label="Open scratchpad tools" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/><path d="m13.5 7.5 3 3"/></svg></button>
+          <div class="adaptation-toast" id="adaptation-toast" aria-live="polite"><span class="adaptation-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg></span><span class="adaptation-copy"><strong>Reviewing an old weakness</strong><span>This quick retest checks whether linear equations are sticking.</span></span></div>
+          <div class="scratch-overlay" id="scratch-overlay" aria-hidden="true">
+            <section class="scratch-sheet" role="dialog" aria-modal="true" aria-labelledby="scratch-title">
+              <div class="scratch-handle" aria-hidden="true"></div>
+              <header class="scratch-header"><h2 class="scratch-title" id="scratch-title">Scratchpad</h2><button class="scratch-close" type="button" id="close-scratchpad" aria-label="Close scratchpad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 6-12 12M6 6l12 12"/></svg></button></header>
+              <div class="scratch-tabs" role="tablist" aria-label="Scratchpad tools">
+                <button class="scratch-tab-button is-active" type="button" role="tab" aria-selected="true" data-tool-panel="draw">Draw</button>
+                <button class="scratch-tab-button" type="button" role="tab" aria-selected="false" data-tool-panel="notes">Notes</button>
+                <button class="scratch-tab-button" type="button" role="tab" aria-selected="false" data-tool-panel="calculator">Graph</button>
+              </div>
+              <div class="scratch-analysis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3 14 8.5 20 10l-4.5 4 1.3 6-4.8-3-4.8 3 1.3-6L4 10l6-1.5L12 3Z"/></svg><span><strong>Work analysis on.</strong> SaturnPath will use your steps to diagnose the mistake—not just the final answer.</span></div>
+              <div class="scratch-content">
+                <div class="tool-panel is-active" data-panel="draw" role="tabpanel">
+                  <div class="draw-toolbar">
+                    <button class="tool-button is-active" type="button" data-pen-color="#6857f6" aria-label="Purple pen"><span class="color-swatch" style="background:#6857f6"></span></button>
+                    <button class="tool-button" type="button" data-pen-color="#17324d" aria-label="Blue pen"><span class="color-swatch" style="background:#17324d"></span></button>
+                    <button class="tool-button" type="button" data-pen-color="#ff7a70" aria-label="Coral pen"><span class="color-swatch" style="background:#ff7a70"></span></button>
+                    <button class="tool-button" type="button" data-eraser>Eraser</button>
+                    <button class="tool-button" type="button" data-clear-canvas>Clear</button>
+                  </div>
+                  <canvas class="scratch-canvas" id="scratch-canvas" width="720" height="500" aria-label="Drawing scratchpad"></canvas>
+                </div>
+                <div class="tool-panel" data-panel="notes" role="tabpanel">
+                  <label for="scratch-notes" class="score-label" style="margin-bottom:8px">Question notes</label>
+                  <textarea class="scratch-notes" id="scratch-notes" placeholder="Type a formula, outline a passage, or leave yourself a note…"></textarea>
+                </div>
+                <div class="tool-panel" data-panel="calculator" role="tabpanel">
+                  <div class="calculator">
+                    <div class="calc-topbar"><span>SAT-style graphing preview</span><a class="desmos-link" href="https://www.desmos.com/testing" target="_blank" rel="noopener noreferrer">Open SAT Desmos<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 5h5v5M10 14 19 5M19 14v5H5V5h5"/></svg></a></div>
+                    <div class="graph-workspace">
+                      <div class="graph-expressions"><div class="graph-expression"><span class="expression-dot"></span><span><label for="graph-expression">Expression 1</label><input id="graph-expression" value="y = x² − 9" aria-label="Graph expression"></span></div></div>
+                      <div class="graph-plane" role="img" aria-label="Preview graph of y equals x squared minus nine"><svg viewBox="0 0 220 150" preserveAspectRatio="none" aria-hidden="true"><path class="graph-curve" d="M34 -8 C57 87 82 132 110 132 C138 132 163 87 186 -8"/></svg><span class="graph-zoom" aria-hidden="true"><span>+</span><span>−</span></span></div>
+                    </div>
+                    <div class="graph-tools" aria-hidden="true"><span class="graph-tool">x²</span><span class="graph-tool">√</span><span class="graph-tool">sin</span><span class="graph-tool">table</span><span class="graph-tool">ABC</span></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="screen" data-screen="complete" aria-labelledby="complete-title">
+          <div class="completion-wrap">
+            <div class="completion-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <p class="eyebrow">Daily goal complete</p>
+            <h1 class="completion-title" id="complete-title">You’re good for today.</h1>
+            <p class="completion-copy">You completed the highest-value practice for today. SaturnPath has enough signal to adapt tomorrow’s session.</p>
+            <span class="saved-time">6 min saved · 12 low-value questions skipped</span>
+            <div class="completion-actions"><button class="primary-button" type="button" data-finish>Finish</button><button class="secondary-button" type="button" data-keep-practicing>Keep practicing</button></div>
+          </div>
+        </section>
+
+        <section class="screen" data-screen="summary" aria-labelledby="summary-title">
+          <div class="summary-wrap">
+            <div class="summary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <p class="eyebrow">Session complete</p>
+            <h1 class="summary-title" id="summary-title">Nice work.</h1>
+            <article class="glass-card summary-card"><div class="summary-stats"><div class="summary-stat"><strong>24</strong><span>minutes</span></div><div class="summary-stat"><strong>18</strong><span>questions</span></div><div class="summary-stat"><strong>15</strong><span>correct</span></div></div></article>
+            <article class="glass-card summary-card">
+              <div class="summary-row"><span>Pacing</span><strong>On target</strong></div>
+              <div class="summary-row"><span>Math today</span><strong>92%</strong></div>
+              <div class="summary-row"><span>Reading &amp; Writing</span><strong>76%</strong></div>
+              <div class="summary-row"><span>Low-value work removed</span><strong>12 questions</strong></div>
+              <div class="summary-row"><span>Time saved today</span><strong class="summary-highlight">6 min</strong></div>
+              <div class="summary-row"><span>Strongest improvement</span><strong class="summary-highlight">Transitions ↑</strong></div>
+              <div class="summary-row"><span>Predicted SAT</span><strong class="summary-highlight">1440 ± 30</strong></div>
+            </article>
+            <button class="primary-button" type="button" data-summary-done>Done</button>
+          </div>
+        </section>
+      </div>
+      <div class="toast-note" id="toast-note" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const questions = [
+        {
+          subject: 'Math · Algebra',
+          why: { title: 'High-impact Algebra', statA: '+12', labelA: 'points', statB: '61%', labelB: 'confidence' },
+          context: 'The equation below has exactly one solution.',
+          prompt: 'If 3(x − 4) + 8 = 20, what is the value of x?<span class="math-line">3(x − 4) + 8 = 20</span>',
+          answers: ['4', '6', '8', '10'],
+          correct: 2,
+          explanation: 'Subtract 8, divide by 3, then add 4: 3(x − 4) = 12, so x = 8.',
+          time: '48 sec', target: '~60 sec', verdict: 'Good pace',
+          pathCorrect: { title: 'Algebra practice shortened', detail: 'You proved this level is becoming automatic.', before: '12 min Algebra', after: '9 min + 1 hard', impact: '3 min saved', added: false },
+          pathWrong: { title: 'Algebra review added tomorrow', detail: 'The concept stays active until a similar problem confirms it.', before: 'Switch skill next', after: '+3 min review', impact: '3 min added', added: true },
+          scratchCorrect: 'Steps verified',
+          scratchWrong: 'Likely −4 slip'
+        },
+        {
+          subject: 'R&W · Transitions',
+          why: { title: 'Pacing opportunity', statA: '18s', labelA: 'over', statB: '84%', labelB: 'accuracy' },
+          context: 'A student is linking two ideas in an informational text.',
+          prompt: 'The first experiment produced inconsistent results. _____, the researchers redesigned the procedure before collecting more data.',
+          answers: ['For example', 'Nevertheless', 'Therefore', 'Meanwhile'],
+          correct: 2,
+          explanation: '“Therefore” shows that redesigning the procedure was a consequence of the inconsistent results.',
+          time: '55 sec', target: '~45 sec', verdict: 'Slightly slower',
+          pathCorrect: { title: 'Transitions moved closer to resolved', detail: 'Friday’s review block no longer needs the easy item.', before: '8 min Friday', after: '6 min Friday', impact: '2 min saved', added: false },
+          pathWrong: { title: 'Transitions stays in today’s path', detail: 'SaturnPath found more value here than switching skills.', before: 'Switch to Math', after: '+2 transitions', impact: '2 questions added', added: true },
+          scratchCorrect: 'Relation identified',
+          scratchWrong: 'Contrast marked'
+        },
+        {
+          subject: 'Math · Advanced Math',
+          why: { title: 'Difficulty unlocked', statA: 'Hard', labelA: 'next', statB: '2×', labelB: 'strong' },
+          context: 'The function f is defined by the equation below.',
+          prompt: 'For what positive value of x is f(x) = 0?<span class="math-line">f(x) = x² − 9</span>',
+          answers: ['1', '3', '6', '9'],
+          correct: 1,
+          explanation: 'Set x² − 9 equal to 0. Then x² = 9, so the positive solution is x = 3.',
+          time: '42 sec', target: '~50 sec', verdict: 'Good pace',
+          pathCorrect: { title: 'Difficulty increased for the next set', detail: 'Easy quadratics were removed as low-value work.', before: '3 easy questions', after: '1 hard question', impact: '4 min saved', added: false },
+          pathWrong: { title: 'A 60-sec Quick Fix was added', detail: 'Advanced Math becomes tomorrow’s first skill.', before: 'Hard set next', after: 'Quick Fix + medium', impact: '1 min added', added: true },
+          scratchCorrect: 'Efficient factoring',
+          scratchWrong: 'Positive constraint missed'
+        },
+        {
+          subject: 'Review · Linear equations',
+          why: { title: 'Retention check', statA: 'Due', labelA: 'now', statB: '4d', labelB: 'spacing' },
+          context: 'You missed a similar problem two days ago. This one checks whether the idea is sticking.',
+          prompt: 'What value of y makes the equation true?<span class="math-line">5y + 7 = 32</span>',
+          answers: ['3', '5', '7', '8'],
+          correct: 1,
+          explanation: 'Subtract 7 from both sides, then divide by 5: 5y = 25, so y = 5.',
+          time: '51 sec', target: '~55 sec', verdict: 'Good pace', review: true,
+          pathCorrect: { title: 'Linear equations advanced to retesting', detail: 'The next check moved four days out instead of tomorrow.', before: 'Review tomorrow', after: 'Retest Friday', impact: '5 min saved', added: false },
+          pathWrong: { title: 'Linear equations remains due', detail: 'A fresh similar problem was added rather than repeating this one.', before: 'Retest Friday', after: 'Review tomorrow', impact: '4 min added', added: true },
+          scratchCorrect: 'Solution verified',
+          scratchWrong: 'Division slip'
+        }
+      ];
+
+      const icons = {
+        correct: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>',
+        wrong: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg>',
+        selected: '<svg class="answer-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>'
+      };
+
+      const state = { question: 0, selected: null, checked: false, reviewOnly: false, classification: null, scratchUsed: false };
+      const screenStack = document.getElementById('screen-stack');
+      const practiceBody = document.getElementById('practice-body');
+      const actionButton = document.getElementById('practice-action');
+      const feedback = document.getElementById('feedback-panel');
+      const pathUpdate = document.getElementById('path-update-pin');
+      const classification = document.getElementById('classification-panel');
+      const adaptationToast = document.getElementById('adaptation-toast');
+      const toastNote = document.getElementById('toast-note');
+      const scratchOverlay = document.getElementById('scratch-overlay');
+      const scratchTrigger = document.getElementById('open-scratchpad');
+      const scratchSheet = document.querySelector('.scratch-sheet');
+      const scratchCanvas = document.getElementById('scratch-canvas');
+      const scratchContext = scratchCanvas.getContext('2d');
+      let toastTimer;
+      let drawing = false;
+      let penColor = '#6857f6';
+      let penWidth = 6;
+
+      const showScreen = (name) => {
+        document.querySelectorAll('.screen').forEach((screen) => {
+          screen.classList.toggle('is-active', screen.dataset.screen === name);
+        });
+      };
+
+      const showNote = (message) => {
+        toastNote.textContent = message;
+        toastNote.classList.add('is-visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastNote.classList.remove('is-visible'), 1900);
+      };
+
+      const startPractice = (reviewOnly = false) => {
+        state.question = reviewOnly ? 3 : 0;
+        state.reviewOnly = reviewOnly;
+        state.selected = null;
+        state.checked = false;
+        state.classification = null;
+        renderQuestion();
+        showScreen('practice');
+      };
+
+      const renderProgress = () => {
+        const progress = document.getElementById('question-progress');
+        progress.innerHTML = questions.map((_, index) => {
+          const status = index < state.question ? 'is-complete' : index === state.question ? 'is-current' : '';
+          return `<span class="${status}"></span>`;
+        }).join('');
+      };
+
+      const renderQuestion = () => {
+        const question = questions[state.question];
+        document.getElementById('question-subject').textContent = question.subject;
+        document.getElementById('question-count').textContent = state.reviewOnly ? 'Review' : `${state.question + 1} of ${questions.length}`;
+        document.getElementById('why-title').textContent = question.why.title;
+        document.getElementById('why-stat-a').textContent = question.why.statA;
+        document.getElementById('why-stat-a-label').textContent = question.why.labelA;
+        document.getElementById('why-stat-b').textContent = question.why.statB;
+        document.getElementById('why-stat-b-label').textContent = question.why.labelB;
+        document.getElementById('question-context').textContent = question.context;
+        document.getElementById('question-prompt').innerHTML = question.prompt;
+        document.getElementById('answers').innerHTML = question.answers.map((answer, index) => `
+          <button class="answer-button" type="button" data-answer="${index}" aria-pressed="false">
+            <span class="answer-letter">${String.fromCharCode(65 + index)}</span>
+            <span class="answer-text">${answer}</span>
+            ${icons.selected}
+          </button>`).join('');
+        renderProgress();
+        feedback.className = 'feedback-panel';
+        pathUpdate.className = 'path-update-pin';
+        classification.className = 'classification-panel';
+        adaptationToast.classList.remove('is-visible');
+        actionButton.textContent = 'Check answer';
+        actionButton.disabled = true;
+        state.selected = null;
+        state.checked = false;
+        state.classification = null;
+        state.scratchUsed = false;
+        document.getElementById('scratch-notes').value = '';
+        scratchContext.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+        practiceBody.scrollTop = 0;
+      };
+
+      const selectAnswer = (index) => {
+        if (state.checked) return;
+        state.selected = index;
+        document.querySelectorAll('.answer-button').forEach((button, buttonIndex) => {
+          const selected = buttonIndex === index;
+          button.classList.toggle('is-selected', selected);
+          button.setAttribute('aria-pressed', String(selected));
+        });
+        actionButton.disabled = false;
+      };
+
+      const showClassification = () => {
+        const choices = ['Sign error', 'Set up equation wrong', 'Rushed', 'Took too long', 'Not sure'];
+        document.getElementById('classification-grid').innerHTML = choices.map((choice) => `<button class="classification-button" type="button" data-classification="${choice}">${choice}</button>`).join('');
+        classification.classList.add('is-visible');
+        actionButton.textContent = 'Choose one to continue';
+        actionButton.disabled = true;
+      };
+
+      const checkAnswer = () => {
+        const question = questions[state.question];
+        state.checked = true;
+        const isCorrect = state.selected === question.correct;
+        document.querySelectorAll('.answer-button').forEach((button, index) => {
+          button.disabled = true;
+          button.classList.remove('is-selected');
+          if (index === question.correct) button.classList.add('is-correct');
+          if (index === state.selected && !isCorrect) button.classList.add('is-wrong');
+        });
+        feedback.classList.add('is-visible');
+        feedback.classList.toggle('is-wrong', !isCorrect);
+        document.getElementById('feedback-title').innerHTML = `${isCorrect ? icons.correct : icons.wrong}<span>${isCorrect ? 'Correct' : `Incorrect — answer ${String.fromCharCode(65 + question.correct)}`}</span>`;
+        document.getElementById('feedback-copy').textContent = question.explanation;
+        const actualSeconds = Number.parseInt(question.time, 10);
+        const targetSeconds = Number.parseInt(question.target.match(/\d+/)?.[0] || '0', 10);
+        const pacePosition = Math.max(5, Math.min(96, (actualSeconds / (targetSeconds * 1.5)) * 100));
+        const paceVisual = document.getElementById('pace-visual');
+        document.getElementById('pace-time').textContent = `${actualSeconds}s`;
+        document.getElementById('pace-target').textContent = `${targetSeconds}s target`;
+        document.getElementById('pace-verdict').textContent = question.verdict;
+        document.getElementById('pace-fill').style.width = `${pacePosition}%`;
+        document.getElementById('pace-marker').style.left = `${pacePosition}%`;
+        paceVisual.classList.toggle('is-slow', actualSeconds > targetSeconds);
+        paceVisual.setAttribute('aria-label', `Your time ${actualSeconds} seconds. Target ${targetSeconds} seconds. ${question.verdict}.`);
+        const update = isCorrect ? question.pathCorrect : question.pathWrong;
+        document.getElementById('path-before').textContent = update.before;
+        document.getElementById('path-after').textContent = update.after;
+        const impact = document.getElementById('path-impact');
+        impact.textContent = update.impact;
+        impact.classList.toggle('added', update.added);
+        document.getElementById('scratch-insight').textContent = state.scratchUsed
+          ? (isCorrect ? question.scratchCorrect : question.scratchWrong)
+          : 'No scratchwork signal';
+        pathUpdate.classList.add('is-visible');
+        if (question.review) {
+          showClassification();
+        } else {
+          actionButton.textContent = state.question === 2 ? 'Continue to review' : 'Next question';
+          actionButton.disabled = false;
+        }
+        setTimeout(() => pathUpdate.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+      };
+
+      const openScratchpad = () => {
+        practiceBody.scrollTop = 0;
+        const overlayRect = scratchOverlay.getBoundingClientRect();
+        const questionRect = document.querySelector('[data-screen="practice"] .question-card').getBoundingClientRect();
+        const minimumTop = overlayRect.top + (overlayRect.height * 0.5);
+        const safeTop = Math.max(minimumTop, questionRect.bottom + 8);
+        scratchSheet.style.height = `${Math.max(0, Math.floor(overlayRect.bottom - safeTop))}px`;
+        scratchOverlay.classList.add('is-open');
+        scratchOverlay.setAttribute('aria-hidden', 'false');
+        scratchTrigger.setAttribute('aria-expanded', 'true');
+        document.getElementById('close-scratchpad').focus();
+      };
+
+      const closeScratchpad = () => {
+        scratchOverlay.classList.remove('is-open');
+        scratchOverlay.setAttribute('aria-hidden', 'true');
+        scratchTrigger.setAttribute('aria-expanded', 'false');
+        scratchTrigger.focus();
+      };
+
+      const canvasPoint = (event) => {
+        const rect = scratchCanvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * (scratchCanvas.width / rect.width),
+          y: (event.clientY - rect.top) * (scratchCanvas.height / rect.height)
+        };
+      };
+
+      scratchCanvas.addEventListener('pointerdown', (event) => {
+        drawing = true;
+        state.scratchUsed = true;
+        scratchCanvas.setPointerCapture(event.pointerId);
+        const point = canvasPoint(event);
+        scratchContext.beginPath();
+        scratchContext.moveTo(point.x, point.y);
+      });
+
+      scratchCanvas.addEventListener('pointermove', (event) => {
+        if (!drawing) return;
+        const point = canvasPoint(event);
+        scratchContext.lineCap = 'round';
+        scratchContext.lineJoin = 'round';
+        scratchContext.strokeStyle = penColor;
+        scratchContext.lineWidth = penWidth;
+        scratchContext.lineTo(point.x, point.y);
+        scratchContext.stroke();
+      });
+
+      const stopDrawing = () => { drawing = false; };
+      scratchCanvas.addEventListener('pointerup', stopDrawing);
+      scratchCanvas.addEventListener('pointercancel', stopDrawing);
+      document.getElementById('scratch-notes').addEventListener('input', () => { state.scratchUsed = true; });
+      document.getElementById('graph-expression').addEventListener('input', () => { state.scratchUsed = true; });
+
+      const setToolPanel = (name) => {
+        document.querySelectorAll('[data-tool-panel]').forEach((button) => {
+          const active = button.dataset.toolPanel === name;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-selected', String(active));
+        });
+        document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === name));
+      };
+
+      const advance = () => {
+        if (state.reviewOnly) {
+          showScreen('summary');
+          return;
+        }
+        if (state.question === questions.length - 1) {
+          showScreen('complete');
+          return;
+        }
+        state.question += 1;
+        renderQuestion();
+        if (state.question === 3) {
+          adaptationToast.classList.add('is-visible');
+          setTimeout(() => adaptationToast.classList.remove('is-visible'), 3000);
+        }
+      };
+
+      actionButton.addEventListener('click', () => {
+        if (!state.checked) checkAnswer();
+        else advance();
+      });
+
+      document.addEventListener('click', (event) => {
+        if (event.target.closest('#open-scratchpad')) openScratchpad();
+        if (event.target.closest('#close-scratchpad') || event.target === scratchOverlay) closeScratchpad();
+
+        const toolTab = event.target.closest('[data-tool-panel]');
+        if (toolTab) setToolPanel(toolTab.dataset.toolPanel);
+
+        const penButton = event.target.closest('[data-pen-color]');
+        if (penButton) {
+          penColor = penButton.dataset.penColor;
+          penWidth = 6;
+          document.querySelectorAll('.draw-toolbar .tool-button').forEach((button) => button.classList.toggle('is-active', button === penButton));
+        }
+
+        const eraserButton = event.target.closest('[data-eraser]');
+        if (eraserButton) {
+          penColor = '#ffffff';
+          penWidth = 24;
+          document.querySelectorAll('.draw-toolbar .tool-button').forEach((button) => button.classList.toggle('is-active', button === eraserButton));
+        }
+
+        if (event.target.closest('[data-clear-canvas]')) scratchContext.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+
+        const answer = event.target.closest('[data-answer]');
+        if (answer) selectAnswer(Number(answer.dataset.answer));
+
+        const classificationButton = event.target.closest('[data-classification]');
+        if (classificationButton) {
+          state.classification = classificationButton.dataset.classification;
+          document.querySelectorAll('.classification-button').forEach((button) => button.classList.toggle('is-selected', button === classificationButton));
+          actionButton.textContent = state.reviewOnly ? 'Finish review' : 'Continue';
+          actionButton.disabled = false;
+        }
+
+        const go = event.target.closest('[data-go]');
+        if (go) showScreen(go.dataset.go);
+        if (event.target.closest('[data-start-practice]')) startPractice(false);
+        if (event.target.closest('[data-start-review]')) startPractice(true);
+        if (event.target.closest('[data-end-session]')) showScreen('complete');
+        if (event.target.closest('[data-finish]')) showScreen('summary');
+        if (event.target.closest('[data-keep-practicing]')) startPractice(false);
+        if (event.target.closest('[data-summary-done]')) {
+          document.querySelector('[data-ring="overall"]').style.strokeDashoffset = '48';
+          document.querySelector('[data-ring="math"]').style.strokeDashoffset = '39';
+          document.querySelector('[data-ring="rw"]').style.strokeDashoffset = '61';
+          document.querySelector('.score-number').textContent = '1440';
+          showScreen('home');
+        }
+
+        const noteButton = event.target.closest('[data-note]');
+        if (noteButton) showNote(noteButton.dataset.note);
+
+        const filterButton = event.target.closest('.filter-button');
+        if (filterButton) {
+          document.querySelectorAll('.filter-button').forEach((button) => button.classList.toggle('is-active', button === filterButton));
+          if (!filterButton.textContent.startsWith('Due')) showNote(`${filterButton.textContent} view selected.`);
+        }
+      });
+
+      screenStack.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && scratchOverlay.classList.contains('is-open')) {
+          closeScratchpad();
+          return;
+        }
+        if (event.key >= '1' && event.key <= '4' && document.querySelector('[data-screen="practice"]').classList.contains('is-active') && !state.checked) {
+          selectAnswer(Number(event.key) - 1);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
