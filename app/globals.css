@@ -60,8 +60,9 @@
    "violet" = refined accent ramp.  "slate" = TRUE-GRAY (zinc).
    ============================================================ */
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Keep builds self-contained: system stacks are available offline and in CI. */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* Violet ramp — the single restrained accent (refined / true violet) */
   --color-violet-50:  #f5f3ff;

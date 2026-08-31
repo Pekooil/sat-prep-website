@@ -1,10 +1,7 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { Manrope } from 'next/font/google'
 import { createClient } from '@/lib/supabase/server'
 import { LandingPage } from '@/components/marketing/landing-page'
-
-const manrope = Manrope({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Free Adaptive SAT Prep',
@@ -50,9 +47,5 @@ export default async function RootPage({
     redirect(profile?.has_completed_onboarding ? '/home' : '/onboarding')
   }
 
-  return (
-    <div className={manrope.className}>
-      <LandingPage />
-    </div>
-  )
+  return <LandingPage />
 }

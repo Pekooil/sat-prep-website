@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { Sidebar } from '@/components/layout/sidebar'
-import { Topbar } from '@/components/layout/topbar'
-import { MobileNav } from '@/components/layout/mobile-nav'
+import { V2Shell } from '@/components/v2-product/v2-shell'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -12,7 +10,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from('users')
-    .select('*')
+    .select('has_completed_onboarding, terms_accepted_at, birth_year')
     .eq('id', user.id)
     .single()
 
@@ -29,19 +27,5 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/onboarding')
   }
 
-  return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <Sidebar user={profile} />
-      <div className="flex min-h-screen flex-col md:pl-[var(--sidebar-width)]">
-        <Topbar user={profile} />
-        <main
-          id="main-content"
-          className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-6 pb-24 sm:px-6 md:pb-10 lg:px-8"
-        >
-          {children}
-        </main>
-      </div>
-      <MobileNav />
-    </div>
-  )
+  return <V2Shell>{children}</V2Shell>
 }

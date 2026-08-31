@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { ThemeProvider } from '@/components/layout/theme-provider'
@@ -7,9 +6,6 @@ import { Toaster } from '@/components/ui/toaster'
 import { CookieNotice } from '@/components/legal/cookie-notice'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
-
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.trim() || 'https://saturnpath.app'
 const APP_NAME = 'SaturnPath'
@@ -86,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`dark ${geistSans.variable} ${geistMono.variable}`}
+      className="dark"
     >
       <body className="min-h-screen antialiased">
         <Script
