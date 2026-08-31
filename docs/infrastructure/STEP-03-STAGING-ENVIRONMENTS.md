@@ -1,7 +1,7 @@
 # Step 3 — staging environments
 
-**Status:** Supabase complete; Vercel staging pending  
-**Updated:** August 26, 2026
+**Status:** Supabase complete and CLI linked; Vercel staging pending
+**Updated:** August 30, 2026
 
 ## Environment decision
 
@@ -51,9 +51,19 @@ The database contains no seeded students, attempts, questions, answers, or produ
 
 ## Migration-history note
 
-The SQL was executed from the Supabase SQL Editor because the local CLI was not authenticated and a local Docker/PostgreSQL runtime is unavailable. The remote schema is correct, but the four versions are not yet recorded in the Supabase CLI migration-history table.
+The SQL was originally executed from the Supabase SQL Editor because the local
+CLI was not authenticated and a local Docker/PostgreSQL runtime was unavailable.
+On August 30, 2026, the CLI was authenticated and linked to project
+`rzxquectwvwevwqmhmzr`. `supabase migration list --linked` confirmed that all
+four local versions were already recorded remotely, so no migration repair and
+no SQL re-execution were needed.
 
-Before the first future `supabase db push`, authenticate and link the CLI, then mark these four versions as applied with the supported migration-repair workflow. Do not run the creation files again against this staging database.
+The same check initially found 14 newer remote migration versions, from
+`20260828180000` through `20260829223000`. Their exact committed source files
+were located in the clean `codex/v2-web-backend` worktree and synchronized into
+this checkout. A second `supabase migration list --linked` showed all 18 local
+and remote versions aligned. No migration repair, SQL re-execution, or database
+push was performed.
 
 ## Secrets
 
@@ -66,5 +76,19 @@ When Vercel staging is created, add the staging project URL and publishable/anon
 - Create or designate a Vercel preview/staging deployment for the existing repository.
 - Add staging-only Supabase environment variables in Vercel.
 - Configure staging authentication redirect URLs after the iOS callback and web preview URLs are known.
-- Authenticate/link the Supabase CLI and repair the four applied migration-history entries.
 - Run real JWT ownership tests during the authentication vertical slice.
+
+## Web API rollout controls
+
+The V2 server reads these server-side feature switches and defaults each one to
+`false` when unset. Keep the service-role key out of all `NEXT_PUBLIC_*` values.
+
+```text
+V2_PRACTICE_ENABLED=false
+V2_SCRATCH_ANALYSIS_ENABLED=false
+V2_PUSH_NOTIFICATIONS_ENABLED=false
+```
+
+The web API safety foundation is implemented locally, but staging JWT ownership
+tests, Vercel configuration, and the first live data operation are still
+required before any V2 handoff is marked `READY`.
