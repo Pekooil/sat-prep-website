@@ -3,7 +3,7 @@
 > **Session trigger:** `Run the web app plan.`  
 > When this phrase is used, read `SATURNPATH_V2_SESSION_ROUTER.md`, then execute the first incomplete, unblocked checklist item below. Do not perform native iOS work.
 
-**Status:** Ready to start — shared foundations complete; Vercel staging and live `/api/v2` implementation pending  
+**Status:** In progress — V2 API safety foundation scaffolded; staging and live product operations pending
 **Primary release order:** Functioning web product first; native iOS client consumes the same backend afterward  
 **Backend consumers:** SaturnPath V2 web app and SaturnPath native iOS app  
 **Question-bank target:** 200 Darcy-approved original questions — 100 Math and 100 Reading and Writing
@@ -73,10 +73,10 @@ Execute in order. Do not mark an item complete until its exit gate passes.
 
 ### W1. Establish safe concurrency and finish staging infrastructure
 
-- [ ] Confirm the web session is using a branch/worktree that will not overwrite concurrent iOS work.
+- [x] Confirm the web session is using a branch/worktree that will not overwrite concurrent iOS work.
 - [ ] Finish the Vercel staging project/configuration from Step 3.
 - [ ] Configure only server-safe environment variables in Vercel and local development.
-- [ ] Link/authenticate the Supabase CLI and reconcile the SQL-Editor-applied staging migration history.
+- [x] Link/authenticate the Supabase CLI and reconcile the SQL-Editor-applied staging migration history.
 - [ ] Add synthetic staging users and run real JWT owner/cross-user/anonymous/answer-key/service-role tests.
 - [ ] Record the staging API base URL and validation evidence without committing secrets.
 
@@ -84,12 +84,20 @@ Execute in order. Do not mark an item complete until its exit gate passes.
 
 ### W2. Implement the shared V2 server foundation
 
-- [ ] Read the relevant Next.js 16.2.7 guides from `node_modules/next/dist/docs/` before writing routes or server code.
-- [ ] Create feature-based `lib/v2/**` modules and shared request/auth/error/idempotency utilities.
-- [ ] Implement thin `/api/v2` route handlers from the OpenAPI contract.
+- [x] Read the relevant Next.js 16.2.7 guides from `node_modules/next/dist/docs/` before writing routes or server code.
+- [x] Create feature-based `lib/v2/**` modules and shared request/auth/error/idempotency utilities.
+- [x] Scaffold thin `/api/v2` route handlers from the OpenAPI contract with safe placeholders.
 - [ ] Generate or verify TypeScript contract models from the single contract source.
 - [ ] Add schema validation, normalized errors, structured safe logging, and rate limiting where appropriate.
 - [ ] Add feature flags and production kill switches for question delivery, scratch analysis, and question IDs.
+
+#### Web-track progress — August 29, 2026
+
+- The web-owned branch is `codex/saturnpath-v2-web-design`; the worktree was clean before this turn and no `apps/ios/**` files were changed.
+- `lib/v2/api/**` now centralizes bearer authentication, UUID and header validation, JSON-body limits, admin allowlisting, rate limiting, request IDs, no-store responses, normalized errors, and safe unknown-error logging.
+- Explicit route handlers now exist for every student and admin operation in `contracts/v2/openapi.json`. They authenticate and validate before returning a `NOT_IMPLEMENTED` response, so unfinished operations cannot accidentally expose student data or answer keys.
+- Server-only rollout flags are disabled by default. `GET /bootstrap` now reads the authenticated user’s V2 profile, today’s recommendation, and active/paused session metadata through the server-only client; it returns no answer-bearing fields.
+- On August 30, the Supabase CLI was authenticated and linked to `saturnpath-v2-staging`. Migration history already contained the four SQL-Editor-applied versions, so no repair was run. Fourteen newer migration files were synchronized byte-for-byte from the clean `codex/v2-web-backend` worktree; `supabase migration list --linked` now shows all 18 local and remote versions aligned. Vercel staging access/configuration remains pending.
 
 **Exit gate:** Contract tests prove every implemented operation matches OpenAPI, and placeholder responses contain no hard-coded student content or answer leakage.
 
