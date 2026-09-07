@@ -56,7 +56,7 @@ export function Step2Time({ data, onChange, errors }: Step2TimeProps) {
           </p>
         ) : (
           <p className="text-xs text-[var(--text-muted)]">
-            Don't have a date yet? Pick a target date — you can change it later.
+            Don&apos;t have a date yet? Pick a target date — you can change it later.
           </p>
         )}
       </div>

@@ -188,7 +188,7 @@ export function buildReminderEmail(d: ReminderEmailData): {
 
             <!-- CTA button -->
             <div style="text-align:center; margin-top:32px; padding-top:24px; border-top:1px solid #f1f5f9;">
-              <a href="${esc(d.appUrl)}/calendar"
+              <a href="${esc(d.appUrl)}/home"
                  style="
                    display:inline-block;
                    background:#1d4ed8; color:#ffffff;
@@ -196,7 +196,7 @@ export function buildReminderEmail(d: ReminderEmailData): {
                    padding:13px 32px; border-radius:10px;
                    letter-spacing:0.01em;
                  ">
-                Open My Study Plan →
+                Open Today →
               </a>
             </div>
           </td>

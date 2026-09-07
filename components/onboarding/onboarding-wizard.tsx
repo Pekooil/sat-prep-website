@@ -164,7 +164,7 @@ function Step5Account({ data, onChange, errors }: Step5AccountProps) {
                   onChange={e => set('parentalAck', e.target.checked)}
                   className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
                 />
-                <span>I am under 18 and have my parent or guardian's permission to use {LEGAL.appName}.</span>
+                <span>I am under 18 and have my parent or guardian&apos;s permission to use {LEGAL.appName}.</span>
               </label>
               {errors.parentalAck && <p className="text-xs text-red-600 dark:text-red-400">{errors.parentalAck}</p>}
             </>
@@ -455,7 +455,6 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
   if (needsConfirmation) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-12">
-        {/* Quiet accent glow backdrop */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <div className="absolute left-1/2 top-[-8rem] h-80 w-80 -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.08] blur-[120px]" />
         </div>
@@ -477,23 +476,18 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
 
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
-      {/* ── Left brand rail (desktop) — dark, step-aware ── */}
       <BrandRail currentStep={step} hideAccountStep={isAuthenticated} />
 
-      {/* ── Right wizard panel ── */}
       <div className="relative flex min-h-screen flex-1 flex-col bg-[var(--surface-base)] lg:h-screen lg:min-h-0">
-        {/* Quiet accent glow, top-right */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden lg:hidden" aria-hidden="true">
           <div className="absolute right-[-6rem] top-[-8rem] h-72 w-72 rounded-full bg-[var(--accent)] opacity-[0.06] blur-[120px]" />
         </div>
 
-        {/* Mobile header: logo + compact progress */}
         <div className="relative z-10 space-y-4 border-b border-[var(--border)] px-5 py-5 sm:px-8 lg:hidden">
           <SaturnPathLogo size="sm" asLink={false} />
           <WizardProgressCompact currentStep={step} hideAccountStep={isAuthenticated} />
         </div>
 
-        {/* Content */}
         <div className="relative z-10 flex-1 overflow-y-auto px-5 py-8 sm:px-8 lg:px-14 lg:py-12">
           <div className="mx-auto w-full max-w-xl">
             <div
@@ -546,7 +540,6 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
           </div>
         </div>
 
-        {/* Footer navigation */}
         <div className="relative z-10 border-t border-[var(--border)] bg-[var(--surface-raised)] px-5 py-4 sm:px-8 lg:px-14">
           <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-3">
             <Button
@@ -559,7 +552,6 @@ export function OnboardingWizard({ isAuthenticated = false }: OnboardingWizardPr
               Back
             </Button>
 
-            {/* Step counter (mobile) */}
             <span className="sp-numeric text-xs font-medium text-[var(--text-muted)] sm:hidden">
               {Math.min(step, totalSteps)} / {totalSteps}
             </span>

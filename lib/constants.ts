@@ -97,12 +97,10 @@ export const TEST_TYPES = [
 ] as const
 
 export const NAV_LINKS = [
-  { href: '/home', label: 'Home' },
-  { href: '/calendar', label: 'Calendar' },
-  { href: '/error-log', label: 'Error Log' },
-  { href: '/data', label: 'Data' },
-  { href: '/inventory', label: 'Inventory' },
-  { href: '/tutorial', label: 'Tutorial' },
+  { href: '/home', label: 'Today' },
+  { href: '/data', label: 'Progress' },
+  { href: '/error-log', label: 'Review' },
+  { href: '/settings', label: 'Profile' },
 ] as const
 
 export const SAT_SCORE_MIN = 400

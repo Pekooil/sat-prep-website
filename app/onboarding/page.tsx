@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
+import { V2Onboarding } from '@/components/v2/onboarding/v2-onboarding'
+import { getAuthProfile } from '@/lib/auth-profile'
 
 export default async function OnboardingPage() {
   const supabase = await createClient()
@@ -9,14 +10,10 @@ export default async function OnboardingPage() {
   // Proxy guarantees auth; this is a fallback safety net.
   if (!user) redirect('/signup')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('has_completed_onboarding, terms_accepted_at, birth_year')
-    .eq('id', user.id)
-    .single()
+  const { profile, source } = await getAuthProfile(supabase, user.id)
 
   // Age gate + consent must be on file before onboarding.
-  if (!profile?.terms_accepted_at || profile.birth_year == null) {
+  if (source === 'v1' && (!profile?.terms_accepted_at || profile.birth_year == null)) {
     redirect('/auth/google-consent')
   }
 
@@ -24,5 +21,5 @@ export default async function OnboardingPage() {
     redirect('/home')
   }
 
-  return <OnboardingWizard isAuthenticated={true} />
+  return <V2Onboarding />
 }

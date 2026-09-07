@@ -1,81 +1,96 @@
-import { CheckCircle2 } from 'lucide-react'
-import { SaturnPathLogo } from '@/components/layout/saturn-path-logo'
+import Link from 'next/link'
+import { ArrowRight, Check, Clock3, RotateCcw, Sparkles, TrendingUp } from 'lucide-react'
 
-const FEATURES = [
-  'Adaptive study plans built around your weak spots',
-  'College Board Question Bank filters for every session',
-  'Real-time score prediction as you practice',
-]
+import styles from './auth.module.css'
+
+const PROOF_POINTS = ['No trial', 'No credit card', 'No premium tier']
+
+function Brand() {
+  return (
+    <span className={styles.brand}>
+      <span className={styles.brandMark} aria-hidden="true"><span /></span>
+      <span>SaturnPath</span>
+    </span>
+  )
+}
+
+function ProgressPreview() {
+  return (
+    <div className={styles.previewStage} aria-hidden="true">
+      <span className={styles.orbitOne} />
+      <span className={styles.orbitTwo} />
+
+      <article className={styles.trajectoryCard}>
+        <header>
+          <span><Sparkles /> Live learning path</span>
+          <small>Today</small>
+        </header>
+        <div className={styles.trajectoryBody}>
+          <div className={styles.rings}>
+            <svg viewBox="0 0 240 240">
+              <circle className={styles.ringTrack} cx="120" cy="120" r="96" strokeWidth="18" />
+              <circle className={styles.ringViolet} cx="120" cy="120" r="96" strokeWidth="18" pathLength="100" strokeDasharray="100" strokeDashoffset="24" />
+              <circle className={styles.ringTrack} cx="120" cy="120" r="70" strokeWidth="16" />
+              <circle className={styles.ringMint} cx="120" cy="120" r="70" strokeWidth="16" pathLength="100" strokeDasharray="100" strokeDashoffset="36" />
+              <circle className={styles.ringTrack} cx="120" cy="120" r="47" strokeWidth="14" />
+              <circle className={styles.ringCoral} cx="120" cy="120" r="47" strokeWidth="14" pathLength="100" strokeDasharray="100" strokeDashoffset="49" />
+            </svg>
+            <span><small>Estimated</small><strong>1430</strong><em>+40 this month</em></span>
+          </div>
+          <div className={styles.pathSignals}>
+            <span><TrendingUp /><small>Score path</small><strong>On track</strong></span>
+            <span><RotateCcw /><small>Review ready</small><strong>3 skills</strong></span>
+            <span><Clock3 /><small>Next session</small><strong>22 min</strong></span>
+          </div>
+        </div>
+      </article>
+
+      <div className={styles.floatingSignal}>
+        <Sparkles />
+        <span><small>Path adapted</small><strong>Every answer changes what comes next</strong></span>
+      </div>
+    </div>
+  )
+}
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <main className={styles.authShell} id="main-content">
+      <div className={styles.auroraViolet} aria-hidden="true" />
+      <div className={styles.auroraMint} aria-hidden="true" />
 
-      {/* ── Left brand panel (desktop only) — confident near-black, single accent ── */}
-      <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12 xl:p-16 bg-[#0a0a0a] overflow-hidden select-none">
+      <section className={styles.storyPanel} aria-label="About SaturnPath">
+        <Link className={styles.desktopBrand} href="/" aria-label="SaturnPath home">
+          <Brand />
+        </Link>
 
-        {/* Hairline orbit texture + one restrained accent glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-white/[0.05]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[440px] h-[440px] rounded-full border border-white/[0.05]" />
-          <div className="absolute left-1/2 top-[38%] -translate-x-1/2 -translate-y-1/2 h-72 w-72 rounded-full bg-[var(--color-violet-500)] opacity-20 blur-[110px]" />
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col items-center text-center max-w-sm">
-          {/* Logo + wordmark */}
-          <div className="mb-10">
-            <SaturnPathLogo variant="dark" size="lg" asLink={false} pathColor="var(--color-violet-400)" />
+        <div className={styles.storyCopy}>
+          <span className={styles.productPill}><Sparkles /> Completely free adaptive SAT prep</span>
+          <h2>Every question<br /><em>should earn its place.</em></h2>
+          <p>Short, focused sessions that adapt after every answer—so your time goes toward the work most likely to move your score.</p>
+          <div className={styles.proofRow}>
+            {PROOF_POINTS.map((point) => <span key={point}><Check /> {point}</span>)}
           </div>
-
-          {/* Logo illustration — white with soft glow */}
-          <div className="mb-10">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo.svg"
-              alt=""
-              aria-hidden="true"
-              className="w-56 h-56 sm:w-64 sm:h-64 lg:w-72 lg:h-72 opacity-90"
-              style={{
-                filter:
-                  'brightness(0) invert(1) drop-shadow(0 0 14px rgba(255,255,255,0.45)) drop-shadow(0 0 38px rgba(196,132,252,0.28))',
-              }}
-            />
-          </div>
-
-          {/* Headline */}
-          <h1 className="text-3xl xl:text-4xl font-semibold text-white leading-tight tracking-[var(--tracking-tight)] mb-3">
-            Your personalized path to a higher SAT score.
-          </h1>
-          <p className="text-white/55 text-sm leading-relaxed mb-8">
-            Build a smart study plan in minutes. Track your progress. Reach your target.
-          </p>
-
-          {/* Feature list */}
-          <ul className="space-y-3 text-left w-full">
-            {FEATURES.map(f => (
-              <li key={f} className="flex items-start gap-2.5 text-sm text-white/75">
-                <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--color-violet-400)' }} />
-                {f}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* ── Right form panel ── */}
-      <div className="flex-1 lg:w-1/2 flex flex-col items-center justify-center min-h-screen bg-[var(--surface-base)] p-6 sm:p-10">
-
-        {/* Mobile-only compact header */}
-        <div className="lg:hidden mb-8 self-start">
-          <SaturnPathLogo size="sm" />
         </div>
 
-        <div className="w-full max-w-sm">
+        <ProgressPreview />
+      </section>
+
+      <section className={styles.formPanel} aria-label="Account access">
+        <Link className={styles.mobileBrand} href="/" aria-label="SaturnPath home">
+          <Brand />
+        </Link>
+
+        <div className={styles.formCard}>
+          <span className={styles.formGlow} aria-hidden="true" />
           {children}
         </div>
-      </div>
 
-    </div>
+        <p className={styles.independentNote}>
+          SAT® is a registered trademark of College Board. SaturnPath is an independent study aid and is not affiliated with or endorsed by College Board.
+        </p>
+        <Link className={styles.returnHome} href="/">Explore SaturnPath <ArrowRight /></Link>
+      </section>
+    </main>
   )
 }

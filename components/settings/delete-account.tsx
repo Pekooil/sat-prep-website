@@ -54,8 +54,8 @@ export function DeleteAccount() {
         Delete account
       </h2>
       <p className="mt-1 text-sm text-red-700/90 dark:text-red-400/90">
-        Permanently delete your account and all of your study data — your plan, calendar tasks,
-        sessions, error log, scores, and analytics. This cannot be undone.
+        Permanently delete your account and all of your SaturnPath data — practice sessions,
+        review history, scores, goals, and preferences. This cannot be undone.
       </p>
 
       <Dialog open={open} onOpenChange={o => { setOpen(o); if (!o) { setConfirmText(''); setPending(false) } }}>

@@ -15,7 +15,7 @@ const navItems = [
 export function V2Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   return (
-    <div className="min-h-screen bg-[#f7f7f8] text-zinc-950 dark:bg-[#101012] dark:text-zinc-50">
+    <div data-product-version="v2" className="min-h-screen bg-[#f7f7f8] text-zinc-950 dark:bg-[#101012] dark:text-zinc-50">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-zinc-200/80 bg-white/90 px-5 py-6 backdrop-blur md:flex dark:border-zinc-800 dark:bg-zinc-950/90">
         <Link href="/home" className="flex items-center gap-2 px-2 text-lg font-semibold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-xl bg-violet-600 text-white shadow-sm"><Sparkles className="h-4 w-4" /></span>SaturnPath</Link>
         <p className="mt-10 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Workspace</p>

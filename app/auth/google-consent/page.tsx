@@ -63,11 +63,12 @@ export default function GoogleConsentPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--surface-base)] p-6">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="flex justify-center">
-          <SaturnPathLogo size="sm" />
-        </div>
+    <main id="main-content" data-product-version="v2" className="min-h-screen bg-[#f7f7f8] px-5 py-8 text-zinc-950 dark:bg-[#101012] dark:text-zinc-50">
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md flex-col justify-center">
+        <div className="space-y-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8 dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="flex justify-center">
+            <SaturnPathLogo size="sm" asLink={false} />
+          </div>
 
         <div className="text-center">
           <h1 className="sp-display text-2xl">One more step</h1>
@@ -136,7 +137,7 @@ export default function GoogleConsentPage() {
           disabled={pending}
           className="h-11 w-full text-sm font-semibold"
         >
-          {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" />}
           {pending ? 'Saving…' : 'Continue'}
         </Button>
 
@@ -144,7 +145,8 @@ export default function GoogleConsentPage() {
           Wrong account?{' '}
           <Link href="/login" className="underline hover:text-[var(--text-heading)]">Sign in with a different account</Link>
         </p>
+        </div>
       </div>
-    </div>
+    </main>
   )
 }

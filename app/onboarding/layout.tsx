@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[var(--surface-base)] text-[var(--text-body)]">
+    <div data-product-version="v2" className="min-h-screen bg-[var(--surface-base)] text-[var(--text-body)]">
       {children}
     </div>
   )

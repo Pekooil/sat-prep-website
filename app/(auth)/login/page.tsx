@@ -2,12 +2,11 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { ArrowLeft, Loader2, Sparkles } from 'lucide-react'
 import { signIn } from '@/actions/auth'
 import { createClient } from '@/lib/supabase/client'
+import { safeAuthPath } from '@/lib/auth/redirect-path'
+import styles from '../auth.module.css'
 
 function GoogleIcon() {
   return (
@@ -31,6 +30,7 @@ function isRedirectError(err: unknown): boolean {
 }
 
 export default function LoginPage() {
+  const [nextPath,      setNextPath]      = React.useState('/home')
   const [pending,       setPending]       = React.useState(false)
   const [googlePending, setGooglePending] = React.useState(false)
   const [error,         setError]         = React.useState<string | null>(null)
@@ -40,9 +40,11 @@ export default function LoginPage() {
     setGooglePending(true)
     setError(null)
     const supabase = createClient()
+    const callbackUrl = new URL('/auth/callback', window.location.origin)
+    callbackUrl.searchParams.set('next', nextPath)
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: callbackUrl.toString() },
     })
     if (oauthError) {
       setError(oauthError.message)
@@ -56,6 +58,7 @@ export default function LoginPage() {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     /* eslint-disable react-hooks/set-state-in-effect -- one-time URL flag read on mount */
+    setNextPath(safeAuthPath(params.get('next')))
     if (params.get('confirmed') === '1') {
       setNotice('Your email is confirmed. Sign in to continue.')
     } else if (params.get('deleted') === '1') {
@@ -86,33 +89,31 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Back link */}
+    <div className={styles.page}>
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-heading)] transition-colors"
+        className={styles.backLink}
       >
-        <ArrowLeft className="h-3.5 w-3.5" />
+        <ArrowLeft aria-hidden="true" />
         Back to home
       </Link>
 
-      {/* Header */}
-      <div>
-        <h1 className="sp-display text-2xl">Welcome back</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1">Sign in to your SaturnPath account</p>
+      <div className={styles.header}>
+        <span className={styles.eyebrow}><Sparkles /> Your path continues</span>
+        <h1 className={styles.title}>Welcome back.</h1>
+        <p className={styles.subtitle}>Sign in to pick up your next adaptive session, review queue, and score trajectory.</p>
       </div>
 
       {notice && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800 dark:bg-emerald-900/20">
-          <p className="text-sm text-emerald-700 dark:text-emerald-300">{notice}</p>
-        </div>
+        <p className={styles.notice} role="status">{notice}</p>
       )}
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
-          <Input
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <input type="hidden" name="next" value={nextPath} />
+        <div className={styles.field}>
+          <label className={styles.fieldLabel} htmlFor="email">Email</label>
+          <input
+            className={styles.input}
             id="email"
             name="email"
             type="email"
@@ -120,11 +121,13 @@ export default function LoginPage() {
             required
             autoComplete="email"
             disabled={pending}
+            aria-describedby={error ? 'login-error' : undefined}
           />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
-          <Input
+        <div className={styles.field}>
+          <label className={styles.fieldLabel} htmlFor="password">Password</label>
+          <input
+            className={styles.input}
             id="password"
             name="password"
             type="password"
@@ -132,60 +135,44 @@ export default function LoginPage() {
             required
             autoComplete="current-password"
             disabled={pending}
+            aria-describedby={error ? 'login-error' : undefined}
           />
         </div>
 
-        {error && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3">
-            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
-          </div>
+      {error && (
+          <p className={styles.error} id="login-error" role="alert">{error}</p>
         )}
 
-        <Button type="submit" className="w-full h-11 text-sm font-semibold" disabled={pending}>
-          {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <button className={`${styles.button} ${styles.primaryButton}`} type="submit" disabled={pending}>
+          {pending && <Loader2 className={styles.spin} aria-hidden="true" />}
           {pending ? 'Signing in…' : 'Sign in'}
-        </Button>
+        </button>
       </form>
 
-      {/* Divider */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-[var(--border)]" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-[var(--surface-base)] px-3 text-[var(--text-muted)]">or</span>
-        </div>
-      </div>
+      <div className={styles.divider}><span>or continue with</span></div>
 
-      {/* Google sign-in */}
-      <Button
+      <button
         type="button"
-        variant="outline"
         onClick={handleGoogleSignIn}
         disabled={pending || googlePending}
-        className="w-full h-11 text-sm font-semibold gap-2"
+        className={`${styles.button} ${styles.secondaryButton}`}
       >
-        {googlePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
+        {googlePending ? <Loader2 className={styles.spin} aria-hidden="true" /> : <GoogleIcon />}
         {googlePending ? 'Redirecting…' : 'Continue with Google'}
-      </Button>
+      </button>
 
-      <p className="text-sm text-center text-[var(--text-muted)]">
+      <p className={styles.switchText}>
         Don&apos;t have an account?{' '}
-        <Link href="/signup" className="font-semibold text-[var(--accent)] hover:underline">
+        <Link href={`/signup?next=${encodeURIComponent(nextPath)}`} className={styles.inlineLink}>
           Create one free
         </Link>
       </p>
 
-      <p className="text-center text-xs text-[var(--text-muted)]">
+      <p className={styles.finePrint}>
         By continuing you confirm you are at least 13 years old and agree to our{' '}
-        <Link href="/terms" className="underline hover:text-[var(--text-heading)]">Terms of Service</Link>
+        <Link href="/terms" className={styles.inlineLink}>Terms of Service</Link>
         {' '}and{' '}
-        <Link href="/privacy" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>.
-      </p>
-
-      <p className="text-center text-[11px] leading-relaxed text-[var(--text-muted)]">
-        SAT is a trademark of the College Board, which is not affiliated with and does not
-        endorse SaturnPath. SaturnPath is an independent study aid.
+        <Link href="/privacy" className={styles.inlineLink}>Privacy Policy</Link>.
       </p>
     </div>
   )

@@ -10,30 +10,30 @@ import { buildConfirmationEmail } from '@/lib/email/confirmation-template'
 import { validateAgeConsent } from '@/lib/legal/config'
 import { verifyTurnstile } from '@/lib/security/turnstile'
 import { rateLimit } from '@/lib/security/rate-limit'
+import { formatSignInError } from '@/lib/auth-errors'
+import { getAuthProfile, isMissingProfileTable } from '@/lib/auth-profile'
+import { safeAuthPath } from '@/lib/auth/redirect-path'
 
 export async function signIn(formData: FormData) {
   'use server'
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const next = safeAuthPath(formData.get('next'))
 
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
-    return { error: error.message }
+    return { error: formatSignInError(error) }
   }
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('has_completed_onboarding')
-    .eq('id', data.user.id)
-    .single()
+  const { profile } = await getAuthProfile(supabase, data.user.id)
 
   if (!profile?.has_completed_onboarding) {
     redirect('/onboarding')
   }
 
-  redirect('/home')
+  redirect(next)
 }
 
 export async function signUp(formData: FormData) {
@@ -83,40 +83,69 @@ export async function signUp(formData: FormData) {
   if (linkError) return { error: linkError.message }
   if (!linkData.user) return { error: 'Account creation failed. Please try again.' }
 
-  // Profile row — user is unconfirmed, so RLS blocks writes; use admin client.
-  const { error: profileErr } = await admin.from('users').upsert(
-    {
-      id: linkData.user.id,
-      email,
-      full_name: fullName,
-      birth_year: birthYear,
-      terms_accepted_at: new Date().toISOString(),
-      parental_ack: parentalAck,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'id' },
-  )
-  if (profileErr) return { error: profileErr.message }
-
-  // Seed default notification preferences so the daily cron picks this user up
-  // immediately. All channels on, Eastern timezone. Non-fatal if it fails.
+  // V2 staging intentionally omits the V1 public.users table. Persist the
+  // account in the V2 projection when it exists; production V1 falls through
+  // to the legacy profile and notification rows.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (admin.from('notification_preferences') as any).upsert(
-    {
-      user_id: linkData.user.id,
-      email_reminders_enabled:   true,
-      inapp_reminders_enabled:   true,
-      daily_assignment_reminder: true,
-      overdue_reminder:          true,
-      practice_test_reminder:    true,
-      timezone:                  'America/New_York',
-    },
-    { onConflict: 'user_id' },
-  )
+  const v2Probe = await (admin as any)
+    .from('v2_profiles')
+    .select('user_id')
+    .eq('user_id', linkData.user.id)
+    .maybeSingle()
+  if (!v2Probe.error) {
+    const now = new Date().toISOString()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: profileErr } = await (admin as any).from('v2_profiles').upsert(
+      {
+        user_id: linkData.user.id,
+        full_name: fullName,
+        terms_accepted_at: now,
+        terms_version: '2026-06-13',
+        privacy_accepted_at: now,
+        privacy_version: '2026-06-13',
+      },
+      { onConflict: 'user_id' },
+    )
+    if (profileErr) return { error: profileErr.message }
+  } else {
+    if (!isMissingProfileTable(v2Probe.error)) return { error: v2Probe.error.message }
+
+    // Profile row — user is unconfirmed, so RLS blocks writes; use admin client.
+    const { error: profileErr } = await admin.from('users').upsert(
+      {
+        id: linkData.user.id,
+        email,
+        full_name: fullName,
+        birth_year: birthYear,
+        terms_accepted_at: new Date().toISOString(),
+        parental_ack: parentalAck,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' },
+    )
+    if (profileErr) return { error: profileErr.message }
+
+    // Seed default notification preferences so the daily cron picks this user up
+    // immediately. All channels on, Eastern timezone. Non-fatal if it fails.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (admin.from('notification_preferences') as any).upsert(
+      {
+        user_id: linkData.user.id,
+        email_reminders_enabled:   true,
+        inapp_reminders_enabled:   true,
+        daily_assignment_reminder: true,
+        overdue_reminder:          true,
+        practice_test_reminder:    true,
+        timezone:                  'America/New_York',
+      },
+      { onConflict: 'user_id' },
+    )
+  }
 
   // Send branded confirmation email via Resend.
   const resendKey = process.env.RESEND_API_KEY
   const fromEmail = process.env.RESEND_FROM_EMAIL ?? 'SaturnPath <onboarding@resend.dev>'
+  let confirmationSent = false
   if (resendKey && linkData.properties?.action_link) {
     try {
       const resend = new Resend(resendKey)
@@ -126,13 +155,22 @@ export async function signUp(formData: FormData) {
         confirmUrl: linkData.properties.action_link,
         appUrl,
       })
-      await resend.emails.send({ from: fromEmail, to: email, subject, html })
+      const { error: sendError } = await resend.emails.send({ from: fromEmail, to: email, subject, html })
+      if (sendError) throw new Error(sendError.message)
+      confirmationSent = true
     } catch (emailErr) {
       console.error('[signUp] Resend error:', emailErr)
-      // Non-fatal — account is created; user can request a new link.
+      // The account is already created; return an actionable error below.
     }
   } else if (!resendKey) {
     console.warn('[signUp] RESEND_API_KEY not set — confirmation email not sent.')
+  }
+
+  if (!confirmationSent) {
+    return {
+      error:
+        'Account created, but the confirmation email could not be sent. Ask an administrator to confirm this account in Supabase → Authentication → Users, or configure RESEND_API_KEY and try again.',
+    }
   }
 
   return { needsConfirmation: true }

@@ -258,7 +258,7 @@ export function LandingPage() {
   const [phoneView, setPhoneView] = React.useState<PhoneView>('today')
 
   return (
-    <main id="main-content" className={styles.landing}>
+    <main id="main-content" data-product-version="v2" className={styles.landing}>
       <div className={styles.auroraOne} /><div className={styles.auroraTwo} />
       <header className={styles.siteHeader}>
         <Link href="/" aria-label="SaturnPath home"><Brand /></Link>

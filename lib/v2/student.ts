@@ -82,7 +82,15 @@ export async function ensureV2Profile(userId: string, client = createV2AdminClie
     .select('full_name, current_score, target_score, test_date, has_completed_onboarding')
     .eq('id', userId)
     .maybeSingle()
-  if (legacy.error) databaseFailure(legacy.error, 'V1 profile import failed')
+  // Isolated V2 staging deliberately has no legacy public.users table. A new
+  // staging auth user should receive an empty V2 profile instead of failing
+  // while we attempt a best-effort V1 import.
+  const legacyTableMissing = legacy.error && (
+    legacy.error.code === '42P01' ||
+    legacy.error.code === 'PGRST205' ||
+    /schema cache|relation .* does not exist/i.test(legacy.error.message ?? '')
+  )
+  if (legacy.error && !legacyTableMissing) databaseFailure(legacy.error, 'V1 profile import failed')
 
   const inserted = await client
     .from('v2_profiles')
@@ -228,6 +236,14 @@ export async function updateProfile(userId: string, values: Record<string, unkno
   if (typeof values.testDate === 'string') columns.test_date = values.testDate
   if (typeof values.scratchAnalysisEnabled === 'boolean') columns.scratch_analysis_enabled = values.scratchAnalysisEnabled
   if (typeof values.timingAccommodationMultiplier === 'number') columns.timing_accommodation_multiplier = values.timingAccommodationMultiplier
+  const completesOnboarding =
+    typeof (columns.full_name ?? profile.full_name) === 'string' &&
+    Boolean(columns.full_name ?? profile.full_name) &&
+    typeof (columns.current_score ?? profile.current_score) === 'number' &&
+    typeof (columns.target_score ?? profile.target_score) === 'number' &&
+    typeof (columns.test_date ?? profile.test_date) === 'string' &&
+    Boolean(columns.test_date ?? profile.test_date)
+  if (completesOnboarding) columns.onboarding_complete = true
   if (Object.keys(columns).length === 0) throw ApiError.validation('Provide at least one supported profile field')
   const result = await client.from('v2_profiles').update(columns).eq('user_id', userId).select('user_id, full_name, current_score, target_score, test_date, onboarding_complete, scratch_analysis_enabled, timing_accommodation_multiplier').single()
   if (result.error) databaseFailure(result.error, 'Profile update failed')

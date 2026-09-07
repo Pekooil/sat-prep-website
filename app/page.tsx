@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { LandingPage } from '@/components/marketing/landing-page'
+import { getAuthProfile } from '@/lib/auth-profile'
+import { V2_STAGING_HOST } from '@/lib/app-url'
+import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
   title: 'Free Adaptive SAT Prep',
@@ -34,11 +37,11 @@ export default async function RootPage({
 
   if (user) {
     // New users who haven't completed onboarding go directly to the wizard.
-    const { data: profile } = await supabase
-      .from('users')
-      .select('has_completed_onboarding, terms_accepted_at, birth_year')
-      .eq('id', user.id)
-      .single()
+    const { profile, source } = await getAuthProfile(supabase, user.id)
+
+    if (source === 'v2') {
+      redirect(profile?.has_completed_onboarding ? '/home' : '/onboarding')
+    }
 
     // Age gate + consent must be on file before entering the app.
     if (!profile?.terms_accepted_at || profile.birth_year == null) {
@@ -46,6 +49,12 @@ export default async function RootPage({
     }
     redirect(profile?.has_completed_onboarding ? '/home' : '/onboarding')
   }
+
+  // The V2 staging hostname is an app environment, not the public marketing
+  // site. Send logged-out visitors to the real auth entry point instead of the
+  // retired front-end-only design preview route.
+  const host = (await headers()).get('host')?.split(':')[0]
+  if (host === V2_STAGING_HOST) redirect('/login')
 
   return <LandingPage />
 }

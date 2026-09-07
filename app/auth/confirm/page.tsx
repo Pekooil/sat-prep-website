@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
 
@@ -58,21 +59,21 @@ export default function ConfirmPage() {
 
   if (errorMessage) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-6">
-        <div className="max-w-sm space-y-3 text-center">
+      <main id="main-content" data-product-version="v2" className="flex min-h-screen items-center justify-center bg-[#f7f7f8] px-6 dark:bg-[#101012]">
+        <div className="max-w-sm space-y-3 rounded-2xl border border-zinc-200 bg-white p-8 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
           <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
-          <a href="/login" className="text-sm font-medium text-violet-600 hover:underline">
+          <Link href="/login" className="text-sm font-medium text-violet-600 hover:underline">
             Back to sign in
-          </a>
+          </Link>
         </div>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3">
-      <Loader2 className="h-6 w-6 animate-spin text-violet-600" />
+    <main id="main-content" data-product-version="v2" className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#f7f7f8] dark:bg-[#101012]">
+      <Loader2 className="h-6 w-6 animate-spin text-violet-600 motion-reduce:animate-none" />
       <p className="text-sm text-[var(--text-muted)]">Confirming your email…</p>
-    </div>
+    </main>
   )
 }

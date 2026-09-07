@@ -155,7 +155,7 @@ export async function sendTestReminder(): Promise<{
         today_.slice(0, 3).map((t) => t.title).join(', ') +
         (today_.length > 3 ? ` +${today_.length - 3} more` : ''),
       type: 'reminder',
-      link: '/calendar',
+      link: '/home',
       is_read: false,
     })
   }
@@ -164,9 +164,9 @@ export async function sendTestReminder(): Promise<{
     notifications.push({
       user_id: user.id,
       title: `⚠️ ${overdue_.length} overdue task${overdue_.length > 1 ? 's' : ''}`,
-      message: "You have incomplete tasks from previous days. Open the calendar to catch up.",
+      message: 'Your next recommended session is ready on Today.',
       type: 'reminder',
-      link: '/calendar',
+      link: '/home',
       is_read: false,
     })
   }
@@ -181,7 +181,7 @@ export async function sendTestReminder(): Promise<{
       title: '📝 Practice test coming up',
       message: `${next.title} · ${dateStr}`,
       type: 'reminder',
-      link: '/calendar',
+      link: '/home',
       is_read: false,
     })
   }

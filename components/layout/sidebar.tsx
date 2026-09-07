@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Home, Calendar, ClipboardList, BarChart3, Package, GraduationCap,
+  Home, ClipboardList, BarChart3, CircleUserRound,
   Settings, LogOut, type LucideIcon,
 } from 'lucide-react'
 import { SaturnPathLogo } from './saturn-path-logo'
@@ -18,11 +18,9 @@ import type { User as UserType } from '@/types'
 
 const NAV_ICONS: Record<string, LucideIcon> = {
   '/home':      Home,
-  '/calendar':  Calendar,
   '/error-log': ClipboardList,
   '/data':      BarChart3,
-  '/inventory': Package,
-  '/tutorial':  GraduationCap,
+  '/settings':  CircleUserRound,
 }
 
 interface SidebarProps {

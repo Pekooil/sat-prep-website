@@ -512,7 +512,12 @@
         "additionalProperties": false,
         "properties": {
           "dailyRecommendationId": { "type": ["string", "null"], "format": "uuid" },
-          "resumeIfAvailable": { "type": "boolean", "default": true }
+          "resumeIfAvailable": { "type": "boolean", "default": true },
+          "includeFirstQuestion": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, the response includes firstQuestion so clients can open practice without a second request."
+          }
         }
       },
       "PracticeSession": {
@@ -526,7 +531,8 @@
           "actualMinutes": { "type": "integer", "minimum": 0 },
           "currentMicroSet": { "type": "integer", "minimum": 1 },
           "startedAt": { "type": "string", "format": "date-time" },
-          "endedAt": { "type": ["string", "null"], "format": "date-time" }
+          "endedAt": { "type": ["string", "null"], "format": "date-time" },
+          "firstQuestion": { "$ref": "#/components/schemas/NextQuestion" }
         }
       },
       "QuestionChoice": {

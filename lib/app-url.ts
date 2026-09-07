@@ -4,6 +4,7 @@
  * (e.g. sat-prep-website-gold.vercel.app).
  */
 export const CANONICAL_APP_URL = 'https://saturnpath.app'
+export const V2_STAGING_HOST = 'saturnpath-v2-staging.vercel.app'
 
 /**
  * Absolute origin used to build email-confirmation and OAuth redirect links.

@@ -227,7 +227,7 @@ async function runDailyReminders(request: Request): Promise<NextResponse> {
           message: todayTasks.slice(0, 3).map(t => t.title).join(', ') +
                    (todayTasks.length > 3 ? ` +${todayTasks.length - 3} more` : ''),
           type:    'reminder',
-          link:    '/calendar',
+          link:    '/home',
           is_read: false,
         })
       }
@@ -236,9 +236,9 @@ async function runDailyReminders(request: Request): Promise<NextResponse> {
         notifs.push({
           user_id: u.id,
           title:   `⚠️ ${overdueTasks.length} overdue task${overdueTasks.length > 1 ? 's' : ''}`,
-          message: 'You have incomplete tasks from previous days. Open the calendar to catch up.',
+          message: 'Your next recommended session is ready on Today.',
           type:    'reminder',
-          link:    '/calendar',
+          link:    '/home',
           is_read: false,
         })
       }
@@ -253,7 +253,7 @@ async function runDailyReminders(request: Request): Promise<NextResponse> {
           title:   '📝 Practice test coming up',
           message: `${next.title} · ${dateStr}`,
           type:    'reminder',
-          link:    '/calendar',
+          link:    '/home',
           is_read: false,
         })
       }

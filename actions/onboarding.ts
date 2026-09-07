@@ -10,6 +10,7 @@ import { runAdaptiveReplanner } from '@/lib/adaptive-replanner'
 import { StudyPlanEngine } from '@/lib/study-plan-engine'
 import { validateAgeConsent } from '@/lib/legal/config'
 import { buildConfirmationEmail } from '@/lib/email/confirmation-template'
+import { isMissingProfileTable } from '@/lib/auth-profile'
 import type { TopicPerformance } from '@/lib/study-plan-engine/types'
 import type {
   OnboardingStep1Data,
@@ -42,6 +43,27 @@ export async function getOnboardingRecommendations(
 
 // ─── Save Onboarding Data ─────────────────────────────────────────────────────
 
+async function saveV2Onboarding(
+  userId: string,
+  fullName: string | null,
+  step1: OnboardingStep1Data,
+): Promise<{ error?: string }> {
+  const admin = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (admin as any).from('v2_profiles').upsert(
+    {
+      user_id: userId,
+      full_name: fullName,
+      current_score: step1.currentScore,
+      target_score: step1.targetScore,
+      test_date: step1.testDate,
+      onboarding_complete: true,
+    },
+    { onConflict: 'user_id' },
+  )
+  return error ? { error: error.message } : {}
+}
+
 export async function saveOnboarding(
   step1: OnboardingStep1Data,
   step2: OnboardingStep2Data,
@@ -51,6 +73,26 @@ export async function saveOnboarding(
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Unauthorized' }
+
+  // V2 staging deliberately does not contain the legacy public.users table.
+  // Detect the V2 projection first and persist only the fields owned by that
+  // schema; production V1 falls through to the existing planner path below.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const v2Probe = await (supabase as any)
+    .from('v2_profiles')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!v2Probe.error) {
+    const result = await saveV2Onboarding(
+      user.id,
+      (user.user_metadata?.full_name as string | undefined) ?? (user.user_metadata?.name as string | undefined) ?? null,
+      step1,
+    )
+    revalidatePath('/home')
+    return result
+  }
+  if (!isMissingProfileTable(v2Probe.error)) return { error: v2Probe.error.message }
 
   const hoursPerWeek = Math.round((step1.dailyStudyMinutes * 7) / 60)
   const today = new Date().toISOString().split('T')[0]
@@ -246,6 +288,64 @@ export async function signUpAndSaveOnboarding(
   if (signUpError) return { error: signUpError.message }
   if (!linkData.user) return { error: 'Account creation failed. Please try again.' }
 
+  // V2 staging deliberately has no V1 users/question_sessions/calendar tables.
+  // Save the completed onboarding directly to the V2 profile projection and
+  // skip the legacy planner writes when that projection exists.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const v2Probe = await (admin as any)
+    .from('v2_profiles')
+    .select('user_id')
+    .eq('user_id', linkData.user.id)
+    .maybeSingle()
+  if (!v2Probe.error) {
+    const now = new Date().toISOString()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: profileErr } = await (admin as any).from('v2_profiles').upsert(
+      {
+        user_id: linkData.user.id,
+        full_name: credentials.fullName,
+        current_score: step1.currentScore,
+        target_score: step1.targetScore,
+        test_date: step1.testDate,
+        onboarding_complete: true,
+        terms_accepted_at: now,
+        terms_version: '2026-06-13',
+        privacy_accepted_at: now,
+        privacy_version: '2026-06-13',
+      },
+      { onConflict: 'user_id' },
+    )
+    if (profileErr) return { error: profileErr.message }
+
+    const resendKey = process.env.RESEND_API_KEY
+    const fromEmail = process.env.RESEND_FROM_EMAIL ?? 'SaturnPath <onboarding@resend.dev>'
+    let confirmationSent = false
+    if (resendKey && linkData.properties?.action_link) {
+      try {
+        const resend = new Resend(resendKey)
+        const firstName = credentials.fullName.split(' ')[0] || 'there'
+        const { subject, html } = buildConfirmationEmail({
+          firstName,
+          confirmUrl: linkData.properties.action_link,
+          appUrl,
+        })
+        const { error: sendError } = await resend.emails.send({ from: fromEmail, to: credentials.email, subject, html })
+        if (sendError) throw new Error(sendError.message)
+        confirmationSent = true
+      } catch (emailErr) {
+        console.error('[signUpAndSaveOnboarding] V2 Resend error:', emailErr)
+      }
+    }
+    if (!confirmationSent) {
+      return {
+        error:
+          'Account created, but the confirmation email could not be sent. Ask an administrator to confirm this account in Supabase → Authentication → Users, or configure RESEND_API_KEY and try again.',
+      }
+    }
+    return { needsConfirmation: true }
+  }
+  if (!isMissingProfileTable(v2Probe.error)) return { error: v2Probe.error.message }
+
   // User is unconfirmed (no session). Use admin client for all writes so RLS
   // doesn't block them. Once the user confirms their email and signs in, their
   // plan is already in the DB and they land straight on the dashboard.
@@ -384,6 +484,7 @@ export async function signUpAndSaveOnboarding(
   // Send branded confirmation email via Resend.
   const resendKey = process.env.RESEND_API_KEY
   const fromEmail = process.env.RESEND_FROM_EMAIL ?? 'SaturnPath <onboarding@resend.dev>'
+  let confirmationSent = false
   if (resendKey && linkData.properties?.action_link) {
     try {
       const resend = new Resend(resendKey)
@@ -393,13 +494,22 @@ export async function signUpAndSaveOnboarding(
         confirmUrl: linkData.properties.action_link,
         appUrl,
       })
-      await resend.emails.send({ from: fromEmail, to: credentials.email, subject, html })
+      const { error: sendError } = await resend.emails.send({ from: fromEmail, to: credentials.email, subject, html })
+      if (sendError) throw new Error(sendError.message)
+      confirmationSent = true
     } catch (emailErr) {
       console.error('[signUpAndSaveOnboarding] Resend error:', emailErr)
-      // Non-fatal — plan is saved; user can request a new confirmation email.
+      // The account and plan are already saved; return an actionable error below.
     }
   } else if (!resendKey) {
     console.warn('[signUpAndSaveOnboarding] RESEND_API_KEY not set — confirmation email not sent.')
+  }
+
+  if (!confirmationSent) {
+    return {
+      error:
+        'Account created, but the confirmation email could not be sent. Ask an administrator to confirm this account in Supabase → Authentication → Users, or configure RESEND_API_KEY and try again.',
+    }
   }
 
   // Plan is already saved. Once the user confirms and signs in they land

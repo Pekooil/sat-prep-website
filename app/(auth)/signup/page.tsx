@@ -2,14 +2,13 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { Loader2, CheckCircle2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { ArrowLeft, CheckCircle2, Loader2, Sparkles } from 'lucide-react'
 import { signUp } from '@/actions/auth'
 import { createClient } from '@/lib/supabase/client'
 import { LEGAL, MIN_BIRTH_YEAR, ageFromBirthYear, validateAgeConsent } from '@/lib/legal/config'
 import { TurnstileWidget } from '@/components/security/turnstile-widget'
+import { safeAuthPath } from '@/lib/auth/redirect-path'
+import styles from '../auth.module.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const BIRTH_YEARS = Array.from({ length: CURRENT_YEAR - MIN_BIRTH_YEAR + 1 }, (_, i) => CURRENT_YEAR - i)
@@ -37,6 +36,7 @@ function isRedirectError(err: unknown): boolean {
 }
 
 export default function SignupPage() {
+  const [nextPath,      setNextPath]      = React.useState('/home')
   const [pending,       setPending]       = React.useState(false)
   const [googlePending, setGooglePending] = React.useState(false)
   const [error,         setError]         = React.useState<string | null>(null)
@@ -50,13 +50,21 @@ export default function SignupPage() {
     ? ageFromBirthYear(Number(birthYear)) < LEGAL.parentalConsentBelowAge
     : false
 
+  React.useEffect(() => {
+    // Keep V1 as the default while preserving an explicitly requested V2 path.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time URL read on mount
+    setNextPath(safeAuthPath(new URLSearchParams(window.location.search).get('next')))
+  }, [])
+
   async function handleGoogleSignUp() {
     setGooglePending(true)
     setError(null)
     const supabase = createClient()
+    const callbackUrl = new URL('/auth/callback', window.location.origin)
+    callbackUrl.searchParams.set('next', nextPath)
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: callbackUrl.toString() },
     })
     if (oauthError) {
       setError(oauthError.message)
@@ -90,6 +98,7 @@ export default function SignupPage() {
     fd.set('agreed_to_terms', agreedToTerms ? 'on' : '')
     fd.set('parental_ack', parentalAck ? 'on' : '')
     fd.set('cf_turnstile_token', captchaToken)
+    fd.set('next', nextPath)
     setPending(true)
     setError(null)
     try {
@@ -111,17 +120,15 @@ export default function SignupPage() {
 
   if (confirmed) {
     return (
-      <div className="space-y-3 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-soft-foreground)]">
-          <CheckCircle2 className="h-6 w-6" strokeWidth={1.75} />
-        </div>
-        <h2 className="sp-display text-xl">Check your email</h2>
-        <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+      <div className={styles.confirmation}>
+        <span className={styles.confirmationIcon}><CheckCircle2 strokeWidth={1.75} /></span>
+        <h2>Check your email</h2>
+        <p>
           We sent a confirmation link to your email address. Click it to activate your account, then sign in.
         </p>
         <Link
-          href="/login"
-          className="mt-2 inline-block text-sm font-semibold text-[var(--accent)] hover:underline"
+          href={`/login?next=${encodeURIComponent(nextPath)}`}
+          className={styles.inlineLink}
         >
           Back to sign in
         </Link>
@@ -130,27 +137,23 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <Link
-          href="/"
-          className="mb-3 inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-heading)] transition-colors"
-        >
-          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M10 12L6 8l4-4" />
-          </svg>
-          Back to home
-        </Link>
-        <h1 className="sp-display text-2xl">Create your account</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">Start your personalized SAT prep journey today</p>
+    <div className={`${styles.page} ${styles.signupPage}`}>
+      <Link href="/" className={styles.backLink}>
+        <ArrowLeft aria-hidden="true" />
+        Back to home
+      </Link>
+
+      <div className={styles.header}>
+        <span className={styles.eyebrow}><Sparkles /> Start free</span>
+        <h1 className={styles.title}>Build your path.</h1>
+        <p className={styles.subtitle}>Create one account for your adaptive plan, focused practice, automatic review, and progress evidence.</p>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="full_name">Full Name</Label>
-          <Input
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.field}>
+          <label className={styles.fieldLabel} htmlFor="full_name">Full name</label>
+          <input
+            className={styles.input}
             id="full_name"
             name="full_name"
             type="text"
@@ -158,11 +161,13 @@ export default function SignupPage() {
             required
             autoComplete="name"
             disabled={pending}
+            aria-describedby={error ? 'signup-error' : undefined}
           />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
-          <Input
+        <div className={styles.field}>
+          <label className={styles.fieldLabel} htmlFor="email">Email</label>
+          <input
+            className={styles.input}
             id="email"
             name="email"
             type="email"
@@ -170,43 +175,52 @@ export default function SignupPage() {
             required
             autoComplete="email"
             disabled={pending}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="At least 8 characters"
-            required
-            minLength={8}
-            autoComplete="new-password"
-            disabled={pending}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="confirm_password">Confirm Password</Label>
-          <Input
-            id="confirm_password"
-            name="confirm_password"
-            type="password"
-            placeholder="Repeat password"
-            required
-            autoComplete="new-password"
-            disabled={pending}
+            aria-describedby={error ? 'signup-error' : undefined}
           />
         </div>
 
-        {/* Age gate */}
-        <div className="space-y-1.5">
-          <Label htmlFor="birth_year">Birth year</Label>
+        <div className={styles.twoColumns}>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel} htmlFor="password">Password</label>
+            <input
+              className={styles.input}
+              id="password"
+              name="password"
+              type="password"
+              placeholder="8+ characters"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              disabled={pending}
+              aria-describedby={error ? 'signup-error' : undefined}
+            />
+          </div>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel} htmlFor="confirm_password">Confirm password</label>
+            <input
+              className={styles.input}
+              id="confirm_password"
+              name="confirm_password"
+              type="password"
+              placeholder="Repeat password"
+              required
+              autoComplete="new-password"
+              disabled={pending}
+              aria-describedby={error ? 'signup-error' : undefined}
+            />
+          </div>
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.fieldLabel} htmlFor="birth_year">Birth year</label>
           <select
+            className={styles.select}
             id="birth_year"
             value={birthYear}
             onChange={e => setBirthYear(e.target.value)}
             disabled={pending}
-            className="flex h-9 w-full rounded-md border border-[var(--border)] bg-[var(--surface-base)] px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+            required
+            aria-describedby={error ? 'signup-error' : undefined}
           >
             <option value="" disabled>Select your birth year</option>
             {BIRTH_YEARS.map(y => (
@@ -215,32 +229,31 @@ export default function SignupPage() {
           </select>
         </div>
 
-        {/* Consent */}
-        <div className="space-y-2">
-          <label className="flex items-start gap-2.5 text-xs leading-relaxed text-[var(--text-muted)]">
+        <div className={styles.checkboxStack}>
+          <label className={styles.checkboxLabel}>
             <input
+              className={styles.checkbox}
               type="checkbox"
               checked={agreedToTerms}
               onChange={e => setAgreedToTerms(e.target.checked)}
               disabled={pending}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
             />
             <span>
               I agree to the{' '}
-              <Link href="/terms" target="_blank" className="underline hover:text-[var(--text-heading)]">Terms of Service</Link>
+              <Link href="/terms" target="_blank" className={styles.inlineLink}>Terms of Service</Link>
               {' '}and{' '}
-              <Link href="/privacy" target="_blank" className="underline hover:text-[var(--text-heading)]">Privacy Policy</Link>.
+              <Link href="/privacy" target="_blank" className={styles.inlineLink}>Privacy Policy</Link>.
             </span>
           </label>
 
           {needsParental && (
-            <label className="flex items-start gap-2.5 text-xs leading-relaxed text-[var(--text-muted)]">
+            <label className={styles.checkboxLabel}>
               <input
+                className={styles.checkbox}
                 type="checkbox"
                 checked={parentalAck}
                 onChange={e => setParentalAck(e.target.checked)}
                 disabled={pending}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
               />
               <span>I am under 18 and have my parent or guardian&apos;s permission to use {LEGAL.appName}.</span>
             </label>
@@ -250,48 +263,32 @@ export default function SignupPage() {
         <TurnstileWidget onVerify={setCaptchaToken} />
 
         {error && (
-          <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/10 px-4 py-3">
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-          </div>
+          <p className={styles.error} id="signup-error" role="alert">{error}</p>
         )}
 
-        <Button type="submit" className="h-11 w-full text-sm font-semibold" disabled={pending}>
-          {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {pending ? 'Creating account...' : 'Create free account'}
-        </Button>
+        <button className={`${styles.button} ${styles.primaryButton}`} type="submit" disabled={pending}>
+          {pending && <Loader2 className={styles.spin} aria-hidden="true" />}
+          {pending ? 'Creating account…' : 'Create free account'}
+        </button>
       </form>
 
-      {/* Google sign-up */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-[var(--border)]" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-[var(--surface-base)] px-3 text-[var(--text-muted)]">or</span>
-        </div>
-      </div>
+      <div className={styles.divider}><span>or continue with</span></div>
 
-      <Button
+      <button
         type="button"
-        variant="outline"
         onClick={handleGoogleSignUp}
         disabled={pending || googlePending}
-        className="h-11 w-full text-sm font-semibold gap-2"
+        className={`${styles.button} ${styles.secondaryButton}`}
       >
-        {googlePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
-        {googlePending ? 'Redirecting...' : 'Continue with Google'}
-      </Button>
+        {googlePending ? <Loader2 className={styles.spin} aria-hidden="true" /> : <GoogleIcon />}
+        {googlePending ? 'Redirecting…' : 'Continue with Google'}
+      </button>
 
-      <p className="text-center text-sm text-[var(--text-muted)]">
+      <p className={styles.switchText}>
         Already have an account?{' '}
-        <Link href="/login" className="font-semibold text-[var(--accent)] hover:underline">
+        <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className={styles.inlineLink}>
           Sign in
         </Link>
-      </p>
-
-      <p className="text-center text-[11px] leading-relaxed text-[var(--text-muted)]">
-        SAT is a trademark of the College Board, which is not affiliated with and does not
-        endorse SaturnPath. SaturnPath is an independent study aid.
       </p>
     </div>
   )
