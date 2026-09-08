@@ -1,0 +1,64 @@
+.generator { width: min(1060px, calc(100% - 40px)); padding-bottom: 90px; margin: 0 auto; color: #17324d; }
+.form { padding: clamp(24px,4vw,42px); border: 1px solid rgba(255,255,255,.96); border-radius: 28px; background: rgba(255,255,255,.78); box-shadow: 0 25px 65px rgba(68,73,118,.12); }
+.formHeading span, .resultHeading > span, .saveCta > div > span { color: #5643ea; font-size: 10px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.formHeading h2, .resultHeading h2 { margin: 8px 0 0; font-size: clamp(29px,4vw,43px); line-height: 1.08; letter-spacing: -.045em; }
+.formHeading p, .resultHeading p { max-width: 680px; margin: 10px 0 0; color: #60758a; font-size: 14px; line-height: 1.65; }
+.fieldGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; margin-top: 30px; }
+.fieldGrid label { display: grid; gap: 7px; }
+.fieldGrid label > span { font-size: 12px; font-weight: 800; }
+.fieldGrid input, .fieldGrid select { width: 100%; min-height: 52px; padding: 0 15px; border: 1px solid rgba(83,99,133,.2); border-radius: 15px; outline: 0; color: #17324d; background: rgba(248,249,255,.84); font: inherit; font-size: 14px; }
+.fieldGrid input:focus-visible, .fieldGrid select:focus-visible { border-color: #6857f6; box-shadow: 0 0 0 4px rgba(104,87,246,.13); background: #fff; }
+.fullField { grid-column: 1 / -1; }
+.form > button { min-height: 54px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 22px; padding: 0 22px; border: 0; border-radius: 16px; cursor: pointer; color: #fff; background: linear-gradient(145deg,#7868fa,#5643ea); box-shadow: 0 14px 28px rgba(104,87,246,.24); font: inherit; font-size: 13px; font-weight: 850; }
+.form > button:hover { transform: translateY(-1px); box-shadow: 0 17px 32px rgba(104,87,246,.29); }
+.form > button:focus-visible { outline: 3px solid rgba(104,87,246,.32); outline-offset: 3px; }
+.form button svg { width: 16px; height: 16px; }
+.form > small { display: block; margin-top: 12px; color: #8da0b3; font-size: 10px; }
+.error { margin: 18px 0 -5px; padding: 12px 14px; border: 1px solid rgba(184,68,58,.17); border-radius: 13px; color: #9f3c34; background: rgba(255,231,228,.74); font-size: 12px; }
+
+.result { padding-top: 65px; outline: none; }
+.resultHeading > span { display: inline-flex; align-items: center; gap: 7px; }
+.resultHeading svg { width: 15px; height: 15px; color: #13795b; }
+.metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 28px; }
+.metrics article { min-height: 110px; display: flex; align-items: center; gap: 13px; padding: 20px; border: 1px solid rgba(255,255,255,.94); border-radius: 20px; background: rgba(255,255,255,.72); box-shadow: 0 10px 26px rgba(68,73,118,.07); }
+.metrics article > svg { width: 20px; height: 20px; padding: 10px; box-sizing: content-box; border-radius: 13px; color: #5643ea; background: #e9e6ff; }
+.metrics article span { display: grid; gap: 4px; }
+.metrics small { color: #8da0b3; font-size: 9px; font-weight: 750; text-transform: uppercase; }
+.metrics strong { font-size: 14px; }
+.resultSection { padding-top: 45px; }
+.resultSection h3 { margin: 0; font-size: 25px; letter-spacing: -.035em; }
+.resultSection > p { margin: 7px 0 0; color: #60758a; font-size: 13px; }
+.phases { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-top: 18px; }
+.phases article { min-height: 190px; display: flex; flex-direction: column; padding: 20px; border: 1px solid rgba(83,99,133,.12); border-radius: 18px; background: rgba(255,255,255,.62); }
+.phases span { color: #6857f6; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.phases strong { margin-top: 10px; font-size: 16px; }
+.phases p { margin: 9px 0 0; color: #60758a; font-size: 12px; line-height: 1.65; }
+.rhythm { display: grid; gap: 8px; margin-top: 18px; }
+.rhythm div { display: grid; grid-template-columns: 105px 1fr; gap: 20px; padding: 14px 17px; border-radius: 13px; background: rgba(255,255,255,.61); }
+.rhythm strong { color: #5643ea; font-size: 12px; }
+.rhythm span { color: #60758a; font-size: 12px; }
+.saveCta { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 30px; padding: 29px; margin-top: 45px; border-radius: 23px; color: #fff; background: #17324d; box-shadow: 0 20px 50px rgba(23,50,77,.2); }
+.saveCta > div > span { color: #baffeb; }
+.saveCta h3 { max-width: 610px; margin: 7px 0 0; font-size: 22px; letter-spacing: -.03em; }
+.saveCta p { max-width: 650px; margin: 8px 0 0; color: rgba(255,255,255,.7); font-size: 12px; line-height: 1.6; }
+.saveCta > a { min-height: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 18px; border-radius: 15px; color: #17324d; background: #baffeb; font-size: 12px; font-weight: 850; text-decoration: none; }
+.saveCta svg { width: 15px; height: 15px; }
+
+@media (max-width: 820px) {
+  .metrics { grid-template-columns: 1fr; }
+  .metrics article { min-height: 90px; }
+  .phases { grid-template-columns: 1fr 1fr; }
+  .saveCta { grid-template-columns: 1fr; }
+  .saveCta > a { width: 100%; }
+}
+
+@media (max-width: 560px) {
+  .fieldGrid, .phases { grid-template-columns: 1fr; }
+  .fullField { grid-column: auto; }
+  .form > button { width: 100%; }
+  .rhythm div { grid-template-columns: 1fr; gap: 5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .generator *, .generator *::before, .generator *::after { transition-duration: .01ms !important; }
+}

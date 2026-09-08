@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import { track } from '@vercel/analytics/react'
 import {
   ArrowRight,
   BarChart3,
@@ -31,16 +32,23 @@ import styles from './landing-page.module.css'
 type PhoneView = 'today' | 'practice' | 'progress'
 
 const NAV_LINKS = [
+  { href: '/tools/sat-study-plan', label: 'Free planner' },
   { href: '#how-it-works', label: 'How it works' },
   { href: '#experience', label: 'Experience' },
-  { href: '#mobile', label: 'Mobile' },
   { href: '#free', label: 'Why free' },
+]
+
+const RESOURCES = [
+  { href: '/guides/30-day-digital-sat-study-plan', label: '30-day plan', title: 'Four focused weeks to test day', body: 'A day-by-day structure for diagnosis, targeted work, timed transfer, and a calm final week.' },
+  { href: '/guides/8-week-digital-sat-study-plan', label: '8-week plan', title: 'Build skills before adding pressure', body: 'A two-month rhythm that makes room for foundations, mixed practice, and full-length checkpoints.' },
+  { href: '/guides/sat-error-log', label: 'Error log', title: 'Make every mistake useful', body: 'A five-field review method that captures the lesson without turning review into more homework.' },
+  { href: '/guides/college-board-question-bank', label: 'Question Bank', title: 'Practice official questions with purpose', body: 'Turn section, domain, skill, and difficulty filters into focused sessions and useful follow-up.' },
 ]
 
 const FAQS = [
   {
     question: 'Is SaturnPath really completely free?',
-    answer: 'Yes. SaturnPath is being built as a completely free SAT prep experience. There is no trial, credit card, or premium study tier required to use the core product.',
+    answer: 'Yes. SaturnPath is completely free to use. There is no trial, credit card, or premium study tier required for the core product.',
   },
   {
     question: 'What makes a session adaptive?',
@@ -48,7 +56,7 @@ const FAQS = [
   },
   {
     question: 'Will SaturnPath work on web and mobile?',
-    answer: 'That is the V2 vision. Your plan, practice history, error patterns, and score trajectory will stay connected across the laptop web app and the SaturnPath mobile app.',
+    answer: 'The web experience is available now. A companion mobile app is in development and is planned to share the same plan, practice history, review patterns, and score trajectory.',
   },
   {
     question: 'Is SaturnPath affiliated with College Board?',
@@ -263,18 +271,18 @@ export function LandingPage() {
       <header className={styles.siteHeader}>
         <Link href="/" aria-label="SaturnPath home"><Brand /></Link>
         <nav className={styles.desktopNav} aria-label="Landing page navigation">{NAV_LINKS.map(link => <a href={link.href} key={link.href}>{link.label}</a>)}</nav>
-        <div className={styles.headerCtas}><Link href="/login">Log in</Link><Link href="/signup" className={styles.navCta}>Start free <ArrowRight /></Link></div>
+        <div className={styles.headerCtas}><Link href="/login">Log in</Link><Link href="/tools/sat-study-plan" className={styles.navCta} onClick={() => track('Marketing CTA Clicked', { placement: 'header', destination: 'planner' })}>Build my plan <ArrowRight /></Link></div>
         <button type="button" className={styles.menuButton} aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>{menuOpen ? <X /> : <Menu />}</button>
-        {menuOpen && <nav className={styles.mobileMenu} aria-label="Mobile landing page navigation">{NAV_LINKS.map(link => <a href={link.href} key={link.href} onClick={() => setMenuOpen(false)}>{link.label}</a>)}<Link href="/login">Log in</Link><Link href="/signup" className={styles.mobileMenuCta}>Start free <ArrowRight /></Link></nav>}
+        {menuOpen && <nav className={styles.mobileMenu} aria-label="Mobile landing page navigation">{NAV_LINKS.map(link => <a href={link.href} key={link.href} onClick={() => setMenuOpen(false)}>{link.label}</a>)}<Link href="/login">Log in</Link><Link href="/tools/sat-study-plan" className={styles.mobileMenuCta} onClick={() => track('Marketing CTA Clicked', { placement: 'mobile_menu', destination: 'planner' })}>Build my plan <ArrowRight /></Link></nav>}
       </header>
 
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
           <span className={styles.freePill}><Sparkles /> Completely free adaptive SAT prep</span>
-          <h1>Every question<br /><em>should earn its place.</em></h1>
-          <p>SaturnPath turns SAT prep into short, adaptive sessions that change after every answer—so you spend less time grinding and more time improving.</p>
-          <div className={styles.heroCtas}><Link href="/signup" className={styles.primaryCta}>Start learning free <ArrowRight /></Link><a href="#how-it-works" className={styles.secondaryCta}><Play /> See how it adapts</a></div>
-          <div className={styles.freeProof}><span><Check /> No trial</span><span><Check /> No credit card</span><span><Check /> No premium tier</span></div>
+          <h1>Your SAT study plan<br /><em>should adapt to you.</em></h1>
+          <p>Start with your score, target, test date, and weak areas. SaturnPath turns them into focused sessions, then changes what comes next as you practice.</p>
+          <div className={styles.heroCtas}><Link href="/tools/sat-study-plan" className={styles.primaryCta} onClick={() => track('Marketing CTA Clicked', { placement: 'hero', destination: 'planner' })}>Build my free plan <ArrowRight /></Link><a href="#how-it-works" className={styles.secondaryCta}><Play /> See how it adapts</a></div>
+          <div className={styles.freeProof}><span><Check /> Preview without an account</span><span><Check /> No credit card</span><span><Check /> No premium tier</span></div>
         </div>
         <div className={styles.heroVisual}><HeroProduct /></div>
       </section>
@@ -323,22 +331,27 @@ export function LandingPage() {
 
       <section id="free" className={styles.freeSection}>
         <div className={styles.freeCard}>
-          <div><span className={styles.freeCardIcon}><Sparkles /></span><span className={styles.eyebrow}>Completely free</span><h2>Good SAT prep should not depend on what you can pay.</h2><p>SaturnPath is being built so every student can get a focused plan, adaptive practice, automatic review, and clear progress without a subscription standing in the way.</p></div>
-          <aside><span className={styles.price}><small>$</small>0</span><strong>Free to use</strong><ul><li><Check /> Adaptive practice sessions</li><li><Check /> Personalized study plan</li><li><Check /> Error review and analytics</li><li><Check /> Web and mobile experience</li></ul><Link href="/signup" className={styles.primaryCta}>Create your free account <ArrowRight /></Link><small>No trial · No credit card · No premium tier</small></aside>
+          <div><span className={styles.freeCardIcon}><Sparkles /></span><span className={styles.eyebrow}>Completely free</span><h2>Good SAT prep should not depend on what you can pay.</h2><p>Every student can use SaturnPath for a focused plan, adaptive practice, automatic review, and clear progress without a subscription standing in the way.</p></div>
+          <aside><span className={styles.price}><small>$</small>0</span><strong>Free to use</strong><ul><li><Check /> Adaptive practice sessions</li><li><Check /> Personalized study plan</li><li><Check /> Error review and analytics</li><li><Check /> Calendar and progress tracking</li></ul><Link href="/tools/sat-study-plan" className={styles.primaryCta} onClick={() => track('Marketing CTA Clicked', { placement: 'free_section', destination: 'planner' })}>Build my free plan <ArrowRight /></Link><small>No trial · No credit card · No premium tier</small></aside>
         </div>
       </section>
 
+      <section className={styles.resourcesSection}>
+        <div className={styles.sectionHeading}><span className={styles.eyebrow}>Free SAT resources</span><h2>Start with something<br /><em>useful right now.</em></h2><p>Build a plan or use a focused guide. Every resource connects back to a practical next step.</p></div>
+        <div className={styles.resourceGrid}>{RESOURCES.map((resource) => <Link href={resource.href} key={resource.href}><span>{resource.label}</span><h3>{resource.title}</h3><p>{resource.body}</p><strong>Read the guide <ArrowRight /></strong></Link>)}</div>
+      </section>
+
       <section className={styles.faqSection}>
-        <div className={styles.faqHeading}><span className={styles.eyebrow}>Questions, answered</span><h2>Before you begin.</h2><p>SaturnPath V2 is a new adaptive experience currently being designed across web and mobile.</p></div>
+        <div className={styles.faqHeading}><span className={styles.eyebrow}>Questions, answered</span><h2>Before you begin.</h2><p>The web app is available now, completely free, with a companion mobile app in development.</p></div>
         <div className={styles.faqList}>{FAQS.map((faq) => <details key={faq.question}><summary>{faq.question}<ChevronDown /></summary><p>{faq.answer}</p></details>)}</div>
       </section>
 
       <section className={styles.finalCta}>
         <div className={styles.finalOrbit}><BrandMark /><span /><span /></div>
-        <span className={styles.eyebrow}>Your next question is ready</span><h2>Shorter sessions.<br /><em>Smarter progress.</em></h2><p>Start building your path to test day—for free.</p><Link href="/signup" className={styles.primaryCta}>Start with SaturnPath <ArrowRight /></Link>
+        <span className={styles.eyebrow}>Your starting plan is ready</span><h2>Shorter sessions.<br /><em>Smarter progress.</em></h2><p>Preview your path to test day in under a minute—for free.</p><Link href="/tools/sat-study-plan" className={styles.primaryCta} onClick={() => track('Marketing CTA Clicked', { placement: 'final', destination: 'planner' })}>Build my free plan <ArrowRight /></Link>
       </section>
 
-      <footer className={styles.footer}><div><Brand /><p>Free, adaptive SAT preparation built around your next best question.</p></div><nav aria-label="Footer navigation"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/login">Log in</Link><Link href="/signup">Sign up</Link></nav><small>SAT® is a registered trademark of College Board. SaturnPath is not affiliated with or endorsed by College Board.</small></footer>
+      <footer className={styles.footer}><div><Brand /><p>Free, adaptive SAT preparation built around your next best question.</p></div><nav aria-label="Footer navigation"><Link href="/tools/sat-study-plan">Free planner</Link><Link href="/guides">Guides</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/login">Log in</Link><Link href="/signup">Sign up</Link></nav><small>SAT® is a registered trademark of College Board. SaturnPath is not affiliated with or endorsed by College Board.</small></footer>
     </main>
   )
 }

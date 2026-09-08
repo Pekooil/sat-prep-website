@@ -3,7 +3,8 @@
 > **Session trigger:** `Continue working on the iOS app.`  
 > When this phrase is used, read `SATURNPATH_V2_SESSION_ROUTER.md` and `docs/coordination/WEB_TO_IOS_HANDOFFS.md`, then execute the first incomplete, unblocked item in the iOS-only checklist in Section 22. Do not implement or modify the shared backend.
 
-**Status:** Active — iOS foundation I1 complete; signed TestFlight build I2 blocked by Apple membership; shared backend milestones owned by the web session  
+**Status:** Active — I1 complete; I3 client infrastructure and I5 native shell/UI-state foundation complete; signed TestFlight build I2 blocked by Apple membership; live contract-backed features blocked on web handoffs
+
 **Prepared:** August 25, 2026  
 **Initial release:** Public iOS App Store release  
 **Question-bank target:** 200 approved original questions — 100 Math and 100 Reading and Writing  
@@ -906,10 +907,10 @@ The local portion is complete; the signed archive is externally blocked. Evidenc
 
 ### I3. Native client core and generated contracts
 
-- [ ] Add the typed `URLSession` client, environment configuration, authenticated request pipeline, normalized errors, and safe logging.
+- [x] Add the typed `URLSession` client, environment configuration, authenticated request pipeline, normalized errors, and safe logging. Evidence: [`docs/ios/STEP-08-NATIVE-CLIENT-CORE.md`](docs/ios/STEP-08-NATIVE-CLIENT-CORE.md).
 - [ ] Generate or implement Swift request/response models from a `READY` OpenAPI milestone without modifying the shared contract.
-- [ ] Add Keychain-backed session handling, dependency injection, feature flags, and local recovery foundations.
-- [ ] Add mock repositories so native UI work can proceed when a live endpoint milestone is not ready.
+- [x] Add Keychain-backed session handling, dependency injection, feature flags, and local recovery foundations.
+- [x] Add mock repositories so native UI work can proceed when a live endpoint milestone is not ready.
 
 ### I4. Native authentication, onboarding, and account lifecycle
 
@@ -920,10 +921,12 @@ The local portion is complete; the signed archive is externally blocked. Evidenc
 
 ### I5. Native shell, navigation, and Home
 
-- [ ] Expand the V2 design system with semantic spacing, glass, typography, motion, controls, and accessibility behavior without using V1 styles.
-- [ ] Implement native Home, Progress, Review, and Profile tab navigation.
+- [x] Expand the V2 design system with semantic spacing, glass, typography, motion, controls, and accessibility behavior without using V1 styles. Evidence: [`docs/ios/STEP-09-NATIVE-SHELL-AND-HOME-FOUNDATION.md`](docs/ios/STEP-09-NATIVE-SHELL-AND-HOME-FOUNDATION.md).
+- [x] Implement native Home, Progress, Review, and Profile tab navigation.
 - [ ] Implement server-backed Home with recommendation, thick rings, score range, target, SAT date, work removed, and minutes saved.
-- [ ] Add loading, empty, offline, expired-session, and server-error states.
+- [x] Add loading, empty, offline, expired-session, and server-error states.
+
+The approved Home presentation is implemented against deterministic mock repository data. The server-backed checkbox remains open until the Home API milestone is marked `READY`; Progress, Review, and Profile currently provide native destination shells rather than claiming their later feature work is complete.
 
 ### I6. Native practice vertical slice
 

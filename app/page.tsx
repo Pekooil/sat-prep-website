@@ -9,6 +9,7 @@ import { headers } from 'next/headers'
 export const metadata: Metadata = {
   title: 'Free Adaptive SAT Prep',
   description: 'Short, adaptive SAT practice sessions that change after every answer. Personalized planning, review, and progress—completely free.',
+  alternates: { canonical: '/' },
 }
 
 export default async function RootPage({

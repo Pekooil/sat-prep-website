@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
+import { track } from '@vercel/analytics/react'
 import {
   ArrowRight,
   CalendarDays,
@@ -123,6 +124,7 @@ export function V2Onboarding({ previewMode = false }: { previewMode?: boolean })
 
   React.useEffect(() => {
     if (previewMode) return
+    track('Onboarding Viewed')
     let active = true
 
     async function loadProfile() {
@@ -202,6 +204,7 @@ export function V2Onboarding({ previewMode = false }: { previewMode?: boolean })
     if (!validateStep()) return
     if (previewMode) {
       setComplete(true)
+      track('Onboarding Completed')
       return
     }
     setSaving(true)
@@ -277,7 +280,7 @@ export function V2Onboarding({ previewMode = false }: { previewMode?: boolean })
             <span><small>Target</small><strong>{form.targetScore || '—'}</strong></span>
             <span><small>Practice style</small><strong>Short + adaptive</strong></span>
           </div>
-          <button className={styles.primaryButton} onClick={() => { router.push('/home'); router.refresh() }} type="button">
+          <button className={styles.primaryButton} onClick={() => { track('Product Opened After Onboarding'); router.push('/home'); router.refresh() }} type="button">
             Open Today <span><ArrowRight aria-hidden="true" /></span>
           </button>
         </section>

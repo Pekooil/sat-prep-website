@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import { track } from '@vercel/analytics/react'
 import {
   ArrowRight,
   CheckCircle2,
@@ -365,6 +366,7 @@ export function V2Home() {
       })
       const nextQuestion = session.firstQuestion
         ?? await v2Fetch<NextData>(`/api/v2/sessions/${session.id}/next`)
+      track('Practice Session Started')
       setQuestion(nextQuestion)
       setAnswer('')
       startedAt.current = Date.now()
@@ -445,13 +447,13 @@ export function V2Home() {
     setWorking(true)
     setError(null)
     try {
-      setSummary(
-        await v2Fetch<Summary>(`/api/v2/sessions/${question.sessionId}/end`, {
+      const completedSummary = await v2Fetch<Summary>(`/api/v2/sessions/${question.sessionId}/end`, {
           method: 'POST',
           headers: { 'Idempotency-Key': idempotencyKey() },
           body: JSON.stringify({ reason: 'user_stop' }),
-        }),
-      )
+        })
+      setSummary(completedSummary)
+      track('Practice Session Completed')
       setQuestion(null)
       setFeedback(null)
       setScratchpad('')

@@ -3,6 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { ArrowLeft, CheckCircle2, Loader2, Sparkles } from 'lucide-react'
+import { track } from '@vercel/analytics/react'
 import { signUp } from '@/actions/auth'
 import { createClient } from '@/lib/supabase/client'
 import { LEGAL, MIN_BIRTH_YEAR, ageFromBirthYear, validateAgeConsent } from '@/lib/legal/config'
@@ -45,6 +46,7 @@ export default function SignupPage() {
   const [agreedToTerms, setAgreedToTerms] = React.useState(false)
   const [parentalAck,   setParentalAck]   = React.useState(false)
   const [captchaToken,  setCaptchaToken]  = React.useState('')
+  const emailStarted = React.useRef(false)
 
   const needsParental = birthYear
     ? ageFromBirthYear(Number(birthYear)) < LEGAL.parentalConsentBelowAge
@@ -59,6 +61,7 @@ export default function SignupPage() {
   async function handleGoogleSignUp() {
     setGooglePending(true)
     setError(null)
+    track('Signup Method Selected', { method: 'google' })
     const supabase = createClient()
     const callbackUrl = new URL('/auth/callback', window.location.origin)
     callbackUrl.searchParams.set('next', nextPath)
@@ -68,15 +71,18 @@ export default function SignupPage() {
     })
     if (oauthError) {
       setError(oauthError.message)
+      track('Signup Error', { method: 'google', stage: 'oauth_start' })
       setGooglePending(false)
     }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    track('Signup Method Selected', { method: 'email' })
     const fd = new FormData(e.currentTarget)
     if (fd.get('password') !== fd.get('confirm_password')) {
       setError('Passwords do not match')
+      track('Signup Error', { method: 'email', stage: 'client_validation' })
       return
     }
     // Age gate + consent — mirrors the authoritative server-side check for
@@ -88,10 +94,12 @@ export default function SignupPage() {
     })
     if (consentError) {
       setError(consentError)
+      track('Signup Error', { method: 'email', stage: 'consent_validation' })
       return
     }
     if (CAPTCHA_ENABLED && !captchaToken) {
       setError('Please complete the captcha to continue.')
+      track('Signup Error', { method: 'email', stage: 'captcha_validation' })
       return
     }
     fd.set('birth_year', birthYear)
@@ -105,8 +113,10 @@ export default function SignupPage() {
       const result = await signUp(fd)
       if (result?.error) {
         setError(result.error)
+        track('Signup Error', { method: 'email', stage: 'account_creation' })
         setPending(false)
       } else if (result?.needsConfirmation) {
+        track('Signup Account Created', { method: 'email', confirmation_required: true })
         setConfirmed(true)
         setPending(false)
       }
@@ -114,6 +124,7 @@ export default function SignupPage() {
       // A successful sign-up (confirmation disabled) throws NEXT_REDIRECT.
       if (isRedirectError(err)) throw err
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      track('Signup Error', { method: 'email', stage: 'unexpected' })
       setPending(false)
     }
   }
@@ -149,7 +160,27 @@ export default function SignupPage() {
         <p className={styles.subtitle}>Create one account for your adaptive plan, focused practice, automatic review, and progress evidence.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className={styles.form}>
+      <button
+        type="button"
+        onClick={handleGoogleSignUp}
+        disabled={pending || googlePending}
+        className={`${styles.button} ${styles.secondaryButton}`}
+      >
+        {googlePending ? <Loader2 className={styles.spin} aria-hidden="true" /> : <GoogleIcon />}
+        {googlePending ? 'Redirecting…' : 'Continue with Google'}
+      </button>
+
+      <div className={styles.divider}><span>or sign up with email</span></div>
+
+      <form
+        onSubmit={handleSubmit}
+        className={styles.form}
+        onFocusCapture={() => {
+          if (emailStarted.current) return
+          emailStarted.current = true
+          track('Signup Form Started', { method: 'email' })
+        }}
+      >
         <div className={styles.field}>
           <label className={styles.fieldLabel} htmlFor="full_name">Full name</label>
           <input
@@ -271,18 +302,6 @@ export default function SignupPage() {
           {pending ? 'Creating account…' : 'Create free account'}
         </button>
       </form>
-
-      <div className={styles.divider}><span>or continue with</span></div>
-
-      <button
-        type="button"
-        onClick={handleGoogleSignUp}
-        disabled={pending || googlePending}
-        className={`${styles.button} ${styles.secondaryButton}`}
-      >
-        {googlePending ? <Loader2 className={styles.spin} aria-hidden="true" /> : <GoogleIcon />}
-        {googlePending ? 'Redirecting…' : 'Continue with Google'}
-      </button>
 
       <p className={styles.switchText}>
         Already have an account?{' '}

@@ -1,7 +1,12 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Check, Clock3, RotateCcw, Sparkles, TrendingUp } from 'lucide-react'
 
 import styles from './auth.module.css'
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 const PROOF_POINTS = ['No trial', 'No credit card', 'No premium tier']
 

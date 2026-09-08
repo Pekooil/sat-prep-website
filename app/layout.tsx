@@ -6,8 +6,9 @@ import { Toaster } from '@/components/ui/toaster'
 import { CookieNotice } from '@/components/legal/cookie-notice'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { CANONICAL_APP_URL } from '@/lib/app-url'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.trim() || 'https://saturnpath.app'
+const APP_URL = CANONICAL_APP_URL
 const APP_NAME = 'SaturnPath'
 const APP_DESCRIPTION =
   'Personalized, data-driven SAT preparation. Smart weekly study plans, progress analytics, error tracking, and AI-powered adaptive replanning — all in one place.'

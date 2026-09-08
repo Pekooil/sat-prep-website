@@ -165,7 +165,7 @@
 .promiseBar small { margin-top: 4px; color: var(--muted); font-size: 10px; font-weight: 700; }
 .promiseBar > i { width: 1px; height: 38px; background: var(--line); }
 
-.section, .experienceSection, .mobileSection, .philosophySection, .freeSection, .faqSection, .finalCta, .footer { position: relative; z-index: 1; width: min(calc(100% - 48px), 1180px); margin-inline: auto; }
+.section, .experienceSection, .mobileSection, .philosophySection, .freeSection, .resourcesSection, .faqSection, .finalCta, .footer { position: relative; z-index: 1; width: min(calc(100% - 48px), 1180px); margin-inline: auto; }
 .section { padding: 155px 0 145px; }
 .sectionHeading { max-width: 760px; margin-bottom: 56px; }
 .eyebrow { display: block; color: var(--primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
@@ -396,6 +396,16 @@
 .freeCard aside .primaryCta { width: 100%; }
 .freeCard aside > small { margin-top: 12px; color: var(--soft); font-size: 8px; text-align: center; }
 
+.resourcesSection { padding: 20px 0 140px; }
+.resourceGrid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+.resourceGrid > a { min-height: 240px; display: flex; flex-direction: column; align-items: flex-start; padding: 28px; border: 1px solid rgba(255,255,255,.96); border-radius: 25px; background: rgba(255,255,255,.65); box-shadow: 0 12px 32px rgba(68,73,118,.07); transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
+.resourceGrid > a:hover { transform: translateY(-3px); border-color: rgba(104,87,246,.2); box-shadow: 0 18px 42px rgba(68,73,118,.11); }
+.resourceGrid > a > span { color: var(--primary-deep); font-size: 9px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.resourceGrid h3 { max-width: 430px; margin-top: 13px; font-size: 28px; line-height: 1.08; letter-spacing: -.045em; }
+.resourceGrid p { max-width: 490px; margin-top: 12px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.resourceGrid strong { display: inline-flex; align-items: center; gap: 7px; margin-top: auto; padding-top: 24px; color: var(--primary-deep); font-size: 11px; }
+.resourceGrid strong svg { width: 14px; height: 14px; }
+
 .faqSection { display: grid; grid-template-columns: .8fr 1.2fr; gap: 90px; padding: 35px 0 145px; }
 .faqHeading h2 { font-size: clamp(40px,4.5vw,58px); }
 .faqHeading > p { font-size: 14px; }
@@ -482,7 +492,7 @@
   .heroProduct { width: 700px; margin-left: 50%; transform: translateX(-50%) scale(.73); transform-origin: top center; }
   .heroVisual { height: 430px; }
   .floatingInsight, .floatingSaved { display: none; }
-  .promiseBar, .section, .mobileSection, .freeSection, .faqSection, .finalCta, .footer { width: calc(100% - 28px); }
+  .promiseBar, .section, .mobileSection, .freeSection, .resourcesSection, .faqSection, .finalCta, .footer { width: calc(100% - 28px); }
   .promiseBar { grid-template-columns: 1fr; padding: 17px; }
   .promiseBar > span { min-height: 58px; border-bottom: 1px solid var(--line); }
   .promiseBar > span:last-child { border-bottom: 0; }
@@ -510,6 +520,9 @@
   .philosophySection { padding: 110px 14px; }
   .philosophyGrid { margin-top: 40px; }
   .freeSection { padding: 110px 0; }
+  .resourcesSection { padding: 0 0 110px; }
+  .resourceGrid { grid-template-columns: 1fr; }
+  .resourceGrid > a { min-height: 220px; padding: 24px; }
   .freeCard { padding: 25px; border-radius: 27px; }
   .freeCard aside { padding: 22px; }
   .faqSection { padding: 15px 0 110px; }
