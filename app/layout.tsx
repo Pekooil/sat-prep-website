@@ -11,7 +11,7 @@ import { CANONICAL_APP_URL } from '@/lib/app-url'
 const APP_URL = CANONICAL_APP_URL
 const APP_NAME = 'SaturnPath'
 const APP_DESCRIPTION =
-  'Personalized, data-driven SAT preparation. Smart weekly study plans, progress analytics, error tracking, and AI-powered adaptive replanning — all in one place.'
+  'Free personalized SAT study plans, adaptive practice, mistake review, and progress tracking built around your score, test date, and weak areas.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
@@ -28,7 +28,6 @@ export const metadata: Metadata = {
   creator: APP_NAME,
   applicationName: APP_NAME,
 
-  // ── Open Graph ────────────────────────────────────────────────────────
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -38,7 +37,7 @@ export const metadata: Metadata = {
     description: APP_DESCRIPTION,
     images: [
       {
-        url: '/og-image.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: `${APP_NAME} — Smart SAT prep`,
@@ -46,22 +45,18 @@ export const metadata: Metadata = {
     ],
   },
 
-  // ── Twitter card ──────────────────────────────────────────────────────
   twitter: {
     card: 'summary_large_image',
     title: APP_NAME,
     description: APP_DESCRIPTION,
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
 
-  // ── Icons ─────────────────────────────────────────────────────────────
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
   },
 
-  // ── Robots ────────────────────────────────────────────────────────────
   robots: {
     index: true,
     follow: true,

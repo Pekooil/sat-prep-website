@@ -9,11 +9,11 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <SaturnPathLogo size="sm" />
           <Link
-            href="/login"
+            href="/"
             className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-heading)]"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to sign in
+            Back to SaturnPath
           </Link>
         </div>
       </header>

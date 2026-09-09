@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArticleStructuredData } from '@/components/marketing/structured-data'
+import { ArticleStructuredData, BreadcrumbStructuredData } from '@/components/marketing/structured-data'
 import { ResourceCta, ResourceHero, ResourceShell } from '@/components/marketing/resource-shell'
 import styles from '@/components/marketing/resource-shell.module.css'
+import { createSocialMetadata } from '@/lib/marketing/metadata'
 
 const title = 'How to Use the College Board SAT Question Bank Effectively'
 const description = 'A practical workflow for turning College Board Student Question Bank filters into focused SAT practice, useful review, and a balanced study schedule.'
@@ -12,14 +13,15 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: path },
-  openGraph: { title: `${title} — SaturnPath`, description, url: path },
+  ...createSocialMetadata({ title: `${title} — SaturnPath`, description, path, type: 'article' }),
 }
 
 export default function QuestionBankGuidePage() {
   return (
     <ResourceShell>
       <ArticleStructuredData title={title} description={description} path={path} />
-      <ResourceHero eyebrow="Official questions, focused sessions" title="Use the SAT Question Bank with a purpose" description="Filtering thousands of official questions is easy. Choosing the right set, reviewing it well, and knowing what to do tomorrow is the part that needs a system." />
+      <BreadcrumbStructuredData items={[{ name: 'Home', path: '/' }, { name: 'Guides', path: '/guides' }, { name: title, path }]} />
+      <ResourceHero eyebrow="Official questions, focused sessions" title="Use the SAT Question Bank with a purpose" description="Filtering thousands of official questions is easy. Choosing the right set, reviewing it well, and knowing what to do tomorrow is the part that needs a system." meta="By SaturnPath · Updated September 9, 2026 · Reviewed against current official practice guidance" />
       <article className={styles.article}>
         <section>
           <h2>Start with a diagnosis, not a favorite topic</h2>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LEGAL } from '@/lib/legal/config'
+import { createSocialMetadata } from '@/lib/marketing/metadata'
 
 // NOTE FOR OPERATORS: This is a good-faith baseline drafted from the app's actual
 // data practices — it is NOT a substitute for review by qualified legal counsel
@@ -13,6 +14,8 @@ const EFFECTIVE_DATE = LEGAL.effectiveDate
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description: `How ${APP_NAME} collects, uses, and protects your information.`,
+  alternates: { canonical: '/privacy' },
+  ...createSocialMetadata({ title: `Privacy Policy — ${APP_NAME}`, description: `How ${APP_NAME} collects, uses, and protects your information.`, path: '/privacy' }),
   robots: { index: true, follow: true },
 }
 

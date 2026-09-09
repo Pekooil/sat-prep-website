@@ -28,6 +28,7 @@ import {
   X,
 } from 'lucide-react'
 import styles from './landing-page.module.css'
+import { LANDING_FAQS } from '@/lib/marketing/seo-content'
 
 type PhoneView = 'today' | 'practice' | 'progress'
 
@@ -39,29 +40,12 @@ const NAV_LINKS = [
 ]
 
 const RESOURCES = [
+  { href: '/tools/sat-error-log-template', label: 'Free template', title: 'Printable SAT error log', body: 'Record the cause, reusable lesson, and review date directly in your browser, then print or save the template.' },
+  { href: '/guides/how-long-to-study-for-the-sat', label: 'Study timeline', title: 'How long should you study?', body: 'Choose a realistic timeline from your test date, score gap, available time, and the kind of mistakes you need to fix.' },
   { href: '/guides/30-day-digital-sat-study-plan', label: '30-day plan', title: 'Four focused weeks to test day', body: 'A day-by-day structure for diagnosis, targeted work, timed transfer, and a calm final week.' },
   { href: '/guides/8-week-digital-sat-study-plan', label: '8-week plan', title: 'Build skills before adding pressure', body: 'A two-month rhythm that makes room for foundations, mixed practice, and full-length checkpoints.' },
   { href: '/guides/sat-error-log', label: 'Error log', title: 'Make every mistake useful', body: 'A five-field review method that captures the lesson without turning review into more homework.' },
   { href: '/guides/college-board-question-bank', label: 'Question Bank', title: 'Practice official questions with purpose', body: 'Turn section, domain, skill, and difficulty filters into focused sessions and useful follow-up.' },
-]
-
-const FAQS = [
-  {
-    question: 'Is SaturnPath really completely free?',
-    answer: 'Yes. SaturnPath is completely free to use. There is no trial, credit card, or premium study tier required for the core product.',
-  },
-  {
-    question: 'What makes a session adaptive?',
-    answer: 'Your next question is selected from the signals created by the question before it—accuracy, pace, confidence, skill, and mistake type. The goal is a short session where every question has a reason to be there.',
-  },
-  {
-    question: 'Will SaturnPath work on web and mobile?',
-    answer: 'The web experience is available now. A companion mobile app is in development and is planned to share the same plan, practice history, review patterns, and score trajectory.',
-  },
-  {
-    question: 'Is SaturnPath affiliated with College Board?',
-    answer: 'No. SaturnPath is an independent SAT preparation product and is not affiliated with or endorsed by College Board.',
-  },
 ]
 
 function BrandMark() {
@@ -327,6 +311,7 @@ export function LandingPage() {
       <section className={styles.philosophySection}>
         <div><span className={styles.eyebrow}>Why SaturnPath feels different</span><h2>Most SAT prep measures effort.<br /><em>We protect it.</em></h2></div>
         <div className={styles.philosophyGrid}><article><span>01</span><h3>Less noise</h3><p>No giant assignment list waiting to make you feel behind. You see the next useful session.</p></article><article><span>02</span><h3>Less repetition</h3><p>Questions are chosen for information value, not because a workbook still has pages left.</p></article><article><span>03</span><h3>More clarity</h3><p>Every chart answers a real question: what changed, why, and what should you do next?</p></article></div>
+        <Link href="/about" className={styles.methodLink}>Read how SaturnPath makes recommendations <ArrowRight /></Link>
       </section>
 
       <section id="free" className={styles.freeSection}>
@@ -343,7 +328,7 @@ export function LandingPage() {
 
       <section className={styles.faqSection}>
         <div className={styles.faqHeading}><span className={styles.eyebrow}>Questions, answered</span><h2>Before you begin.</h2><p>The web app is available now, completely free, with a companion mobile app in development.</p></div>
-        <div className={styles.faqList}>{FAQS.map((faq) => <details key={faq.question}><summary>{faq.question}<ChevronDown /></summary><p>{faq.answer}</p></details>)}</div>
+        <div className={styles.faqList}>{LANDING_FAQS.map((faq) => <details key={faq.question}><summary>{faq.question}<ChevronDown /></summary><p>{faq.answer}</p></details>)}</div>
       </section>
 
       <section className={styles.finalCta}>
@@ -351,7 +336,7 @@ export function LandingPage() {
         <span className={styles.eyebrow}>Your starting plan is ready</span><h2>Shorter sessions.<br /><em>Smarter progress.</em></h2><p>Preview your path to test day in under a minute—for free.</p><Link href="/tools/sat-study-plan" className={styles.primaryCta} onClick={() => track('Marketing CTA Clicked', { placement: 'final', destination: 'planner' })}>Build my free plan <ArrowRight /></Link>
       </section>
 
-      <footer className={styles.footer}><div><Brand /><p>Free, adaptive SAT preparation built around your next best question.</p></div><nav aria-label="Footer navigation"><Link href="/tools/sat-study-plan">Free planner</Link><Link href="/guides">Guides</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/login">Log in</Link><Link href="/signup">Sign up</Link></nav><small>SAT® is a registered trademark of College Board. SaturnPath is not affiliated with or endorsed by College Board.</small></footer>
+      <footer className={styles.footer}><div><Brand /><p>Free, adaptive SAT preparation built around your next best question.</p></div><nav aria-label="Footer navigation"><Link href="/tools/sat-study-plan">Free planner</Link><Link href="/guides">Guides</Link><Link href="/about">About</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/login">Log in</Link><Link href="/signup">Sign up</Link></nav><small>SAT® is a registered trademark of College Board. SaturnPath is not affiliated with or endorsed by College Board.</small></footer>
     </main>
   )
 }

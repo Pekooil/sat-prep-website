@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Target } from 'lucide-react'
+import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Printer, Share2, Target } from 'lucide-react'
 import { track } from '@vercel/analytics/react'
 import {
   generateStudyPlanPreview,
@@ -25,6 +25,7 @@ export function StudyPlanGenerator() {
   const [input, setInput] = React.useState<StudyPlanInput>(DEFAULT_INPUT)
   const [plan, setPlan] = React.useState<StudyPlanPreview | null>(null)
   const [error, setError] = React.useState<string | null>(null)
+  const [shareStatus, setShareStatus] = React.useState<string | null>(null)
 
   function update<K extends keyof StudyPlanInput>(field: K, value: StudyPlanInput[K]) {
     setInput((current) => ({ ...current, [field]: value }))
@@ -44,6 +45,33 @@ export function StudyPlanGenerator() {
     setPlan(nextPlan)
     track('Study Plan Generated')
     window.requestAnimationFrame(() => document.getElementById('study-plan-result')?.focus())
+  }
+
+  async function handleShare() {
+    const shareData = {
+      title: 'Free SAT Study Plan Generator — SaturnPath',
+      text: 'Build a free personalized SAT study plan from your score, test date, and available time.',
+      url: `${window.location.origin}/tools/sat-study-plan`,
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+        setShareStatus('Planner shared')
+      } else {
+        await navigator.clipboard.writeText(shareData.url)
+        setShareStatus('Planner link copied')
+      }
+      track('Study Plan Shared')
+    } catch (shareError) {
+      if (shareError instanceof DOMException && shareError.name === 'AbortError') return
+      setShareStatus('Copy the page address to share this planner')
+    }
+  }
+
+  function handlePrint() {
+    track('Study Plan Printed')
+    window.print()
   }
 
   return (
@@ -116,6 +144,12 @@ export function StudyPlanGenerator() {
             <h3>A repeatable week</h3>
             <p>About {plan.weeklyMinutes} focused minutes per week.</p>
             <div className={styles.rhythm}>{plan.rhythm.map((item) => <div key={item.day}><strong>{item.day}</strong><span>{item.task}</span></div>)}</div>
+          </div>
+
+          <div className={styles.planActions} aria-label="Study plan actions">
+            <button type="button" onClick={handlePrint}><Printer /> Print my plan</button>
+            <button type="button" onClick={handleShare}><Share2 /> Share the free planner</button>
+            <span role="status" aria-live="polite">{shareStatus}</span>
           </div>
 
           <aside className={styles.saveCta}>

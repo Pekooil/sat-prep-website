@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArticleStructuredData } from '@/components/marketing/structured-data'
+import { ArticleStructuredData, BreadcrumbStructuredData } from '@/components/marketing/structured-data'
 import { ResourceCta, ResourceHero, ResourceShell } from '@/components/marketing/resource-shell'
 import styles from '@/components/marketing/resource-shell.module.css'
+import { createSocialMetadata } from '@/lib/marketing/metadata'
 
 const title = '8-Week Digital SAT Study Plan'
 const description = 'An eight-week Digital SAT schedule for building skills, reviewing mistakes, practicing under time, and preparing calmly for test day.'
@@ -12,14 +13,15 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: path },
-  openGraph: { title: `${title} — SaturnPath`, description, url: path },
+  ...createSocialMetadata({ title: `${title} — SaturnPath`, description, path, type: 'article' }),
 }
 
 export default function EightWeekPlanPage() {
   return (
     <ResourceShell>
       <ArticleStructuredData title={title} description={description} path={path} />
-      <ResourceHero eyebrow="Eight-week schedule" title="Build skills first. Add pressure later." description="This two-month Digital SAT plan separates diagnosis, targeted growth, timed transfer, and test readiness so every week has a clear job." />
+      <BreadcrumbStructuredData items={[{ name: 'Home', path: '/' }, { name: 'Guides', path: '/guides' }, { name: title, path }]} />
+      <ResourceHero eyebrow="Eight-week schedule" title="Build skills first. Add pressure later." description="This two-month Digital SAT plan separates diagnosis, targeted growth, timed transfer, and test readiness so every week has a clear job." meta="By SaturnPath · Updated September 9, 2026 · Reviewed against current official practice guidance" />
       <article className={styles.article}>
         <section>
           <h2>The weekly rhythm</h2>

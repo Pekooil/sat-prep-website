@@ -37,6 +37,12 @@
 .rhythm div { display: grid; grid-template-columns: 105px 1fr; gap: 20px; padding: 14px 17px; border-radius: 13px; background: rgba(255,255,255,.61); }
 .rhythm strong { color: #5643ea; font-size: 12px; }
 .rhythm span { color: #60758a; font-size: 12px; }
+.planActions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.planActions button { min-height: 44px; display: inline-flex; align-items: center; gap: 7px; padding: 0 15px; border: 1px solid rgba(83,99,133,.16); border-radius: 13px; cursor: pointer; color: #17324d; background: rgba(255,255,255,.72); font: inherit; font-size: 11px; font-weight: 800; }
+.planActions button:hover { border-color: rgba(104,87,246,.3); color: #5643ea; background: #fff; }
+.planActions button:focus-visible { outline: 3px solid rgba(104,87,246,.24); outline-offset: 2px; }
+.planActions svg { width: 15px; height: 15px; }
+.planActions span { color: #60758a; font-size: 11px; }
 .saveCta { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 30px; padding: 29px; margin-top: 45px; border-radius: 23px; color: #fff; background: #17324d; box-shadow: 0 20px 50px rgba(23,50,77,.2); }
 .saveCta > div > span { color: #baffeb; }
 .saveCta h3 { max-width: 610px; margin: 7px 0 0; font-size: 22px; letter-spacing: -.03em; }
@@ -61,4 +67,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .generator *, .generator *::before, .generator *::after { transition-duration: .01ms !important; }
+}
+
+@media print {
+  .form, .planActions, .saveCta { display: none; }
+  .generator { width: 100%; padding: 0; color: #17324d; }
+  .result { padding: 0; }
+  .metrics, .phases { break-inside: avoid; }
+  .metrics article, .phases article, .rhythm div { border: 1px solid #d8dee8; box-shadow: none; background: #fff; }
 }

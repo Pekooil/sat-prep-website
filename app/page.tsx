@@ -5,11 +5,18 @@ import { LandingPage } from '@/components/marketing/landing-page'
 import { getAuthProfile } from '@/lib/auth-profile'
 import { V2_STAGING_HOST } from '@/lib/app-url'
 import { headers } from 'next/headers'
+import { FaqStructuredData, HomeStructuredData } from '@/components/marketing/structured-data'
+import { LANDING_FAQS } from '@/lib/marketing/seo-content'
+import { createSocialMetadata } from '@/lib/marketing/metadata'
+
+const title = 'Free SAT Study Planner & Adaptive Practice | SaturnPath'
+const description = 'Build a free personalized SAT study plan from your score, test date, and weak areas, then use adaptive practice, mistake review, and progress tracking.'
 
 export const metadata: Metadata = {
-  title: 'Free Adaptive SAT Prep',
-  description: 'Short, adaptive SAT practice sessions that change after every answer. Personalized planning, review, and progress—completely free.',
+  title,
+  description,
   alternates: { canonical: '/' },
+  ...createSocialMetadata({ title, description, path: '/' }),
 }
 
 export default async function RootPage({
@@ -57,5 +64,5 @@ export default async function RootPage({
   const host = (await headers()).get('host')?.split(':')[0]
   if (host === V2_STAGING_HOST) redirect('/login')
 
-  return <LandingPage />
+  return <><HomeStructuredData /><FaqStructuredData items={LANDING_FAQS} /><LandingPage /></>
 }

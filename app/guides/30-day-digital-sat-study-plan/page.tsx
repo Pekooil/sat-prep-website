@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArticleStructuredData } from '@/components/marketing/structured-data'
+import { ArticleStructuredData, BreadcrumbStructuredData } from '@/components/marketing/structured-data'
 import { ResourceCta, ResourceHero, ResourceShell } from '@/components/marketing/resource-shell'
 import styles from '@/components/marketing/resource-shell.module.css'
+import { createSocialMetadata } from '@/lib/marketing/metadata'
 
 const title = '30-Day Digital SAT Study Plan'
 const description = 'A practical four-week Digital SAT study schedule built around official practice, targeted skill work, mistake review, and realistic timing.'
@@ -12,14 +13,15 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: path },
-  openGraph: { title: `${title} — SaturnPath`, description, url: path },
+  ...createSocialMetadata({ title: `${title} — SaturnPath`, description, path, type: 'article' }),
 }
 
 export default function ThirtyDayPlanPage() {
   return (
     <ResourceShell>
       <ArticleStructuredData title={title} description={description} path={path} />
-      <ResourceHero eyebrow="Four focused weeks" title="A 30-day Digital SAT study plan you can actually follow" description="Use official practice to find the skills that matter, spend most days on targeted work, and reserve enough time to review instead of simply counting questions." />
+      <BreadcrumbStructuredData items={[{ name: 'Home', path: '/' }, { name: 'Guides', path: '/guides' }, { name: title, path }]} />
+      <ResourceHero eyebrow="Four focused weeks" title="A 30-day Digital SAT study plan you can actually follow" description="Use official practice to find the skills that matter, spend most days on targeted work, and reserve enough time to review instead of simply counting questions." meta="By SaturnPath · Updated September 9, 2026 · Reviewed against current official practice guidance" />
       <article className={styles.article}>
         <section>
           <h2>Before day one</h2>

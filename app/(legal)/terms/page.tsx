@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LEGAL } from '@/lib/legal/config'
+import { createSocialMetadata } from '@/lib/marketing/metadata'
 
 // NOTE FOR OPERATORS: Baseline terms drafted to match the product. Have qualified
 // legal counsel review before public launch. All contact/entity details live in
@@ -12,6 +13,8 @@ const EFFECTIVE_DATE = LEGAL.effectiveDate
 export const metadata: Metadata = {
   title: 'Terms of Service',
   description: `The terms that govern your use of ${APP_NAME}.`,
+  alternates: { canonical: '/terms' },
+  ...createSocialMetadata({ title: `Terms of Service — ${APP_NAME}`, description: `The terms that govern your use of ${APP_NAME}.`, path: '/terms' }),
   robots: { index: true, follow: true },
 }
 

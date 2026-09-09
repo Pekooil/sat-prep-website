@@ -378,6 +378,9 @@
 .philosophyGrid article > span { color: #a99fff; font-size: 10px; font-weight: 800; letter-spacing: .13em; }
 .philosophyGrid h3 { margin-top: auto; font-size: 25px; letter-spacing: -.045em; }
 .philosophyGrid p { margin-top: 10px; color: rgba(255,255,255,.65); font-size: 13px; line-height: 1.7; }
+.methodLink { min-height: 48px; display: inline-flex; align-items: center; gap: 8px; margin-top: 28px; color: #d8d4ff; font-size: 12px; font-weight: 800; }
+.methodLink:hover { color: #fff; }
+.methodLink svg { width: 15px; height: 15px; }
 
 .freeSection { padding: 145px 0; }
 .freeCard { display: grid; grid-template-columns: 1.15fr .85fr; gap: 75px; padding: clamp(35px,5vw,70px); border: 1px solid rgba(255,255,255,.96); border-radius: 35px; background: linear-gradient(145deg,rgba(255,255,255,.85),rgba(218,248,238,.55)); box-shadow: 0 28px 70px rgba(68,73,118,.12); }

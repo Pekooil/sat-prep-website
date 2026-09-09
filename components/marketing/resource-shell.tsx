@@ -10,6 +10,7 @@ interface ResourceHeroProps {
   eyebrow: string
   title: string
   description: string
+  meta?: string
 }
 
 export function ResourceHeader() {
@@ -22,6 +23,7 @@ export function ResourceHeader() {
       <nav aria-label="Resource navigation">
         <Link href="/tools/sat-study-plan">Free planner</Link>
         <Link href="/guides">Study guides</Link>
+        <Link href="/about">About</Link>
         <Link href="/login">Log in</Link>
         <Link href="/signup" className={styles.headerCta}>Start free <ArrowRight /></Link>
       </nav>
@@ -29,12 +31,13 @@ export function ResourceHeader() {
   )
 }
 
-export function ResourceHero({ eyebrow, title, description }: ResourceHeroProps) {
+export function ResourceHero({ eyebrow, title, description, meta }: ResourceHeroProps) {
   return (
     <header className={styles.hero}>
       <span className={styles.eyebrow}><Sparkles /> {eyebrow}</span>
       <h1>{title}</h1>
       <p>{description}</p>
+      {meta ? <small className={styles.heroMeta}>{meta}</small> : null}
     </header>
   )
 }
@@ -68,6 +71,7 @@ export function ResourceShell({ children }: ResourceShellProps) {
         <nav aria-label="Footer navigation">
           <Link href="/tools/sat-study-plan">Free planner</Link>
           <Link href="/guides">Study guides</Link>
+          <Link href="/about">About</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms</Link>
         </nav>

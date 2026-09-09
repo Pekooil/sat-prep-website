@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArticleStructuredData } from '@/components/marketing/structured-data'
+import { ArticleStructuredData, BreadcrumbStructuredData } from '@/components/marketing/structured-data'
 import { ResourceCta, ResourceHero, ResourceShell } from '@/components/marketing/resource-shell'
 import styles from '@/components/marketing/resource-shell.module.css'
+import { createSocialMetadata } from '@/lib/marketing/metadata'
 
 const title = 'How to Make an SAT Error Log That Improves Your Practice'
 const description = 'A simple SAT error log method for classifying mistakes, choosing the right correction, and scheduling useful retries without copying question text.'
@@ -12,14 +13,15 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: path },
-  openGraph: { title: `${title} — SaturnPath`, description, url: path },
+  ...createSocialMetadata({ title: `${title} — SaturnPath`, description, path, type: 'article' }),
 }
 
 export default function SatErrorLogPage() {
   return (
     <ResourceShell>
       <ArticleStructuredData title={title} description={description} path={path} />
-      <ResourceHero eyebrow="Review that changes what comes next" title="Your SAT error log should be short enough to use" description="The goal is not to rewrite every question. Capture the reason for the miss, the correction you can reuse, and when you will test that correction again." />
+      <BreadcrumbStructuredData items={[{ name: 'Home', path: '/' }, { name: 'Guides', path: '/guides' }, { name: title, path }]} />
+      <ResourceHero eyebrow="Review that changes what comes next" title="Your SAT error log should be short enough to use" description="The goal is not to rewrite every question. Capture the reason for the miss, the correction you can reuse, and when you will test that correction again." meta="By SaturnPath · Updated September 9, 2026" />
       <article className={styles.article}>
         <section>
           <h2>The five fields that matter</h2>
@@ -51,6 +53,7 @@ export default function SatErrorLogPage() {
             <li>If the same cause appears again, keep it in the review queue. If the correction transfers, increase the interval before the next check.</li>
           </ol>
           <p>Reviewing mistakes is most valuable when it affects your schedule. SaturnPath connects error patterns with future sessions, while the <Link href="/tools/sat-study-plan">free planner</Link> gives you a starting weekly rhythm.</p>
+          <p>Want a clean place to begin? Open the <Link href="/tools/sat-error-log-template">free printable SAT error log template</Link>, fill it in privately, and print or save it as a PDF.</p>
         </section>
         <section>
           <h2>What not to put in the log</h2>
