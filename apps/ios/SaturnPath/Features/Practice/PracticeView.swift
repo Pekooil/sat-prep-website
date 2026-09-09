@@ -108,7 +108,7 @@ struct PracticeView: View {
             }
         case .feedback:
             if let feedback = model.feedback {
-                PracticeFeedbackView(feedback: feedback) {
+                PracticeFeedbackView(model: model, feedback: feedback) {
                     Task {
                         await model.advance(
                             using: dependencies.practiceRepository,
@@ -377,8 +377,12 @@ private struct PracticeTimerView: View {
 }
 
 private struct PracticeFeedbackView: View {
+    @Bindable var model: PracticeViewModel
     let feedback: PracticeFeedbackContent
     let onContinue: () -> Void
+
+    @Environment(\.appDependencies) private var dependencies
+    @FocusState private var isOtherFieldFocused: Bool
 
     var body: some View {
         ScrollView {
@@ -410,6 +414,10 @@ private struct PracticeFeedbackView: View {
                 }
                 .spGlassCard(padding: SaturnPathSpacing.large, radius: SaturnPathRadius.card)
 
+                if feedback.correctness == .incorrect, !feedback.classificationOptions.isEmpty {
+                    classificationCard
+                }
+
                 feedbackSignal(icon: "timer", text: feedback.pacingMessage, color: SaturnPathTheme.sky)
                 PracticePathChangeView(pathChange: feedback.pathChange)
 
@@ -419,6 +427,8 @@ private struct PracticeFeedbackView: View {
 
                 Button(nextButtonTitle, action: onContinue)
                     .buttonStyle(SaturnPathPrimaryButtonStyle())
+                    .disabled(!model.canContinueFromFeedback)
+                    .opacity(model.canContinueFromFeedback ? 1 : 0.55)
                     .accessibilityIdentifier("saturnpath.practice.next")
             }
             .frame(maxWidth: 620)
@@ -426,6 +436,154 @@ private struct PracticeFeedbackView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollIndicators(.hidden)
+    }
+
+    private var classificationCard: some View {
+        VStack(alignment: .leading, spacing: SaturnPathSpacing.medium) {
+            VStack(alignment: .leading, spacing: SaturnPathSpacing.xSmall) {
+                Text("What got in the way?")
+                    .font(SaturnPathTypography.bodyStrong)
+                    .foregroundStyle(SaturnPathTheme.ink)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("saturnpath.practice.classification")
+
+                Text("Choose one so the next review fits the mistake.")
+                    .font(SaturnPathTypography.caption)
+                    .foregroundStyle(SaturnPathTheme.mutedInk)
+            }
+
+            VStack(spacing: SaturnPathSpacing.xSmall) {
+                ForEach(feedback.classificationOptions) { option in
+                    classificationButton(option)
+                }
+            }
+
+            if model.selectedClassification?.kind == .other, model.classificationReceipt == nil {
+                VStack(alignment: .leading, spacing: SaturnPathSpacing.xSmall) {
+                    Text("What happened?")
+                        .font(SaturnPathTypography.caption)
+                        .foregroundStyle(SaturnPathTheme.ink)
+
+                    TextField(
+                        "Add a short note",
+                        text: Binding(
+                            get: { model.otherClassificationText },
+                            set: { newValue in
+                                model.updateOtherClassificationText(newValue)
+                            }
+                        ),
+                        axis: .vertical
+                    )
+                    .focused($isOtherFieldFocused)
+                    .lineLimit(2...3)
+                    .padding(.horizontal, SaturnPathSpacing.medium)
+                    .frame(minHeight: 54)
+                    .background(
+                        SaturnPathTheme.canvas,
+                        in: RoundedRectangle(cornerRadius: SaturnPathRadius.control, style: .continuous)
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: SaturnPathRadius.control, style: .continuous)
+                            .stroke(SaturnPathTheme.lineStrong, lineWidth: 1)
+                    }
+                    .accessibilityIdentifier("saturnpath.practice.classification.other-text")
+
+                    HStack {
+                        Text("Keep it brief—no personal details.")
+                        Spacer()
+                        Text("\(model.otherClassificationText.count)/\(PracticeViewModel.otherClassificationLimit)")
+                    }
+                    .font(.system(.caption2, design: .rounded))
+                    .foregroundStyle(SaturnPathTheme.softInk)
+
+                    Button {
+                        Task {
+                            await model.saveOtherClassification(using: dependencies.practiceRepository)
+                        }
+                    } label: {
+                        if model.isClassifying {
+                            ProgressView()
+                                .tint(.white)
+                                .accessibilityLabel("Saving mistake reason")
+                        } else {
+                            Text("Save Reason")
+                        }
+                    }
+                    .buttonStyle(SaturnPathPrimaryButtonStyle())
+                    .disabled(!model.canSaveOtherClassification)
+                    .opacity(model.canSaveOtherClassification ? 1 : 0.55)
+                    .accessibilityIdentifier("saturnpath.practice.classification.other-save")
+                }
+            }
+
+            if let failure = model.classificationFailure {
+                Label(failure.classificationMessage, systemImage: "exclamationmark.circle")
+                    .font(SaturnPathTypography.caption)
+                    .foregroundStyle(SaturnPathTheme.coralDeep)
+                    .accessibilityIdentifier("saturnpath.practice.classification.error")
+            }
+
+            if model.classificationReceipt != nil {
+                Label("Reason saved", systemImage: "checkmark.circle.fill")
+                    .font(SaturnPathTypography.caption)
+                    .foregroundStyle(SaturnPathTheme.mintDeep)
+                    .accessibilityIdentifier("saturnpath.practice.classification.saved")
+            }
+        }
+        .spGlassCard(padding: SaturnPathSpacing.large, radius: SaturnPathRadius.card)
+        .onChange(of: model.selectedClassificationID) { _, selectedID in
+            guard
+                let selectedID,
+                feedback.classificationOptions.first(where: { $0.id == selectedID })?.kind == .other
+            else {
+                return
+            }
+            isOtherFieldFocused = true
+        }
+    }
+
+    private func classificationButton(_ option: MistakeClassificationOptionContent) -> some View {
+        let isSelected = model.selectedClassificationID == option.id
+        let isSaved = isSelected && model.classificationReceipt != nil
+
+        return Button {
+            Task {
+                await model.selectClassification(option, using: dependencies.practiceRepository)
+            }
+        } label: {
+            HStack(spacing: SaturnPathSpacing.small) {
+                Image(systemName: isSaved ? "checkmark.circle.fill" : isSelected ? "circle.inset.filled" : "circle")
+                    .foregroundStyle(isSelected ? SaturnPathTheme.primaryDeep : SaturnPathTheme.softInk)
+                    .accessibilityHidden(true)
+
+                Text(option.label)
+                    .font(SaturnPathTypography.caption)
+                    .foregroundStyle(SaturnPathTheme.ink)
+                    .multilineTextAlignment(.leading)
+
+                Spacer()
+
+                if isSelected && model.isClassifying {
+                    ProgressView()
+                        .controlSize(.small)
+                        .accessibilityLabel("Saving")
+                }
+            }
+            .padding(.horizontal, SaturnPathSpacing.medium)
+            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+            .background(
+                isSelected ? SaturnPathTheme.primarySoft : SaturnPathTheme.canvas,
+                in: RoundedRectangle(cornerRadius: 15, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .stroke(isSelected ? SaturnPathTheme.primary.opacity(0.5) : SaturnPathTheme.lineStrong, lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(model.isClassifying || model.classificationReceipt != nil)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityIdentifier("saturnpath.practice.classification.\(option.id)")
     }
 
     private func feedbackSignal(icon: String, text: String, color: Color) -> some View {
@@ -452,6 +610,16 @@ private struct PracticeFeedbackView: View {
             "View Recommendation"
         case .sessionComplete:
             "View Summary"
+        }
+    }
+}
+
+private extension PracticeViewFailure {
+    var classificationMessage: String {
+        switch self {
+        case .offline: "That reason needs a connection. Try again when you’re online."
+        case .expiredSession: "Your session expired before the reason was saved."
+        case .server: "That reason was not saved. Please try again."
         }
     }
 }

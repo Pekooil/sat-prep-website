@@ -199,6 +199,82 @@ struct PracticeViewModelTests {
         #expect(try await recoveryStore.load() == nil)
     }
 
+    @Test
+    func incorrectFeedbackCannotAdvanceBeforeClassification() async {
+        let repository = ClassificationPracticeRepository()
+        let model = PracticeViewModel()
+        await model.start(using: repository)
+        model.selectResponse("A")
+        await model.submit(using: repository)
+
+        await model.advance(using: repository)
+
+        #expect(model.phase == .feedback)
+        #expect(model.needsClassification)
+        #expect(await repository.nextCount == 0)
+    }
+
+    @Test
+    func commonMistakeReasonSavesWithOneSelection() async throws {
+        let repository = ClassificationPracticeRepository()
+        let model = PracticeViewModel()
+        await model.start(using: repository)
+        model.selectResponse("A")
+        await model.submit(using: repository)
+        let option = try #require(model.feedback?.classificationOptions.first { $0.kind == .careless })
+
+        await model.selectClassification(option, using: repository)
+
+        let classification = try #require(await repository.lastClassification)
+        #expect(classification.attemptID == PracticeFeedbackContent.incorrectMock.attemptID)
+        #expect(classification.kind == .careless)
+        #expect(classification.otherText == nil)
+        #expect(classification.idempotencyKey.isEmpty == false)
+        #expect(model.classificationReceipt?.classification == .careless)
+        #expect(model.canContinueFromFeedback)
+    }
+
+    @Test
+    func otherReasonRequiresTextAndEnforcesCharacterLimit() async throws {
+        let repository = ClassificationPracticeRepository()
+        let model = PracticeViewModel()
+        await model.start(using: repository)
+        model.selectResponse("A")
+        await model.submit(using: repository)
+        let option = try #require(model.feedback?.classificationOptions.first { $0.kind == .other })
+        await model.selectClassification(option, using: repository)
+
+        await model.saveOtherClassification(using: repository)
+        #expect(await repository.classificationCount == 0)
+
+        model.updateOtherClassificationText(String(repeating: "x", count: 100))
+        #expect(model.otherClassificationText.count == PracticeViewModel.otherClassificationLimit)
+        await model.saveOtherClassification(using: repository)
+
+        #expect(await repository.classificationCount == 1)
+        #expect(try #require(await repository.lastClassification).otherText?.count == PracticeViewModel.otherClassificationLimit)
+        #expect(model.classificationReceipt?.classification == .other)
+    }
+
+    @Test
+    func ambiguousClassificationRetryReusesItsIdempotencyKey() async throws {
+        let repository = ClassificationPracticeRepository(classificationFailuresRemaining: 1)
+        let model = PracticeViewModel()
+        await model.start(using: repository)
+        model.selectResponse("A")
+        await model.submit(using: repository)
+        let option = try #require(model.feedback?.classificationOptions.first { $0.kind == .strategy })
+
+        await model.selectClassification(option, using: repository)
+        #expect(model.classificationFailure == .offline)
+        await model.selectClassification(option, using: repository)
+
+        let keys = await repository.classificationKeys
+        #expect(keys.count == 2)
+        #expect(keys.first == keys.last)
+        #expect(model.classificationReceipt?.classification == .strategy)
+    }
+
     @Test(arguments: [
         (RepositoryError.offline, PracticeViewFailure.offline),
         (RepositoryError.expiredSession, PracticeViewFailure.expiredSession),
@@ -363,5 +439,76 @@ private struct FailingPracticeRepository: PracticeRepository {
         idempotencyKey: String
     ) throws -> PracticeSummaryContent {
         throw error
+    }
+}
+
+private actor ClassificationPracticeRepository: PracticeRepository {
+    struct Classification: Sendable {
+        let attemptID: String
+        let kind: MistakeClassificationKind
+        let otherText: String?
+        let idempotencyKey: String
+    }
+
+    private(set) var nextCount = 0
+    private(set) var classificationCount = 0
+    private(set) var lastClassification: Classification?
+    private(set) var classificationKeys: [String] = []
+    private var classificationFailuresRemaining: Int
+
+    init(classificationFailuresRemaining: Int = 0) {
+        self.classificationFailuresRemaining = classificationFailuresRemaining
+    }
+
+    func startOrResume() -> PracticeQuestionStep {
+        .mock
+    }
+
+    func submitResponse(
+        sessionID: String,
+        questionID: String,
+        response: String,
+        elapsedSeconds: Int,
+        idempotencyKey: String
+    ) -> PracticeFeedbackContent {
+        .incorrectMock
+    }
+
+    func fetchNext(sessionID: String) -> PracticeNextContent {
+        nextCount += 1
+        return .question(.mockContinuation)
+    }
+
+    func classifyAttempt(
+        attemptID: String,
+        classification: MistakeClassificationKind,
+        otherText: String?,
+        idempotencyKey: String
+    ) throws -> PracticeClassificationReceipt {
+        classificationCount += 1
+        classificationKeys.append(idempotencyKey)
+        lastClassification = Classification(
+            attemptID: attemptID,
+            kind: classification,
+            otherText: otherText,
+            idempotencyKey: idempotencyKey
+        )
+        if classificationFailuresRemaining > 0 {
+            classificationFailuresRemaining -= 1
+            throw RepositoryError.offline
+        }
+        return PracticeClassificationReceipt(
+            attemptID: attemptID,
+            classification: classification,
+            classifiedAt: .now
+        )
+    }
+
+    func endSession(
+        sessionID: String,
+        reason: PracticeEndReason,
+        idempotencyKey: String
+    ) -> PracticeSummaryContent {
+        .mock
     }
 }

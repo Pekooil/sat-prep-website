@@ -29,15 +29,43 @@ final class PracticeViewModel {
     private(set) var accumulatedElapsedSeconds: TimeInterval = 0
     private(set) var isSubmitting = false
     private(set) var isResolvingStop = false
+    private(set) var selectedClassificationID: String?
+    private(set) var otherClassificationText = ""
+    private(set) var classificationReceipt: PracticeClassificationReceipt?
+    private(set) var classificationFailure: PracticeViewFailure?
+    private(set) var isClassifying = false
 
     private var scratchNotes = ""
     private var submissionIdempotencyKey: String?
+    private var classificationIdempotencyKey: String?
+
+    static let otherClassificationLimit = 80
 
     var canSubmit: Bool {
         guard let selectedResponse else {
             return false
         }
         return !selectedResponse.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isSubmitting
+    }
+
+    var needsClassification: Bool {
+        feedback?.correctness == .incorrect
+            && feedback?.classificationOptions.isEmpty == false
+            && classificationReceipt == nil
+    }
+
+    var canContinueFromFeedback: Bool {
+        !needsClassification && !isClassifying
+    }
+
+    var canSaveOtherClassification: Bool {
+        selectedClassification?.kind == .other
+            && !otherClassificationText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !isClassifying
+    }
+
+    var selectedClassification: MistakeClassificationOptionContent? {
+        feedback?.classificationOptions.first { $0.id == selectedClassificationID }
     }
 
     func start(
@@ -106,6 +134,7 @@ final class PracticeViewModel {
             )
             isSubmitting = false
             submissionIdempotencyKey = nil
+            resetClassification()
             phase = .feedback
             await discardRecovery(using: recoveryStore)
         } catch {
@@ -122,7 +151,11 @@ final class PracticeViewModel {
         recoveryStore: (any PracticeRecoveryStoring)? = nil,
         now: Date = .now
     ) async {
-        guard phase == .feedback, let sessionID = questionStep?.sessionID else {
+        guard
+            phase == .feedback,
+            canContinueFromFeedback,
+            let sessionID = questionStep?.sessionID
+        else {
             return
         }
 
@@ -137,6 +170,52 @@ final class PracticeViewModel {
             recoveryStore: recoveryStore,
             sessionID: sessionID,
             now: now
+        )
+    }
+
+    func selectClassification(
+        _ option: MistakeClassificationOptionContent,
+        using repository: any PracticeRepository
+    ) async {
+        guard
+            phase == .feedback,
+            feedback?.classificationOptions.contains(option) == true,
+            classificationReceipt == nil,
+            !isClassifying
+        else {
+            return
+        }
+
+        if selectedClassificationID != option.id {
+            classificationIdempotencyKey = nil
+            classificationFailure = nil
+        }
+        selectedClassificationID = option.id
+
+        guard option.kind != .other else {
+            return
+        }
+
+        otherClassificationText = ""
+        await saveClassification(option, otherText: nil, using: repository)
+    }
+
+    func updateOtherClassificationText(_ text: String) {
+        guard classificationReceipt == nil else {
+            return
+        }
+        otherClassificationText = String(text.prefix(Self.otherClassificationLimit))
+        classificationFailure = nil
+    }
+
+    func saveOtherClassification(using repository: any PracticeRepository) async {
+        guard let selectedClassification, canSaveOtherClassification else {
+            return
+        }
+        await saveClassification(
+            selectedClassification,
+            otherText: otherClassificationText.trimmingCharacters(in: .whitespacesAndNewlines),
+            using: repository
         )
     }
 
@@ -248,6 +327,7 @@ final class PracticeViewModel {
         submissionIdempotencyKey = nil
         isSubmitting = false
         isResolvingStop = false
+        resetClassification()
         phase = .question
     }
 
@@ -262,6 +342,7 @@ final class PracticeViewModel {
         submissionIdempotencyKey = recovery.submissionIdempotencyKey
         isSubmitting = false
         isResolvingStop = false
+        resetClassification()
         phase = .question
     }
 
@@ -314,5 +395,42 @@ final class PracticeViewModel {
         default:
             .server
         }
+    }
+
+    private func saveClassification(
+        _ option: MistakeClassificationOptionContent,
+        otherText: String?,
+        using repository: any PracticeRepository
+    ) async {
+        guard let attemptID = feedback?.attemptID else {
+            return
+        }
+
+        isClassifying = true
+        classificationFailure = nil
+        let idempotencyKey = classificationIdempotencyKey ?? UUID().uuidString
+        classificationIdempotencyKey = idempotencyKey
+
+        do {
+            classificationReceipt = try await repository.classifyAttempt(
+                attemptID: attemptID,
+                classification: option.kind,
+                otherText: otherText,
+                idempotencyKey: idempotencyKey
+            )
+            classificationIdempotencyKey = nil
+        } catch {
+            classificationFailure = map(error)
+        }
+        isClassifying = false
+    }
+
+    private func resetClassification() {
+        selectedClassificationID = nil
+        otherClassificationText = ""
+        classificationReceipt = nil
+        classificationFailure = nil
+        classificationIdempotencyKey = nil
+        isClassifying = false
     }
 }

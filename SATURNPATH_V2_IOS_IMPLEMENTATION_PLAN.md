@@ -3,7 +3,7 @@
 > **Session trigger:** `Continue working on the iOS app.`  
 > When this phrase is used, read `SATURNPATH_V2_SESSION_ROUTER.md` and `docs/coordination/WEB_TO_IOS_HANDOFFS.md`, then execute the first incomplete, unblocked item in the iOS-only checklist in Section 22. Do not implement or modify the shared backend.
 
-**Status:** Active — I1 complete; I3 client infrastructure, I4 auth/onboarding presentation foundation, I5 native shell/UI-state foundation, I6 practice presentation plus lifecycle recovery, and the I7 adaptive presentation foundation complete; signed TestFlight build I2 blocked by Apple membership; live contract-backed features blocked on web handoffs
+**Status:** Active — I1 complete; I3 client infrastructure, I4 auth/onboarding presentation foundation, I5 native shell/UI-state foundation, I6 practice presentation plus lifecycle recovery, I7 adaptive presentation, and I8 Review/error-resolution presentation foundations complete; signed TestFlight build I2 blocked by Apple membership; live contract-backed features blocked on web handoffs
 
 **Prepared:** August 25, 2026  
 **Initial release:** Public iOS App Store release  
@@ -928,7 +928,7 @@ The mock-backed root router, sign-in presentation, three-step onboarding flow, v
 - [ ] Implement server-backed Home with recommendation, thick rings, score range, target, SAT date, work removed, and minutes saved.
 - [x] Add loading, empty, offline, expired-session, and server-error states.
 
-The approved Home presentation is implemented against deterministic mock repository data. The server-backed checkbox remains open until the Home API milestone is marked `READY`; Progress, Review, and Profile currently provide native destination shells rather than claiming their later feature work is complete.
+The approved Home presentation is implemented against deterministic mock repository data. The server-backed checkbox remains open until the Home API milestone is marked `READY`; Progress and Profile remain destination shells, while Review now has its own mock-backed I8 presentation foundation.
 
 ### I6. Native practice vertical slice
 
@@ -952,8 +952,10 @@ The complete adaptive presentation is implemented against repository-provided mo
 
 - [ ] Implement one-tap mistake classification and constrained Other entry.
 - [ ] Implement Due, Learning, Retesting, Resolved, and Saved native views.
-- [ ] Render server-owned review states and actions without reproducing the state machine locally.
+- [x] Render server-owned review states and actions without reproducing the state machine locally. Evidence: [`docs/ios/STEP-13-REVIEW-AND-ERROR-RESOLUTION-FOUNDATION.md`](docs/ios/STEP-13-REVIEW-AND-ERROR-RESOLUTION-FOUNDATION.md).
 - [ ] Verify correction, similar confirmation, delayed retest, resolution, and failure paths.
+
+The complete native presentation foundation now includes repository-supplied one-tap classifications, a focused and length-constrained Other entry, all five Review collections, semantic lifecycle cards, server-provided actions, loading/empty/failure states, and simulator coverage. The first two production checkboxes remain open until their requested contract additions are `READY` and live repositories replace mocks. The full lifecycle verification remains open until the shared review engine can drive correction through delayed resolution. Evidence: [`docs/ios/STEP-13-REVIEW-AND-ERROR-RESOLUTION-FOUNDATION.md`](docs/ios/STEP-13-REVIEW-AND-ERROR-RESOLUTION-FOUNDATION.md).
 
 ### I9. Native scratchpad, calculator, and scratch signals
 

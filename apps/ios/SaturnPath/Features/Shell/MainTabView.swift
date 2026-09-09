@@ -52,13 +52,7 @@ struct MainTabView: View {
             }
             .tag(AppTab.progress)
 
-            PlaceholderFeatureView(
-                eyebrow: "Scheduled for you",
-                title: "Review",
-                message: "Mistakes will appear here when the shared review API is ready.",
-                systemImage: "arrow.trianglehead.2.clockwise.rotate.90",
-                accessibilityIdentifier: "saturnpath.review.title"
-            ) {
+            ReviewView {
                 selectedTab = .profile
             }
             .tabItem {

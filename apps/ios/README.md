@@ -54,13 +54,13 @@ Client foundations live under `SaturnPath/Core` and include:
 - Keychain-backed auth-session storage
 - local practice recovery
 - feature flags and SwiftUI dependency injection
-- mock bootstrap, Home, account, onboarding, and practice repositories
+- mock bootstrap, Home, account, onboarding, practice, and Review repositories
 
 Until `docs/coordination/WEB_TO_IOS_HANDOFFS.md` marks an API milestone `READY`, every build uses mock repositories and live API feature flags remain off. Debug networking defaults to `http://127.0.0.1:3000/api/v2`; override it with `SATURNPATH_API_BASE_URL` when running against another client-safe endpoint.
 
 ## Native shell
 
-The app launches into Home, Progress, Review, and Profile tabs. Home is a complete mock-backed presentation of the approved dashboard, including score rings, target and SAT date, daily recommendation, work removed, minutes saved, and explicit loading and failure states. Its primary action opens the mock-backed practice journey. Progress, Review, and Profile remain destination shells until their server milestones are ready.
+The app launches into Home, Progress, Review, and Profile tabs. Home is a complete mock-backed presentation of the approved dashboard, including score rings, target and SAT date, daily recommendation, work removed, minutes saved, and explicit loading and failure states. Its primary action opens the mock-backed practice journey. Review now presents the I8 mock-backed experience; Progress and Profile remain destination shells until their server milestones are ready.
 
 The design system uses semantic system typography, Dynamic Type, accessible control sizes, VoiceOver summaries, reduced-motion-aware transitions, and safe clearance above the system tab bar. Implementation and verification evidence is recorded in `docs/ios/STEP-09-NATIVE-SHELL-AND-HOME-FOUNDATION.md`.
 
@@ -79,6 +79,12 @@ The active public question snapshot, response, foreground elapsed time, session 
 Adaptive feedback now renders a structured before/after route tile and an optional, more prominent micro-set adaptation card directly from repository content. Repository-directed stop recommendations open a dedicated “You’re good for today” state where the student can finish for a server-owned summary or ask the repository for another selected question. The Swift layer does not calculate mastery, selection priority, route changes, or savings.
 
 This is not a live adaptive session. The sample question and feedback remain isolated mock data until the practice API handoff is marked `READY`; physical-device validation also remains open. See `docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md` and `docs/ios/STEP-12-ADAPTIVE-PRESENTATION-FOUNDATION.md`.
+
+## Review and error-resolution foundation
+
+Incorrect feedback can now ask for a repository-supplied mistake reason. Common reasons save with one tap; Something Else opens a focused, labeled note field limited to 80 characters. The next action stays unavailable until the reason is stored, and classification retries reuse the same idempotency key.
+
+The Review tab presents Due, Learning, Retesting, Resolved, and Saved collections with accessible lifecycle labels, schedule and lapse context, repository-provided actions, and explicit loading, empty, offline, expired-session, and server-error states. Swift renders the repository response and never advances the review lifecycle locally. Live Saved filtering and constrained Other storage are awaiting the additive contract requests in `docs/coordination/IOS_TO_WEB_REQUESTS.md`; see `docs/ios/STEP-13-REVIEW-AND-ERROR-RESOLUTION-FOUNDATION.md`.
 
 ## Signing status
 

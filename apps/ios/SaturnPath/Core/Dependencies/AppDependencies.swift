@@ -12,6 +12,7 @@ struct AppDependencies: Sendable {
     let onboardingRepository: any OnboardingRepository
     let homeRepository: any HomeRepository
     let practiceRepository: any PracticeRepository
+    let reviewRepository: any ReviewRepository
 
     static func makeDefault(
         configuration: AppConfiguration = .current()
@@ -51,6 +52,11 @@ struct AppDependencies: Sendable {
             )
         }
 
+        let mockPracticeFeedback: PracticeFeedbackContent =
+            ProcessInfo.processInfo.environment["SATURNPATH_MOCK_PRACTICE_OUTCOME"] == "incorrect"
+            ? .incorrectMock
+            : .recommendedStopMock
+
         // Live repositories are added only after a tested contract milestone is READY.
         return Self(
             configuration: configuration,
@@ -62,7 +68,8 @@ struct AppDependencies: Sendable {
             accountRepository: MockAccountRepository(),
             onboardingRepository: MockOnboardingRepository(),
             homeRepository: MockHomeRepository(),
-            practiceRepository: MockPracticeRepository()
+            practiceRepository: MockPracticeRepository(feedback: mockPracticeFeedback),
+            reviewRepository: MockReviewRepository()
         )
     }
 
@@ -79,7 +86,8 @@ struct AppDependencies: Sendable {
         accountRepository: MockAccountRepository(),
         onboardingRepository: MockOnboardingRepository(),
         homeRepository: MockHomeRepository(),
-        practiceRepository: MockPracticeRepository()
+        practiceRepository: MockPracticeRepository(),
+        reviewRepository: MockReviewRepository()
     )
 
     private static func recoveryFileURL() -> URL {

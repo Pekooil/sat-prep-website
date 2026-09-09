@@ -40,6 +40,26 @@ enum PracticeCorrectness: String, Codable, Equatable, Sendable {
     case incorrect
 }
 
+enum MistakeClassificationKind: String, Codable, Equatable, Sendable {
+    case concept
+    case careless
+    case pacing
+    case strategy
+    case other
+}
+
+struct MistakeClassificationOptionContent: Codable, Equatable, Identifiable, Sendable {
+    let id: String
+    let kind: MistakeClassificationKind
+    let label: String
+}
+
+struct PracticeClassificationReceipt: Codable, Equatable, Sendable {
+    let attemptID: String
+    let classification: MistakeClassificationKind
+    let classifiedAt: Date
+}
+
 enum PracticeNextAction: String, Codable, Equatable, Sendable {
     case continuePractice = "continue"
     case microSetSummary = "micro_set_summary"
@@ -68,6 +88,7 @@ struct PracticeAdaptationContent: Codable, Equatable, Sendable {
 }
 
 struct PracticeFeedbackContent: Codable, Equatable, Sendable {
+    let attemptID: String
     let correctness: PracticeCorrectness
     let headline: String
     let explanation: String
@@ -75,6 +96,7 @@ struct PracticeFeedbackContent: Codable, Equatable, Sendable {
     let pathChange: PracticePathChangeContent
     let adaptation: PracticeAdaptationContent?
     let nextAction: PracticeNextAction
+    let classificationOptions: [MistakeClassificationOptionContent]
 }
 
 struct PracticeSummaryContent: Codable, Equatable, Sendable {
@@ -108,6 +130,13 @@ protocol PracticeRepository: Sendable {
 
     func fetchNext(sessionID: String) async throws -> PracticeNextContent
 
+    func classifyAttempt(
+        attemptID: String,
+        classification: MistakeClassificationKind,
+        otherText: String?,
+        idempotencyKey: String
+    ) async throws -> PracticeClassificationReceipt
+
     func endSession(
         sessionID: String,
         reason: PracticeEndReason,
@@ -116,6 +145,12 @@ protocol PracticeRepository: Sendable {
 }
 
 struct MockPracticeRepository: PracticeRepository {
+    let feedback: PracticeFeedbackContent
+
+    init(feedback: PracticeFeedbackContent = .recommendedStopMock) {
+        self.feedback = feedback
+    }
+
     func startOrResume() -> PracticeQuestionStep {
         .mock
     }
@@ -127,11 +162,24 @@ struct MockPracticeRepository: PracticeRepository {
         elapsedSeconds: Int,
         idempotencyKey: String
     ) -> PracticeFeedbackContent {
-        .recommendedStopMock
+        feedback
     }
 
     func fetchNext(sessionID: String) -> PracticeNextContent {
         .question(.mockContinuation)
+    }
+
+    func classifyAttempt(
+        attemptID: String,
+        classification: MistakeClassificationKind,
+        otherText: String?,
+        idempotencyKey: String
+    ) -> PracticeClassificationReceipt {
+        PracticeClassificationReceipt(
+            attemptID: attemptID,
+            classification: classification,
+            classifiedAt: .now
+        )
     }
 
     func endSession(
@@ -192,6 +240,7 @@ extension PracticeQuestionStep {
 
 extension PracticeFeedbackContent {
     static let mock = Self(
+        attemptID: "mock-attempt",
         correctness: .correct,
         headline: "Nice work—that route is getting stronger.",
         explanation: "Slope is the change in y divided by the change in x: (19 − 7) ÷ (6 − 2) = 12 ÷ 4 = 3.",
@@ -206,10 +255,12 @@ extension PracticeFeedbackContent {
             headline: "Difficulty unlocked",
             detail: "Your next micro-set can include a more challenging linear-equations question."
         ),
-        nextAction: .continuePractice
+        nextAction: .continuePractice,
+        classificationOptions: []
     )
 
     static let recommendedStopMock = Self(
+        attemptID: mock.attemptID,
         correctness: mock.correctness,
         headline: mock.headline,
         explanation: mock.explanation,
@@ -219,8 +270,46 @@ extension PracticeFeedbackContent {
             headline: "Today’s route is complete",
             detail: "The highest-value work is done. More practice is optional."
         ),
-        nextAction: .recommendedStop
+        nextAction: .recommendedStop,
+        classificationOptions: []
     )
+
+    static let incorrectMock = Self(
+        attemptID: "mock-incorrect-attempt",
+        correctness: .incorrect,
+        headline: "This one is now part of your path.",
+        explanation: "Slope is the change in y divided by the change in x: (19 − 7) ÷ (6 − 2) = 12 ÷ 4 = 3.",
+        pacingMessage: "You answered a little faster than the target pace.",
+        pathChange: PracticePathChangeContent(
+            beforeLabel: "Mixed math practice",
+            afterLabel: "Linear-equation correction",
+            impactLabel: "Review added",
+            kind: .reviewAdded
+        ),
+        adaptation: PracticeAdaptationContent(
+            headline: "A correction path is ready",
+            detail: "One quick label helps SaturnPath choose the most useful follow-up."
+        ),
+        nextAction: .continuePractice,
+        classificationOptions: [
+            MistakeClassificationOptionContent(id: "concept", kind: .concept, label: "I didn’t know the concept"),
+            MistakeClassificationOptionContent(id: "careless", kind: .careless, label: "I made a careless mistake"),
+            MistakeClassificationOptionContent(id: "pacing", kind: .pacing, label: "I ran out of time"),
+            MistakeClassificationOptionContent(id: "strategy", kind: .strategy, label: "My strategy broke down"),
+            MistakeClassificationOptionContent(id: "other", kind: .other, label: "Something else"),
+        ]
+    )
+}
+
+extension PracticeRepository {
+    func classifyAttempt(
+        attemptID: String,
+        classification: MistakeClassificationKind,
+        otherText: String?,
+        idempotencyKey: String
+    ) async throws -> PracticeClassificationReceipt {
+        throw RepositoryError.unavailable
+    }
 }
 
 extension PracticeSummaryContent {

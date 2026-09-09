@@ -143,4 +143,65 @@ final class SaturnPathUITests: XCTestCase {
         app.buttons["Leave Practice"].tap()
         XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 5))
     }
+
+    func testReviewPresentsServerOwnedCollections() {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 8))
+        app.tabBars.buttons["Review"].tap()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.review.title"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["saturnpath.review.item.review-linear-equations"].exists)
+
+        let retesting = app.buttons["saturnpath.review.filter.retesting"]
+        if !retesting.isHittable {
+            app.scrollViews["saturnpath.review.filters"].swipeLeft()
+        }
+        retesting.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["saturnpath.review.item.review-words-context"].waitForExistence(timeout: 5))
+
+        let saved = app.buttons["saturnpath.review.filter.saved"]
+        if !saved.isHittable {
+            app.scrollViews["saturnpath.review.filters"].swipeLeft()
+        }
+        saved.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["saturnpath.review.item.review-quadratics"].waitForExistence(timeout: 5))
+
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Review collections"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+    }
+
+    func testIncorrectAnswerRequiresAndSavesMistakeReason() {
+        let app = XCUIApplication()
+        app.launchEnvironment["SATURNPATH_MOCK_PRACTICE_OUTCOME"] = "incorrect"
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 8))
+        app.swipeUp()
+        app.buttons["saturnpath.home.start"].tap()
+        XCTAssertTrue(app.buttons["saturnpath.practice.choice.A"].waitForExistence(timeout: 5))
+        app.buttons["saturnpath.practice.choice.A"].tap()
+        app.buttons["saturnpath.practice.submit"].tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)["saturnpath.practice.classification"].waitForExistence(timeout: 5))
+        let nextButton = app.buttons["saturnpath.practice.next"]
+        XCTAssertFalse(nextButton.isEnabled)
+
+        app.buttons["saturnpath.practice.classification.careless"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["saturnpath.practice.classification.saved"].waitForExistence(timeout: 5))
+        XCTAssertTrue(nextButton.isEnabled)
+
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Mistake classification"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+
+        nextButton.tap()
+        XCTAssertTrue(app.textFields["saturnpath.practice.student-response"].waitForExistence(timeout: 5))
+        app.buttons["saturnpath.practice.close"].tap()
+        app.buttons["Leave Practice"].tap()
+    }
 }
