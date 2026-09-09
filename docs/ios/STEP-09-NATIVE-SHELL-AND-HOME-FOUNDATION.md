@@ -23,7 +23,7 @@ The visual implementation preserves the approved SaturnPath indigo, mint, coral,
 
 The shared Home endpoint is not marked `READY` in `docs/coordination/WEB_TO_IOS_HANDOFFS.md`. Home therefore consumes only the existing native mock repository and presentation model. Swift does not calculate mastery, question selection, score prediction, review scheduling, or savings; the displayed sample values are deterministic preview data.
 
-`Start Practicing` currently presents a clear availability notice. It does not fabricate a local practice session or expose hard-coded question content. Live Home and practice wiring remain open until their versioned server contracts are ready.
+`Start Practicing` now opens the later mock-backed practice presentation foundation documented in [`STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md`](STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md). Live Home and practice wiring remain open until their versioned server contracts are ready.
 
 ## Accessibility and interaction
 

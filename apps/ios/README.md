@@ -54,13 +54,13 @@ Client foundations live under `SaturnPath/Core` and include:
 - Keychain-backed auth-session storage
 - local practice recovery
 - feature flags and SwiftUI dependency injection
-- mock bootstrap and Home repositories
+- mock bootstrap, Home, account, onboarding, and practice repositories
 
 Until `docs/coordination/WEB_TO_IOS_HANDOFFS.md` marks an API milestone `READY`, every build uses mock repositories and live API feature flags remain off. Debug networking defaults to `http://127.0.0.1:3000/api/v2`; override it with `SATURNPATH_API_BASE_URL` when running against another client-safe endpoint.
 
 ## Native shell
 
-The app launches into Home, Progress, Review, and Profile tabs. Home is a complete mock-backed presentation of the approved dashboard, including score rings, target and SAT date, daily recommendation, work removed, minutes saved, and explicit loading and failure states. Progress, Review, and Profile remain destination shells until their server milestones are ready.
+The app launches into Home, Progress, Review, and Profile tabs. Home is a complete mock-backed presentation of the approved dashboard, including score rings, target and SAT date, daily recommendation, work removed, minutes saved, and explicit loading and failure states. Its primary action opens the mock-backed practice journey. Progress, Review, and Profile remain destination shells until their server milestones are ready.
 
 The design system uses semantic system typography, Dynamic Type, accessible control sizes, VoiceOver summaries, reduced-motion-aware transitions, and safe clearance above the system tab bar. Implementation and verification evidence is recorded in `docs/ios/STEP-09-NATIVE-SHELL-AND-HOME-FOUNDATION.md`.
 
@@ -69,6 +69,12 @@ The design system uses semantic system typography, Dynamic Type, accessible cont
 The app root now routes mock bootstrap states to sign-in, onboarding, or the main tabs. The native three-step onboarding flow captures score baseline and target, SAT date, timing accommodation, and optional scratchwork-analysis consent. Set `SATURNPATH_MOCK_ROOT_STATE` to `sign-in` or `onboarding` in a local launch environment to inspect those deterministic states.
 
 These screens are presentation foundations, not live authentication. Sign in with Apple, Supabase session exchange, email deep links, profile persistence, and account deletion remain disabled until Apple signing and the relevant backend handoffs are ready. See `docs/ios/STEP-10-AUTH-AND-ONBOARDING-FOUNDATION.md`.
+
+## Practice presentation foundation
+
+Home now opens a native question → feedback → summary experience backed by a deterministic practice repository. The question model contains no answer key; the view sends the selected response, elapsed time, session and question identifiers, and a fresh idempotency key to the repository, then renders repository-owned correctness and adaptation messaging. Multiple-choice and student-produced response controls, loading and error states, leave confirmation, Dynamic Type, accessible labels, and duplicate-submission protection are included.
+
+This is not a live adaptive session. The sample question and feedback remain isolated mock data until the practice API handoff is marked `READY`; persistence across termination and physical-device validation also remain open. See `docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md`.
 
 ## Signing status
 

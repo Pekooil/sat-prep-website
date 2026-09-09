@@ -5,7 +5,7 @@ struct HomeView: View {
 
     @Environment(\.appDependencies) private var dependencies
     @State private var model = HomeViewModel()
-    @State private var showsPracticeNotice = false
+    @State private var showsPractice = false
 
     var body: some View {
         NavigationStack {
@@ -26,10 +26,10 @@ struct HomeView: View {
         .task {
             await model.load(using: dependencies.homeRepository)
         }
-        .alert("Practice flow comes next", isPresented: $showsPracticeNotice) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("The native shell is using safe mock data until the shared practice API is ready.")
+        .fullScreenCover(isPresented: $showsPractice) {
+            PracticeView {
+                showsPractice = false
+            }
         }
     }
 
@@ -48,7 +48,7 @@ struct HomeView: View {
             )
         case let .content(content):
             HomeDashboardView(content: content) {
-                showsPracticeNotice = true
+                showsPractice = true
             }
         case let .failure(failure):
             HomeStatusView(

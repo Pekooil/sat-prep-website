@@ -49,4 +49,31 @@ final class SaturnPathUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 5))
     }
+
+    func testMockPracticeJourneyReturnsHome() {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 8))
+        app.swipeUp()
+
+        let startButton = app.buttons["saturnpath.home.start"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 3))
+        startButton.tap()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.practice.prompt"].waitForExistence(timeout: 5))
+        app.buttons["saturnpath.practice.choice.B"].tap()
+
+        let submitButton = app.buttons["saturnpath.practice.submit"]
+        XCTAssertTrue(submitButton.isEnabled)
+        submitButton.tap()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.practice.feedback"].waitForExistence(timeout: 5))
+        app.buttons["saturnpath.practice.next"].tap()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.practice.summary"].waitForExistence(timeout: 5))
+        app.buttons["saturnpath.practice.finish"].tap()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 5))
+    }
 }

@@ -11,6 +11,7 @@ struct AppDependencies: Sendable {
     let accountRepository: any AccountRepository
     let onboardingRepository: any OnboardingRepository
     let homeRepository: any HomeRepository
+    let practiceRepository: any PracticeRepository
 
     static func makeDefault(
         configuration: AppConfiguration = .current()
@@ -60,7 +61,8 @@ struct AppDependencies: Sendable {
             bootstrapRepository: MockBootstrapRepository(content: bootstrapContent),
             accountRepository: MockAccountRepository(),
             onboardingRepository: MockOnboardingRepository(),
-            homeRepository: MockHomeRepository()
+            homeRepository: MockHomeRepository(),
+            practiceRepository: MockPracticeRepository()
         )
     }
 
@@ -76,7 +78,8 @@ struct AppDependencies: Sendable {
         bootstrapRepository: MockBootstrapRepository(),
         accountRepository: MockAccountRepository(),
         onboardingRepository: MockOnboardingRepository(),
-        homeRepository: MockHomeRepository()
+        homeRepository: MockHomeRepository(),
+        practiceRepository: MockPracticeRepository()
     )
 
     private static func recoveryFileURL() -> URL {
