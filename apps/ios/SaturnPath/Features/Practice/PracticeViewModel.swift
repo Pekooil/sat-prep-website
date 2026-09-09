@@ -6,6 +6,7 @@ enum PracticeViewPhase: Equatable, Sendable {
     case loading
     case question
     case feedback
+    case recommendedStop
     case summary
     case failure(PracticeViewFailure)
 }
@@ -27,6 +28,7 @@ final class PracticeViewModel {
     private(set) var questionPresentedAt: Date?
     private(set) var accumulatedElapsedSeconds: TimeInterval = 0
     private(set) var isSubmitting = false
+    private(set) var isResolvingStop = false
 
     private var scratchNotes = ""
     private var submissionIdempotencyKey: String?
@@ -124,18 +126,59 @@ final class PracticeViewModel {
             return
         }
 
+        if feedback?.nextAction == .recommendedStop {
+            phase = .recommendedStop
+            return
+        }
+
         phase = .loading
+        await loadNext(
+            using: repository,
+            recoveryStore: recoveryStore,
+            sessionID: sessionID,
+            now: now
+        )
+    }
+
+    func keepPracticing(
+        using repository: any PracticeRepository,
+        recoveryStore: (any PracticeRecoveryStoring)? = nil,
+        now: Date = .now
+    ) async {
+        guard phase == .recommendedStop, let sessionID = questionStep?.sessionID, !isResolvingStop else {
+            return
+        }
+
+        isResolvingStop = true
+        await loadNext(
+            using: repository,
+            recoveryStore: recoveryStore,
+            sessionID: sessionID,
+            now: now
+        )
+        isResolvingStop = false
+    }
+
+    func finishRecommendedStop(
+        using repository: any PracticeRepository,
+        recoveryStore: (any PracticeRecoveryStoring)? = nil
+    ) async {
+        guard phase == .recommendedStop, let sessionID = questionStep?.sessionID, !isResolvingStop else {
+            return
+        }
+
+        isResolvingStop = true
         do {
-            switch try await repository.fetchNext(sessionID: sessionID) {
-            case let .question(step):
-                present(step, now: now)
-                await persist(using: recoveryStore, now: now)
-            case let .summary(summary):
-                self.summary = summary
-                phase = .summary
-                await discardRecovery(using: recoveryStore)
-            }
+            summary = try await repository.endSession(
+                sessionID: sessionID,
+                reason: .recommendedStop,
+                idempotencyKey: UUID().uuidString
+            )
+            isResolvingStop = false
+            phase = .summary
+            await discardRecovery(using: recoveryStore)
         } catch {
+            isResolvingStop = false
             phase = .failure(map(error))
         }
     }
@@ -204,6 +247,7 @@ final class PracticeViewModel {
         scratchNotes = ""
         submissionIdempotencyKey = nil
         isSubmitting = false
+        isResolvingStop = false
         phase = .question
     }
 
@@ -217,7 +261,30 @@ final class PracticeViewModel {
         scratchNotes = recovery.scratchNotes
         submissionIdempotencyKey = recovery.submissionIdempotencyKey
         isSubmitting = false
+        isResolvingStop = false
         phase = .question
+    }
+
+    private func loadNext(
+        using repository: any PracticeRepository,
+        recoveryStore: (any PracticeRecoveryStoring)?,
+        sessionID: String,
+        now: Date
+    ) async {
+        phase = .loading
+        do {
+            switch try await repository.fetchNext(sessionID: sessionID) {
+            case let .question(step):
+                present(step, now: now)
+                await persist(using: recoveryStore, now: now)
+            case let .summary(summary):
+                self.summary = summary
+                phase = .summary
+                await discardRecovery(using: recoveryStore)
+            }
+        } catch {
+            phase = .failure(map(error))
+        }
     }
 
     private func recoveryMatches(_ recovery: PracticeRecoveryState, step: PracticeQuestionStep) -> Bool {

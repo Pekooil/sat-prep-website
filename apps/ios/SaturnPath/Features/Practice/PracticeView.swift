@@ -33,8 +33,12 @@ struct PracticeView: View {
                 }
 
                 ToolbarItem(placement: .principal) {
-                    if let step = model.questionStep, model.phase != .summary {
+                    if let step = model.questionStep, model.phase == .question || model.phase == .feedback {
                         Text("Question \(step.position) of \(step.totalCount)")
+                            .font(SaturnPathTypography.caption)
+                            .foregroundStyle(SaturnPathTheme.mutedInk)
+                    } else if model.phase == .recommendedStop {
+                        Text("Daily goal")
                             .font(SaturnPathTypography.caption)
                             .foregroundStyle(SaturnPathTheme.mutedInk)
                     } else {
@@ -113,6 +117,26 @@ struct PracticeView: View {
                     }
                 }
             }
+        case .recommendedStop:
+            PracticeStopRecommendationView(
+                isWorking: model.isResolvingStop,
+                onFinish: {
+                    Task {
+                        await model.finishRecommendedStop(
+                            using: dependencies.practiceRepository,
+                            recoveryStore: dependencies.recoveryStore
+                        )
+                    }
+                },
+                onKeepPracticing: {
+                    Task {
+                        await model.keepPracticing(
+                            using: dependencies.practiceRepository,
+                            recoveryStore: dependencies.recoveryStore
+                        )
+                    }
+                }
+            )
         case .summary:
             if let summary = model.summary {
                 PracticeSummaryView(summary: summary, onFinish: closeAndDiscard)
@@ -386,12 +410,14 @@ private struct PracticeFeedbackView: View {
                 }
                 .spGlassCard(padding: SaturnPathSpacing.large, radius: SaturnPathRadius.card)
 
-                VStack(spacing: SaturnPathSpacing.small) {
-                    feedbackSignal(icon: "timer", text: feedback.pacingMessage, color: SaturnPathTheme.sky)
-                    feedbackSignal(icon: "point.topleft.down.curvedto.point.bottomright.up", text: feedback.pathDeltaMessage, color: SaturnPathTheme.primary)
+                feedbackSignal(icon: "timer", text: feedback.pacingMessage, color: SaturnPathTheme.sky)
+                PracticePathChangeView(pathChange: feedback.pathChange)
+
+                if let adaptation = feedback.adaptation {
+                    PracticeAdaptationView(adaptation: adaptation)
                 }
 
-                Button(feedback.nextAction == .nextQuestion ? "Next" : "Finish", action: onContinue)
+                Button(nextButtonTitle, action: onContinue)
                     .buttonStyle(SaturnPathPrimaryButtonStyle())
                     .accessibilityIdentifier("saturnpath.practice.next")
             }
@@ -414,6 +440,207 @@ private struct PracticeFeedbackView: View {
             Spacer()
         }
         .spGlassCard(padding: SaturnPathSpacing.medium, radius: SaturnPathRadius.card)
+    }
+
+    private var nextButtonTitle: String {
+        switch feedback.nextAction {
+        case .continuePractice:
+            "Next Question"
+        case .microSetSummary:
+            "View Route Update"
+        case .recommendedStop:
+            "View Recommendation"
+        case .sessionComplete:
+            "View Summary"
+        }
+    }
+}
+
+private struct PracticePathChangeView: View {
+    let pathChange: PracticePathChangeContent
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SaturnPathSpacing.medium) {
+            HStack(spacing: SaturnPathSpacing.small) {
+                Label("Path updated", systemImage: icon)
+                    .font(SaturnPathTypography.bodyStrong)
+                    .foregroundStyle(SaturnPathTheme.ink)
+
+                Spacer()
+
+                Text(pathChange.impactLabel)
+                    .font(SaturnPathTypography.eyebrow)
+                    .foregroundStyle(SaturnPathTheme.primaryDeep)
+                    .padding(.horizontal, SaturnPathSpacing.small)
+                    .padding(.vertical, SaturnPathSpacing.xSmall)
+                    .background(SaturnPathTheme.primarySoft, in: Capsule())
+            }
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: SaturnPathSpacing.small) {
+                    routeStop(pathChange.beforeLabel, isDestination: false)
+                    Image(systemName: "arrow.right")
+                        .foregroundStyle(SaturnPathTheme.softInk)
+                        .accessibilityHidden(true)
+                    routeStop(pathChange.afterLabel, isDestination: true)
+                }
+
+                VStack(alignment: .leading, spacing: SaturnPathSpacing.small) {
+                    routeStop(pathChange.beforeLabel, isDestination: false)
+                    Image(systemName: "arrow.down")
+                        .foregroundStyle(SaturnPathTheme.softInk)
+                        .accessibilityHidden(true)
+                    routeStop(pathChange.afterLabel, isDestination: true)
+                }
+            }
+        }
+        .spGlassCard(padding: SaturnPathSpacing.medium, radius: SaturnPathRadius.card)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            "Path updated from \(pathChange.beforeLabel) to \(pathChange.afterLabel). \(pathChange.impactLabel)."
+        )
+        .accessibilityIdentifier("saturnpath.practice.path-change")
+    }
+
+    private func routeStop(_ label: String, isDestination: Bool) -> some View {
+        Text(label)
+            .font(SaturnPathTypography.caption)
+            .foregroundStyle(isDestination ? SaturnPathTheme.primaryDeep : SaturnPathTheme.mutedInk)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .padding(.horizontal, SaturnPathSpacing.small)
+            .background(
+                isDestination ? SaturnPathTheme.primarySoft : SaturnPathTheme.canvas,
+                in: RoundedRectangle(cornerRadius: 13, style: .continuous)
+            )
+    }
+
+    private var icon: String {
+        switch pathChange.kind {
+        case .routeSwap:
+            "point.topleft.down.curvedto.point.bottomright.up"
+        case .timeDelta:
+            "timer"
+        case .reviewAdded:
+            "arrow.trianglehead.2.clockwise.rotate.90"
+        case .workRemoved:
+            "checkmark.circle"
+        case .noChange:
+            "equal.circle"
+        }
+    }
+}
+
+private struct PracticeAdaptationView: View {
+    let adaptation: PracticeAdaptationContent
+
+    var body: some View {
+        HStack(alignment: .top, spacing: SaturnPathSpacing.medium) {
+            Image(systemName: "sparkles")
+                .font(.system(.title3, weight: .semibold))
+                .foregroundStyle(SaturnPathTheme.primaryDeep)
+                .frame(width: 44, height: 44)
+                .background(SaturnPathTheme.surfaceStrong, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: SaturnPathSpacing.xSmall) {
+                Text(adaptation.headline)
+                    .font(SaturnPathTypography.bodyStrong)
+                    .foregroundStyle(SaturnPathTheme.ink)
+                Text(adaptation.detail)
+                    .font(SaturnPathTypography.body)
+                    .foregroundStyle(SaturnPathTheme.mutedInk)
+                    .lineSpacing(3)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(SaturnPathSpacing.medium)
+        .background(
+            LinearGradient(
+                colors: [SaturnPathTheme.primarySoft, SaturnPathTheme.skySoft],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: SaturnPathRadius.card, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: SaturnPathRadius.card, style: .continuous)
+                .stroke(SaturnPathTheme.primary.opacity(0.22), lineWidth: 1)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("saturnpath.practice.adaptation")
+    }
+}
+
+private struct PracticeStopRecommendationView: View {
+    let isWorking: Bool
+    let onFinish: () -> Void
+    let onKeepPracticing: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: SaturnPathSpacing.xLarge) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 34, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 68, height: 68)
+                    .background(SaturnPathTheme.mintDeep, in: Circle())
+                    .accessibilityHidden(true)
+
+                VStack(spacing: SaturnPathSpacing.small) {
+                    Text("DAILY GOAL COMPLETE")
+                        .font(SaturnPathTypography.eyebrow)
+                        .tracking(1.1)
+                        .foregroundStyle(SaturnPathTheme.primaryDeep)
+
+                    Text("You’re good for today.")
+                        .font(SaturnPathTypography.pageTitle)
+                        .foregroundStyle(SaturnPathTheme.ink)
+                        .multilineTextAlignment(.center)
+                        .accessibilityAddTraits(.isHeader)
+
+                    Text("SaturnPath has enough signal to adapt your next session. You can finish here or keep practicing.")
+                        .font(SaturnPathTypography.body)
+                        .foregroundStyle(SaturnPathTheme.mutedInk)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("saturnpath.practice.stop-recommendation")
+
+                VStack(spacing: SaturnPathSpacing.small) {
+                    Button(action: onFinish) {
+                        if isWorking {
+                            ProgressView()
+                                .tint(.white)
+                                .accessibilityLabel("Finishing session")
+                        } else {
+                            Text("Finish")
+                        }
+                    }
+                    .buttonStyle(SaturnPathPrimaryButtonStyle())
+                    .disabled(isWorking)
+                    .accessibilityIdentifier("saturnpath.practice.stop.finish")
+
+                    Button("Keep Practicing", action: onKeepPracticing)
+                        .font(SaturnPathTypography.bodyStrong)
+                        .foregroundStyle(SaturnPathTheme.primaryDeep)
+                        .frame(maxWidth: .infinity, minHeight: 56)
+                        .background(SaturnPathTheme.surfaceStrong, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(SaturnPathTheme.primary.opacity(0.34), lineWidth: 1)
+                        }
+                        .disabled(isWorking)
+                        .accessibilityIdentifier("saturnpath.practice.stop.keep")
+                }
+            }
+            .frame(maxWidth: 560)
+            .padding(.horizontal, SaturnPathSpacing.large)
+            .padding(.vertical, SaturnPathSpacing.xxLarge)
+            .frame(maxWidth: .infinity, minHeight: 620)
+        }
+        .scrollIndicators(.hidden)
     }
 }
 

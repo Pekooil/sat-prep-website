@@ -76,7 +76,9 @@ Home now opens a native question → feedback → summary experience backed by a
 
 The active public question snapshot, response, foreground elapsed time, session identifiers, scratch-note placeholder, and pending idempotency key are stored locally. Background time does not inflate response timing, ambiguous submission retries reuse their original key, relaunch restores the active question, and explicit exit or successful submission clears recovery.
 
-This is not a live adaptive session. The sample question and feedback remain isolated mock data until the practice API handoff is marked `READY`; physical-device validation also remains open. See `docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md`.
+Adaptive feedback now renders a structured before/after route tile and an optional, more prominent micro-set adaptation card directly from repository content. Repository-directed stop recommendations open a dedicated “You’re good for today” state where the student can finish for a server-owned summary or ask the repository for another selected question. The Swift layer does not calculate mastery, selection priority, route changes, or savings.
+
+This is not a live adaptive session. The sample question and feedback remain isolated mock data until the practice API handoff is marked `READY`; physical-device validation also remains open. See `docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md` and `docs/ios/STEP-12-ADAPTIVE-PRESENTATION-FOUNDATION.md`.
 
 ## Signing status
 

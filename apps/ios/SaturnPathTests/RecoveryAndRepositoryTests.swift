@@ -4,6 +4,16 @@ import Testing
 
 struct RecoveryAndRepositoryTests {
     @Test
+    func adaptivePresentationValuesMatchTheVersionedContract() {
+        #expect(PracticeNextAction.continuePractice.rawValue == "continue")
+        #expect(PracticeNextAction.microSetSummary.rawValue == "micro_set_summary")
+        #expect(PracticeNextAction.recommendedStop.rawValue == "recommended_stop")
+        #expect(PracticeNextAction.sessionComplete.rawValue == "session_complete")
+        #expect(PracticePathChangeKind.routeSwap.rawValue == "route_swap")
+        #expect(PracticeEndReason.recommendedStop.rawValue == "recommended_stop")
+    }
+
+    @Test
     func recoveryStoreRoundTripsPracticeState() async throws {
         let store = InMemoryPracticeRecoveryStore()
         let state = PracticeRecoveryState(

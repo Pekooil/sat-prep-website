@@ -71,6 +71,56 @@ struct PracticeViewModelTests {
     }
 
     @Test
+    func recommendedStopIsPresentedBeforeTheSessionEnds() async {
+        let repository = RecommendedStopPracticeRepository()
+        let model = PracticeViewModel()
+        await model.start(using: repository)
+        model.selectResponse("B")
+        await model.submit(using: repository)
+
+        await model.advance(using: repository)
+
+        #expect(model.phase == .recommendedStop)
+        #expect(await repository.nextCount == 0)
+        #expect(await repository.endCount == 0)
+    }
+
+    @Test
+    func recommendedStopCanFinishWithServerSummary() async {
+        let repository = RecommendedStopPracticeRepository()
+        let model = PracticeViewModel()
+        await model.start(using: repository)
+        model.selectResponse("B")
+        await model.submit(using: repository)
+        await model.advance(using: repository)
+
+        await model.finishRecommendedStop(using: repository)
+
+        #expect(model.phase == .summary)
+        #expect(model.summary == .mock)
+        #expect(await repository.endCount == 1)
+        #expect(await repository.lastEndReason == .recommendedStop)
+        #expect(await repository.lastEndKey?.isEmpty == false)
+    }
+
+    @Test
+    func recommendedStopCanContinueWithTheServerSelectedQuestion() async {
+        let repository = RecommendedStopPracticeRepository()
+        let model = PracticeViewModel()
+        await model.start(using: repository)
+        model.selectResponse("B")
+        await model.submit(using: repository)
+        await model.advance(using: repository)
+
+        await model.keepPracticing(using: repository)
+
+        #expect(model.phase == .question)
+        #expect(model.questionStep == .mockContinuation)
+        #expect(await repository.nextCount == 1)
+        #expect(await repository.endCount == 0)
+    }
+
+    @Test
     func suspendedQuestionRestoresSelectionAndForegroundElapsedTime() async throws {
         let repository = RecordingPracticeRepository()
         let recoveryStore = InMemoryPracticeRecoveryStore()
@@ -205,6 +255,51 @@ private actor RecordingPracticeRepository: PracticeRepository {
     func fetchNext(sessionID: String) -> PracticeNextContent {
         .summary(.mock)
     }
+
+    func endSession(
+        sessionID: String,
+        reason: PracticeEndReason,
+        idempotencyKey: String
+    ) -> PracticeSummaryContent {
+        .mock
+    }
+}
+
+private actor RecommendedStopPracticeRepository: PracticeRepository {
+    private(set) var nextCount = 0
+    private(set) var endCount = 0
+    private(set) var lastEndReason: PracticeEndReason?
+    private(set) var lastEndKey: String?
+
+    func startOrResume() -> PracticeQuestionStep {
+        .mock
+    }
+
+    func submitResponse(
+        sessionID: String,
+        questionID: String,
+        response: String,
+        elapsedSeconds: Int,
+        idempotencyKey: String
+    ) -> PracticeFeedbackContent {
+        .recommendedStopMock
+    }
+
+    func fetchNext(sessionID: String) -> PracticeNextContent {
+        nextCount += 1
+        return .question(.mockContinuation)
+    }
+
+    func endSession(
+        sessionID: String,
+        reason: PracticeEndReason,
+        idempotencyKey: String
+    ) -> PracticeSummaryContent {
+        endCount += 1
+        lastEndReason = reason
+        lastEndKey = idempotencyKey
+        return .mock
+    }
 }
 
 private actor FlakyPracticeRepository: PracticeRepository {
@@ -231,6 +326,14 @@ private actor FlakyPracticeRepository: PracticeRepository {
     func fetchNext(sessionID: String) -> PracticeNextContent {
         .summary(.mock)
     }
+
+    func endSession(
+        sessionID: String,
+        reason: PracticeEndReason,
+        idempotencyKey: String
+    ) -> PracticeSummaryContent {
+        .mock
+    }
 }
 
 private struct FailingPracticeRepository: PracticeRepository {
@@ -251,6 +354,14 @@ private struct FailingPracticeRepository: PracticeRepository {
     }
 
     func fetchNext(sessionID: String) throws -> PracticeNextContent {
+        throw error
+    }
+
+    func endSession(
+        sessionID: String,
+        reason: PracticeEndReason,
+        idempotencyKey: String
+    ) throws -> PracticeSummaryContent {
         throw error
     }
 }

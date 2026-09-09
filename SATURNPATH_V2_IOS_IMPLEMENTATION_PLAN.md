@@ -3,7 +3,7 @@
 > **Session trigger:** `Continue working on the iOS app.`  
 > When this phrase is used, read `SATURNPATH_V2_SESSION_ROUTER.md` and `docs/coordination/WEB_TO_IOS_HANDOFFS.md`, then execute the first incomplete, unblocked item in the iOS-only checklist in Section 22. Do not implement or modify the shared backend.
 
-**Status:** Active — I1 complete; I3 client infrastructure, I4 auth/onboarding presentation foundation, I5 native shell/UI-state foundation, and I6 practice presentation plus lifecycle recovery complete; signed TestFlight build I2 blocked by Apple membership; live contract-backed features blocked on web handoffs
+**Status:** Active — I1 complete; I3 client infrastructure, I4 auth/onboarding presentation foundation, I5 native shell/UI-state foundation, I6 practice presentation plus lifecycle recovery, and the I7 adaptive presentation foundation complete; signed TestFlight build I2 blocked by Apple membership; live contract-backed features blocked on web handoffs
 
 **Prepared:** August 25, 2026  
 **Initial release:** Public iOS App Store release  
@@ -944,7 +944,9 @@ The complete answer-free practice presentation, submission guard, server-shaped 
 - [ ] Present server-provided “Why this question” title and two visual metrics.
 - [ ] Present subtle per-answer route deltas and larger micro-set adaptation changes.
 - [ ] Implement server-directed stopping with Finish and Keep Practicing.
-- [ ] Do not calculate or override mastery, routes, selection priority, or savings in Swift.
+- [x] Do not calculate or override mastery, routes, selection priority, or savings in Swift. Evidence: [`docs/ios/STEP-12-ADAPTIVE-PRESENTATION-FOUNDATION.md`](docs/ios/STEP-12-ADAPTIVE-PRESENTATION-FOUNDATION.md).
+
+The complete adaptive presentation is implemented against repository-provided mock responses: exactly two selection signals, structured before/after path changes, optional prominent micro-set adaptation messaging, and a server-directed stop state with Finish and Keep Practicing. The first three production checkboxes remain open until the practice milestone is `READY` and these views render live server responses. Evidence: [`docs/ios/STEP-12-ADAPTIVE-PRESENTATION-FOUNDATION.md`](docs/ios/STEP-12-ADAPTIVE-PRESENTATION-FOUNDATION.md).
 
 ### I8. Native Review and error-resolution experience
 

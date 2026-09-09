@@ -69,7 +69,20 @@ final class SaturnPathUITests: XCTestCase {
         submitButton.tap()
 
         XCTAssertTrue(app.staticTexts["saturnpath.practice.feedback"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["saturnpath.practice.path-change"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["saturnpath.practice.adaptation"].exists)
+        let feedbackScreenshot = XCTAttachment(screenshot: app.screenshot())
+        feedbackScreenshot.name = "Adaptive route feedback"
+        feedbackScreenshot.lifetime = .keepAlways
+        add(feedbackScreenshot)
         app.buttons["saturnpath.practice.next"].tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)["saturnpath.practice.stop-recommendation"].waitForExistence(timeout: 5))
+        let recommendationScreenshot = XCTAttachment(screenshot: app.screenshot())
+        recommendationScreenshot.name = "Adaptive stop recommendation"
+        recommendationScreenshot.lifetime = .keepAlways
+        add(recommendationScreenshot)
+        app.buttons["saturnpath.practice.stop.finish"].tap()
 
         XCTAssertTrue(app.staticTexts["saturnpath.practice.summary"].waitForExistence(timeout: 5))
         app.buttons["saturnpath.practice.finish"].tap()
@@ -102,6 +115,30 @@ final class SaturnPathUITests: XCTestCase {
         XCTAssertTrue(restoredChoice.isSelected)
         XCTAssertTrue(app.descendants(matching: .any)["saturnpath.practice.timer"].exists)
 
+        app.buttons["saturnpath.practice.close"].tap()
+        app.buttons["Leave Practice"].tap()
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 5))
+    }
+
+    func testRecommendedStopCanKeepPracticing() {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 8))
+        app.swipeUp()
+        app.buttons["saturnpath.home.start"].tap()
+
+        XCTAssertTrue(app.buttons["saturnpath.practice.choice.B"].waitForExistence(timeout: 5))
+        app.buttons["saturnpath.practice.choice.B"].tap()
+        app.buttons["saturnpath.practice.submit"].tap()
+        XCTAssertTrue(app.staticTexts["saturnpath.practice.feedback"].waitForExistence(timeout: 5))
+        app.buttons["saturnpath.practice.next"].tap()
+
+        let keepPracticing = app.buttons["saturnpath.practice.stop.keep"]
+        XCTAssertTrue(keepPracticing.waitForExistence(timeout: 5))
+        keepPracticing.tap()
+
+        XCTAssertTrue(app.textFields["saturnpath.practice.student-response"].waitForExistence(timeout: 5))
         app.buttons["saturnpath.practice.close"].tap()
         app.buttons["Leave Practice"].tap()
         XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 5))
