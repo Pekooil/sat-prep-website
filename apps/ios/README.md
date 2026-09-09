@@ -64,6 +64,12 @@ The app launches into Home, Progress, Review, and Profile tabs. Home is a comple
 
 The design system uses semantic system typography, Dynamic Type, accessible control sizes, VoiceOver summaries, reduced-motion-aware transitions, and safe clearance above the system tab bar. Implementation and verification evidence is recorded in `docs/ios/STEP-09-NATIVE-SHELL-AND-HOME-FOUNDATION.md`.
 
+## Authentication and onboarding foundation
+
+The app root now routes mock bootstrap states to sign-in, onboarding, or the main tabs. The native three-step onboarding flow captures score baseline and target, SAT date, timing accommodation, and optional scratchwork-analysis consent. Set `SATURNPATH_MOCK_ROOT_STATE` to `sign-in` or `onboarding` in a local launch environment to inspect those deterministic states.
+
+These screens are presentation foundations, not live authentication. Sign in with Apple, Supabase session exchange, email deep links, profile persistence, and account deletion remain disabled until Apple signing and the relevant backend handoffs are ready. See `docs/ios/STEP-10-AUTH-AND-ONBOARDING-FOUNDATION.md`.
+
 ## Signing status
 
 Automatic signing is configured, but no development team is committed to the repository. After the individual Apple Developer membership becomes active, select the paid team in Xcode for the `SaturnPath` target, register the explicit App ID, create the App Store Connect record, and archive through Product → Archive.

@@ -3,7 +3,7 @@
 > **Session trigger:** `Continue working on the iOS app.`  
 > When this phrase is used, read `SATURNPATH_V2_SESSION_ROUTER.md` and `docs/coordination/WEB_TO_IOS_HANDOFFS.md`, then execute the first incomplete, unblocked item in the iOS-only checklist in Section 22. Do not implement or modify the shared backend.
 
-**Status:** Active — I1 complete; I3 client infrastructure and I5 native shell/UI-state foundation complete; signed TestFlight build I2 blocked by Apple membership; live contract-backed features blocked on web handoffs
+**Status:** Active — I1 complete; I3 client infrastructure, I4 auth/onboarding presentation foundation, and I5 native shell/UI-state foundation complete; signed TestFlight build I2 blocked by Apple membership; live contract-backed features blocked on web handoffs
 
 **Prepared:** August 25, 2026  
 **Initial release:** Public iOS App Store release  
@@ -918,6 +918,8 @@ The local portion is complete; the signed archive is externally blocked. Evidenc
 - [ ] Implement native onboarding using the shared bootstrap/profile behavior.
 - [ ] Implement account-linking presentation and native account-deletion confirmation against the shared endpoint.
 - [ ] Verify auth expiry, cancellation, private relay, relaunch, and deletion on simulator and physical device.
+
+The mock-backed root router, sign-in presentation, three-step onboarding flow, validation, error presentation, and end-to-end simulator path are complete. Apple authorization, Supabase session exchange, deep links, profile persistence, sign-out, recovery, and deletion remain unchecked until signing and backend milestones are ready. Evidence: [`docs/ios/STEP-10-AUTH-AND-ONBOARDING-FOUNDATION.md`](docs/ios/STEP-10-AUTH-AND-ONBOARDING-FOUNDATION.md).
 
 ### I5. Native shell, navigation, and Home
 

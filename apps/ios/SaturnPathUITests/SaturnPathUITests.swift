@@ -32,4 +32,21 @@ final class SaturnPathUITests: XCTestCase {
         app.tabBars.buttons["Home"].tap()
         XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 2))
     }
+
+    func testMockSignInAndOnboardingReachHome() {
+        let app = XCUIApplication()
+        app.launchEnvironment["SATURNPATH_MOCK_ROOT_STATE"] = "sign-in"
+        app.launch()
+
+        let appleButton = app.buttons["saturnpath.auth.apple"]
+        XCTAssertTrue(appleButton.waitForExistence(timeout: 8))
+        appleButton.tap()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.onboarding.title"].waitForExistence(timeout: 3))
+        app.buttons["saturnpath.onboarding.continue"].tap()
+        app.buttons["saturnpath.onboarding.continue"].tap()
+        app.buttons["saturnpath.onboarding.continue"].tap()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 5))
+    }
 }

@@ -8,6 +8,8 @@ struct AppDependencies: Sendable {
     let sessionStore: any SessionStoring
     let recoveryStore: any PracticeRecoveryStoring
     let bootstrapRepository: any BootstrapRepository
+    let accountRepository: any AccountRepository
+    let onboardingRepository: any OnboardingRepository
     let homeRepository: any HomeRepository
 
     static func makeDefault(
@@ -25,6 +27,29 @@ struct AppDependencies: Sendable {
             )
         }
 
+        let mockRootState = ProcessInfo.processInfo.environment["SATURNPATH_MOCK_ROOT_STATE"]
+        let bootstrapContent: AppBootstrapViewContent
+        switch mockRootState {
+        case "sign-in":
+            bootstrapContent = AppBootstrapViewContent(
+                isAuthenticated: false,
+                hasCompletedOnboarding: false,
+                displayName: nil
+            )
+        case "onboarding":
+            bootstrapContent = AppBootstrapViewContent(
+                isAuthenticated: true,
+                hasCompletedOnboarding: false,
+                displayName: "Explorer"
+            )
+        default:
+            bootstrapContent = AppBootstrapViewContent(
+                isAuthenticated: true,
+                hasCompletedOnboarding: true,
+                displayName: "Explorer"
+            )
+        }
+
         // Live repositories are added only after a tested contract milestone is READY.
         return Self(
             configuration: configuration,
@@ -32,7 +57,9 @@ struct AppDependencies: Sendable {
             apiClient: apiClient,
             sessionStore: sessionStore,
             recoveryStore: recoveryStore,
-            bootstrapRepository: MockBootstrapRepository(),
+            bootstrapRepository: MockBootstrapRepository(content: bootstrapContent),
+            accountRepository: MockAccountRepository(),
+            onboardingRepository: MockOnboardingRepository(),
             homeRepository: MockHomeRepository()
         )
     }
@@ -47,6 +74,8 @@ struct AppDependencies: Sendable {
         sessionStore: InMemorySessionStore(),
         recoveryStore: InMemoryPracticeRecoveryStore(),
         bootstrapRepository: MockBootstrapRepository(),
+        accountRepository: MockAccountRepository(),
+        onboardingRepository: MockOnboardingRepository(),
         homeRepository: MockHomeRepository()
     )
 
