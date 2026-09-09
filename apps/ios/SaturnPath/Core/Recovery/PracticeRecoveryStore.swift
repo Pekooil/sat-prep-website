@@ -7,6 +7,28 @@ struct PracticeRecoveryState: Codable, Equatable, Sendable {
     let elapsedSeconds: TimeInterval
     let scratchNotes: String
     let updatedAt: Date
+    let questionStep: PracticeQuestionStep?
+    let submissionIdempotencyKey: String?
+
+    init(
+        sessionID: String,
+        questionID: String,
+        selectedResponse: String?,
+        elapsedSeconds: TimeInterval,
+        scratchNotes: String,
+        updatedAt: Date,
+        questionStep: PracticeQuestionStep? = nil,
+        submissionIdempotencyKey: String? = nil
+    ) {
+        self.sessionID = sessionID
+        self.questionID = questionID
+        self.selectedResponse = selectedResponse
+        self.elapsedSeconds = elapsedSeconds
+        self.scratchNotes = scratchNotes
+        self.updatedAt = updatedAt
+        self.questionStep = questionStep
+        self.submissionIdempotencyKey = submissionIdempotencyKey
+    }
 }
 
 enum PracticeRecoveryStoreError: Error, Equatable, Sendable {

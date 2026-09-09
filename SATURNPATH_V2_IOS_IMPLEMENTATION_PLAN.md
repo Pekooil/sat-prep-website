@@ -3,7 +3,7 @@
 > **Session trigger:** `Continue working on the iOS app.`  
 > When this phrase is used, read `SATURNPATH_V2_SESSION_ROUTER.md` and `docs/coordination/WEB_TO_IOS_HANDOFFS.md`, then execute the first incomplete, unblocked item in the iOS-only checklist in Section 22. Do not implement or modify the shared backend.
 
-**Status:** Active — I1 complete; I3 client infrastructure, I4 auth/onboarding presentation foundation, I5 native shell/UI-state foundation, and I6 practice presentation foundation complete; signed TestFlight build I2 blocked by Apple membership; live contract-backed features blocked on web handoffs
+**Status:** Active — I1 complete; I3 client infrastructure, I4 auth/onboarding presentation foundation, I5 native shell/UI-state foundation, and I6 practice presentation plus lifecycle recovery complete; signed TestFlight build I2 blocked by Apple membership; live contract-backed features blocked on web handoffs
 
 **Prepared:** August 25, 2026  
 **Initial release:** Public iOS App Store release  
@@ -934,10 +934,10 @@ The approved Home presentation is implemented against deterministic mock reposit
 
 - [ ] Implement Start Practicing, answer-free question rendering, response timing, choices/student-produced responses, and idempotent submission.
 - [ ] Render correctness, concise explanation, visual pacing, path delta, and next action from server responses.
-- [ ] Preserve question, selection, timer, and session state across background/foreground and termination.
+- [x] Preserve question, selection, timer, and session state across background/foreground and termination. Evidence: [`docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md`](docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md).
 - [ ] Verify Home → Start → question → feedback → next → summary on a physical iPhone with no hard-coded question data.
 
-The complete answer-free practice presentation, submission guard, server-shaped feedback, summary flow, error states, unit coverage, and simulator UI journey are implemented against a deterministic mock repository. Production checkboxes remain open until the practice contract is `READY`, lifecycle recovery is connected, and the flow is verified with live content on a signed physical iPhone. Evidence: [`docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md`](docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md).
+The complete answer-free practice presentation, submission guard, server-shaped feedback, summary flow, error states, lifecycle recovery, unit coverage, and simulator UI journeys are implemented against a deterministic mock repository. The live rendering/response checkboxes remain open until the practice contract is `READY`, and final verification remains open until the flow uses live content on a signed physical iPhone. Evidence: [`docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md`](docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md).
 
 ### I7. Native adaptive and selection presentation
 

@@ -12,7 +12,9 @@ struct RecoveryAndRepositoryTests {
             selectedResponse: "B",
             elapsedSeconds: 42,
             scratchNotes: "2x = 8",
-            updatedAt: Date(timeIntervalSince1970: 1_000)
+            updatedAt: Date(timeIntervalSince1970: 1_000),
+            questionStep: .mock,
+            submissionIdempotencyKey: "submission-1"
         )
 
         try await store.save(state)

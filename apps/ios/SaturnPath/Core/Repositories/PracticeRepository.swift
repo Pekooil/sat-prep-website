@@ -1,22 +1,22 @@
 import Foundation
 
-enum PracticeResponseKind: Equatable, Sendable {
+enum PracticeResponseKind: String, Codable, Equatable, Sendable {
     case multipleChoice
     case studentProduced
 }
 
-struct PracticeChoiceContent: Equatable, Identifiable, Sendable {
+struct PracticeChoiceContent: Codable, Equatable, Identifiable, Sendable {
     let id: String
     let text: String
 }
 
-struct PracticeMetricContent: Equatable, Identifiable, Sendable {
+struct PracticeMetricContent: Codable, Equatable, Identifiable, Sendable {
     let id: String
     let label: String
     let value: String
 }
 
-struct PracticeQuestionContent: Equatable, Identifiable, Sendable {
+struct PracticeQuestionContent: Codable, Equatable, Identifiable, Sendable {
     let id: String
     let sectionLabel: String
     let skillLabel: String
@@ -28,24 +28,24 @@ struct PracticeQuestionContent: Equatable, Identifiable, Sendable {
     let whyMetrics: [PracticeMetricContent]
 }
 
-struct PracticeQuestionStep: Equatable, Sendable {
+struct PracticeQuestionStep: Codable, Equatable, Sendable {
     let sessionID: String
     let position: Int
     let totalCount: Int
     let question: PracticeQuestionContent
 }
 
-enum PracticeCorrectness: Equatable, Sendable {
+enum PracticeCorrectness: String, Codable, Equatable, Sendable {
     case correct
     case incorrect
 }
 
-enum PracticeNextAction: Equatable, Sendable {
+enum PracticeNextAction: String, Codable, Equatable, Sendable {
     case nextQuestion
     case finish
 }
 
-struct PracticeFeedbackContent: Equatable, Sendable {
+struct PracticeFeedbackContent: Codable, Equatable, Sendable {
     let correctness: PracticeCorrectness
     let headline: String
     let explanation: String
@@ -54,7 +54,7 @@ struct PracticeFeedbackContent: Equatable, Sendable {
     let nextAction: PracticeNextAction
 }
 
-struct PracticeSummaryContent: Equatable, Sendable {
+struct PracticeSummaryContent: Codable, Equatable, Sendable {
     let completedCount: Int
     let correctCount: Int
     let elapsedMinutes: Int

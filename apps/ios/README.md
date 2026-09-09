@@ -74,7 +74,9 @@ These screens are presentation foundations, not live authentication. Sign in wit
 
 Home now opens a native question → feedback → summary experience backed by a deterministic practice repository. The question model contains no answer key; the view sends the selected response, elapsed time, session and question identifiers, and a fresh idempotency key to the repository, then renders repository-owned correctness and adaptation messaging. Multiple-choice and student-produced response controls, loading and error states, leave confirmation, Dynamic Type, accessible labels, and duplicate-submission protection are included.
 
-This is not a live adaptive session. The sample question and feedback remain isolated mock data until the practice API handoff is marked `READY`; persistence across termination and physical-device validation also remain open. See `docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md`.
+The active public question snapshot, response, foreground elapsed time, session identifiers, scratch-note placeholder, and pending idempotency key are stored locally. Background time does not inflate response timing, ambiguous submission retries reuse their original key, relaunch restores the active question, and explicit exit or successful submission clears recovery.
+
+This is not a live adaptive session. The sample question and feedback remain isolated mock data until the practice API handoff is marked `READY`; physical-device validation also remains open. See `docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md`.
 
 ## Signing status
 

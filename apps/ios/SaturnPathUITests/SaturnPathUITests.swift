@@ -76,4 +76,34 @@ final class SaturnPathUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 5))
     }
+
+    func testPracticeQuestionRestoresAfterTermination() {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 8))
+        app.swipeUp()
+        app.buttons["saturnpath.home.start"].tap()
+
+        let choice = app.buttons["saturnpath.practice.choice.D"]
+        XCTAssertTrue(choice.waitForExistence(timeout: 5))
+        choice.tap()
+        XCTAssertTrue(choice.isSelected)
+
+        app.terminate()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 8))
+        app.swipeUp()
+        app.buttons["saturnpath.home.start"].tap()
+
+        let restoredChoice = app.buttons["saturnpath.practice.choice.D"]
+        XCTAssertTrue(restoredChoice.waitForExistence(timeout: 5))
+        XCTAssertTrue(restoredChoice.isSelected)
+        XCTAssertTrue(app.descendants(matching: .any)["saturnpath.practice.timer"].exists)
+
+        app.buttons["saturnpath.practice.close"].tap()
+        app.buttons["Leave Practice"].tap()
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 5))
+    }
 }

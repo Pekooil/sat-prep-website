@@ -5,6 +5,7 @@ struct PracticeView: View {
 
     @Environment(\.appDependencies) private var dependencies
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @State private var model = PracticeViewModel()
     @State private var showsCloseConfirmation = false
 
@@ -20,7 +21,7 @@ struct PracticeView: View {
                         if model.phase == .question || model.phase == .feedback {
                             showsCloseConfirmation = true
                         } else {
-                            onClose()
+                            closeAndDiscard()
                         }
                     } label: {
                         Image(systemName: "xmark")
@@ -50,19 +51,46 @@ struct PracticeView: View {
             guard model.phase == .idle else {
                 return
             }
-            await model.start(using: dependencies.practiceRepository)
+            await model.start(
+                using: dependencies.practiceRepository,
+                recoveryStore: dependencies.recoveryStore
+            )
+        }
+        .onChange(of: model.selectedResponse) { _, _ in
+            Task {
+                await model.persist(using: dependencies.recoveryStore)
+            }
+        }
+        .onChange(of: scenePhase) { _, nextPhase in
+            switch nextPhase {
+            case .active:
+                model.resume()
+            case .inactive, .background:
+                Task {
+                    await model.suspend(using: dependencies.recoveryStore)
+                }
+            @unknown default:
+                break
+            }
         }
         .confirmationDialog(
             "Leave this practice session?",
             isPresented: $showsCloseConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Leave Practice", role: .destructive, action: onClose)
+            Button("Leave Practice", role: .destructive, action: closeAndDiscard)
             Button("Keep Practicing", role: .cancel) {}
         } message: {
-            Text("This mock practice session won’t be saved.")
+            Text("Your saved response for this question will be cleared.")
         }
         .animation(SaturnPathMotion.standard(reduceMotion: reduceMotion), value: model.phase)
+    }
+
+    private func closeAndDiscard() {
+        Task {
+            await model.discardRecovery(using: dependencies.recoveryStore)
+            onClose()
+        }
     }
 
     @ViewBuilder
@@ -78,18 +106,24 @@ struct PracticeView: View {
             if let feedback = model.feedback {
                 PracticeFeedbackView(feedback: feedback) {
                     Task {
-                        await model.advance(using: dependencies.practiceRepository)
+                        await model.advance(
+                            using: dependencies.practiceRepository,
+                            recoveryStore: dependencies.recoveryStore
+                        )
                     }
                 }
             }
         case .summary:
             if let summary = model.summary {
-                PracticeSummaryView(summary: summary, onFinish: onClose)
+                PracticeSummaryView(summary: summary, onFinish: closeAndDiscard)
             }
         case let .failure(failure):
             PracticeFailureView(failure: failure) {
                 Task {
-                    await model.start(using: dependencies.practiceRepository)
+                    await model.start(
+                        using: dependencies.practiceRepository,
+                        recoveryStore: dependencies.recoveryStore
+                    )
                 }
             }
         }
@@ -126,7 +160,10 @@ private struct PracticeQuestionView: View {
 
             Button {
                 Task {
-                    await model.submit(using: dependencies.practiceRepository)
+                    await model.submit(
+                        using: dependencies.practiceRepository,
+                        recoveryStore: dependencies.recoveryStore
+                    )
                 }
             } label: {
                 if model.isSubmitting {
@@ -163,7 +200,8 @@ private struct PracticeQuestionView: View {
             Spacer()
 
             PracticeTimerView(
-                startedAt: model.questionPresentedAt ?? .now,
+                accumulatedSeconds: model.accumulatedElapsedSeconds,
+                resumedAt: model.questionPresentedAt,
                 expectedSeconds: step.question.expectedSeconds
             )
         }
@@ -290,12 +328,14 @@ private struct PracticeChoiceButton: View {
 }
 
 private struct PracticeTimerView: View {
-    let startedAt: Date
+    let accumulatedSeconds: TimeInterval
+    let resumedAt: Date?
     let expectedSeconds: Int
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            let elapsed = max(0, Int(context.date.timeIntervalSince(startedAt)))
+            let activeSeconds = resumedAt.map { max(0, context.date.timeIntervalSince($0)) } ?? 0
+            let elapsed = max(0, Int(accumulatedSeconds + activeSeconds))
             Label(duration(elapsed), systemImage: "timer")
                 .font(SaturnPathTypography.caption)
                 .foregroundStyle(SaturnPathTheme.mutedInk)
@@ -303,6 +343,7 @@ private struct PracticeTimerView: View {
                 .frame(minHeight: 36)
                 .background(.thinMaterial, in: Capsule())
                 .accessibilityLabel("Elapsed time \(duration(elapsed)). Target \(duration(expectedSeconds)).")
+                .accessibilityIdentifier("saturnpath.practice.timer")
         }
     }
 
