@@ -3,7 +3,7 @@
 > **Session trigger:** `Continue working on the iOS app.`  
 > When this phrase is used, read `SATURNPATH_V2_SESSION_ROUTER.md` and `docs/coordination/WEB_TO_IOS_HANDOFFS.md`, then execute the first incomplete, unblocked item in the iOS-only checklist in Section 22. Do not implement or modify the shared backend.
 
-**Status:** Active — I1 complete; I3 client infrastructure, I4 auth/onboarding presentation foundation, I5 native shell/UI-state foundation, I6 practice presentation plus lifecycle recovery, I7 adaptive presentation, I8 Review/error-resolution presentation, and the I9 question-safe scratchpad foundations complete; signed TestFlight build I2 blocked by Apple membership; live contract-backed features blocked on web handoffs
+**Status:** Active — I1 complete; I3 client infrastructure, I4 auth/onboarding presentation foundation, I5 native shell/UI-state foundation, I6 practice presentation plus lifecycle recovery, I7 adaptive presentation, I8 Review/error-resolution presentation, and the I9 question-safe scratchpad plus native calculator fallback complete; signed TestFlight build I2 blocked by Apple membership; live contract-backed features blocked on web handoffs
 
 **Prepared:** August 25, 2026  
 **Initial release:** Public iOS App Store release  
@@ -961,11 +961,11 @@ The complete native presentation foundation now includes repository-supplied one
 
 - [x] Implement the bottom sheet below the complete question so it may cover answers but never the question. Evidence: [`docs/ios/STEP-14-QUESTION-SAFE-SCRATCHPAD-FOUNDATION.md`](docs/ios/STEP-14-QUESTION-SAFE-SCRATCHPAD-FOUNDATION.md).
 - [x] Add PencilKit drawing, typed notes, colors, eraser, undo/redo, clear, and attempt-scoped persistence. Evidence: [`docs/ios/STEP-14-QUESTION-SAFE-SCRATCHPAD-FOUNDATION.md`](docs/ios/STEP-14-QUESTION-SAFE-SCRATCHPAD-FOUNDATION.md).
-- [ ] Implement the licensed calculator integration or defined native/fallback experience.
+- [x] Implement the licensed calculator integration or defined native/fallback experience. Evidence: [`docs/ios/STEP-15-NATIVE-CALCULATOR-FALLBACK.md`](docs/ios/STEP-15-NATIVE-CALCULATOR-FALLBACK.md).
 - [ ] Add on-device non-content signals and supported Apple Vision preprocessing.
 - [ ] Send only privacy-approved structured data and present confidence-aware server signals.
 
-The local, question-safe drawing and notes experience is complete. Calculator selection, Vision preprocessing, privacy-approved structured scratch signals, server confidence presentation, and physical Apple Pencil/keyboard validation remain open. No raw scratch content is sent by this foundation.
+The local, question-safe drawing, notes, and native scientific calculator experience is complete. Graphing opens the official SAT Desmos experience in an in-app browser; embedded Desmos remains intentionally disabled pending explicit production licensing. Vision preprocessing, privacy-approved structured scratch signals, server confidence presentation, and physical Apple Pencil/keyboard validation remain open. No raw scratch content is sent by this foundation. Evidence: [`docs/ios/STEP-15-NATIVE-CALCULATOR-FALLBACK.md`](docs/ios/STEP-15-NATIVE-CALCULATOR-FALLBACK.md).
 
 ### I10. Complete native Progress, Profile, notifications, and recovery
 

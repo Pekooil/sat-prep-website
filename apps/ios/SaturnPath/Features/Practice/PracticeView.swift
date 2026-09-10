@@ -260,7 +260,13 @@ private struct PracticeQuestionView: View {
             HStack(spacing: SaturnPathSpacing.small) {
                 Image(systemName: "pencil.and.scribble")
                     .accessibilityHidden(true)
-                Text(model.scratchDrawingData == nil && model.scratchNotes.isEmpty ? "Open Scratchpad" : "Resume Scratchpad")
+                Text(
+                    model.scratchDrawingData == nil
+                        && model.scratchNotes.isEmpty
+                        && model.calculatorState.isEmpty
+                        ? "Open Scratchpad"
+                        : "Resume Scratchpad"
+                )
                 Spacer()
                 Image(systemName: "chevron.up")
                     .font(.system(.caption, weight: .bold))

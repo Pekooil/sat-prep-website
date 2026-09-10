@@ -84,7 +84,9 @@ This is not a live adaptive session. The sample question and feedback remain iso
 
 Every active question now offers a native scratchpad immediately below the complete question. Its measured bottom sheet can cover answer choices but leaves the full prompt visible. Draw mode uses PencilKit with pen, eraser, four labeled ink colors, undo, redo, and confirmed clearing; Notes mode provides a focused, 2,000-character plain-text workspace.
 
-Drawings and notes persist only with the active attempt, survive dismissal and app relaunch, and clear after a successful submission, explicit exit, or transition to another question. Existing recovery files saved before drawing support remain compatible. This foundation does not upload raw scratch content. Calculator integration, on-device signal extraction, Apple Vision preprocessing, structured signal sharing, and physical-device Pencil/keyboard validation remain open. See `docs/ios/STEP-14-QUESTION-SAFE-SCRATCHPAD-FOUNDATION.md`.
+Drawings and notes persist only with the active attempt, survive dismissal and app relaunch, and clear after a successful submission, explicit exit, or transition to another question. Existing recovery files saved before drawing support remain compatible. This foundation does not upload raw scratch content. See `docs/ios/STEP-14-QUESTION-SAFE-SCRATCHPAD-FOUNDATION.md`.
+
+Calculator mode provides native arithmetic, parentheses, powers, roots, trigonometry, logarithms, pi, previous-answer reuse, degree/radian selection, and friendly error states. Its state follows the same attempt-scoped lifecycle as the rest of the scratchpad. Graphing practice opens the official SAT Desmos calculator in an in-app browser; no third-party calculator is embedded pending explicit production licensing. On-device signal extraction, Apple Vision preprocessing, structured signal sharing, and physical-device Pencil/keyboard validation remain open. See `docs/ios/STEP-15-NATIVE-CALCULATOR-FALLBACK.md`.
 
 ## Review and error-resolution foundation
 

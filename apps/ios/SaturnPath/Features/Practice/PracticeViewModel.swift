@@ -37,6 +37,7 @@ final class PracticeViewModel {
 
     private(set) var scratchNotes = ""
     private(set) var scratchDrawingData: Data?
+    private(set) var calculatorState = PracticeCalculatorState()
     private var submissionIdempotencyKey: String?
     private var classificationIdempotencyKey: String?
 
@@ -117,6 +118,13 @@ final class PracticeViewModel {
             return
         }
         scratchDrawingData = data
+    }
+
+    func updateCalculatorState(_ state: PracticeCalculatorState) {
+        guard phase == .question else {
+            return
+        }
+        calculatorState = state
     }
 
     func submit(
@@ -293,6 +301,7 @@ final class PracticeViewModel {
             elapsedSeconds: TimeInterval(elapsedSeconds(at: now)),
             scratchNotes: scratchNotes,
             scratchDrawingData: scratchDrawingData,
+            calculatorState: calculatorState.isEmpty ? nil : calculatorState,
             updatedAt: now,
             questionStep: questionStep,
             submissionIdempotencyKey: submissionIdempotencyKey
@@ -357,6 +366,7 @@ final class PracticeViewModel {
         accumulatedElapsedSeconds = max(0, recovery.elapsedSeconds)
         scratchNotes = recovery.scratchNotes
         scratchDrawingData = recovery.scratchDrawingData
+        calculatorState = recovery.calculatorState ?? PracticeCalculatorState()
         submissionIdempotencyKey = recovery.submissionIdempotencyKey
         isSubmitting = false
         isResolvingStop = false
@@ -455,5 +465,6 @@ final class PracticeViewModel {
     private func resetScratchpad() {
         scratchNotes = ""
         scratchDrawingData = nil
+        calculatorState = PracticeCalculatorState()
     }
 }

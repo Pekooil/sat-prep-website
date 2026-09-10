@@ -1,5 +1,60 @@
 import Foundation
 
+enum PracticeCalculatorAngleMode: String, Codable, CaseIterable, Identifiable, Sendable {
+    case degrees
+    case radians
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .degrees: "Deg"
+        case .radians: "Rad"
+        }
+    }
+}
+
+enum PracticeCalculatorInput: String, Codable, Equatable, Sendable {
+    case zero
+    case one
+    case two
+    case three
+    case four
+    case five
+    case six
+    case seven
+    case eight
+    case nine
+    case decimal
+    case add
+    case subtract
+    case multiply
+    case divide
+    case power
+    case square
+    case openParenthesis
+    case closeParenthesis
+    case sine
+    case cosine
+    case tangent
+    case logarithm
+    case naturalLogarithm
+    case squareRoot
+    case pi
+    case answer
+}
+
+struct PracticeCalculatorState: Codable, Equatable, Sendable {
+    var inputs: [PracticeCalculatorInput] = []
+    var lastAnswer: Double?
+    var showsResult = false
+    var angleMode: PracticeCalculatorAngleMode = .degrees
+
+    var isEmpty: Bool {
+        inputs.isEmpty && lastAnswer == nil && angleMode == .degrees
+    }
+}
+
 struct PracticeRecoveryState: Codable, Equatable, Sendable {
     let sessionID: String
     let questionID: String
@@ -7,6 +62,7 @@ struct PracticeRecoveryState: Codable, Equatable, Sendable {
     let elapsedSeconds: TimeInterval
     let scratchNotes: String
     let scratchDrawingData: Data?
+    let calculatorState: PracticeCalculatorState?
     let updatedAt: Date
     let questionStep: PracticeQuestionStep?
     let submissionIdempotencyKey: String?
@@ -18,6 +74,7 @@ struct PracticeRecoveryState: Codable, Equatable, Sendable {
         elapsedSeconds: TimeInterval,
         scratchNotes: String,
         scratchDrawingData: Data? = nil,
+        calculatorState: PracticeCalculatorState? = nil,
         updatedAt: Date,
         questionStep: PracticeQuestionStep? = nil,
         submissionIdempotencyKey: String? = nil
@@ -28,6 +85,7 @@ struct PracticeRecoveryState: Codable, Equatable, Sendable {
         self.elapsedSeconds = elapsedSeconds
         self.scratchNotes = scratchNotes
         self.scratchDrawingData = scratchDrawingData
+        self.calculatorState = calculatorState
         self.updatedAt = updatedAt
         self.questionStep = questionStep
         self.submissionIdempotencyKey = submissionIdempotencyKey

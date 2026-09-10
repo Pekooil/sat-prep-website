@@ -5,6 +5,7 @@ import SwiftUI
 enum ScratchpadTab: String, CaseIterable, Identifiable, Sendable {
     case draw
     case notes
+    case calculator
 
     var id: String { rawValue }
 
@@ -12,6 +13,7 @@ enum ScratchpadTab: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .draw: "Draw"
         case .notes: "Notes"
+        case .calculator: "Calculator"
         }
     }
 }
@@ -73,6 +75,8 @@ struct ScratchpadView: View {
                 drawingContent
             case .notes:
                 notesContent
+            case .calculator:
+                calculatorContent
             }
 
             privacyNote
@@ -315,11 +319,20 @@ struct ScratchpadView: View {
     }
 
     private var privacyNote: some View {
-        Label("Drawing and notes stay on this device for the active attempt.", systemImage: "lock")
+        Label("Scratchwork stays on this device for the active attempt.", systemImage: "lock")
             .font(.system(.caption2, design: .rounded, weight: .medium))
             .foregroundStyle(SaturnPathTheme.mutedInk)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityIdentifier("saturnpath.scratchpad.privacy")
+    }
+
+    private var calculatorContent: some View {
+        ScientificCalculatorView(
+            state: Binding(
+                get: { practiceModel.calculatorState },
+                set: { practiceModel.updateCalculatorState($0) }
+            )
+        )
     }
 }
 

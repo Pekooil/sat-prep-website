@@ -166,10 +166,17 @@ struct PracticeViewModelTests {
         let repository = RecordingPracticeRepository()
         let recoveryStore = InMemoryPracticeRecoveryStore()
         let drawingData = Data([0x53, 0x50, 0x01])
+        let calculatorState = PracticeCalculatorState(
+            inputs: [.seven, .multiply, .eight],
+            lastAnswer: 56,
+            showsResult: true,
+            angleMode: .degrees
+        )
         let firstModel = PracticeViewModel()
         await firstModel.start(using: repository, recoveryStore: recoveryStore)
         firstModel.updateScratchNotes("2x + 4 = 10")
         firstModel.updateScratchDrawing(drawingData)
+        firstModel.updateCalculatorState(calculatorState)
         await firstModel.persist(using: recoveryStore)
 
         let restoredModel = PracticeViewModel()
@@ -177,12 +184,14 @@ struct PracticeViewModelTests {
 
         #expect(restoredModel.scratchNotes == "2x + 4 = 10")
         #expect(restoredModel.scratchDrawingData == drawingData)
+        #expect(restoredModel.calculatorState == calculatorState)
 
         restoredModel.selectResponse("B")
         await restoredModel.submit(using: repository, recoveryStore: recoveryStore)
 
         #expect(restoredModel.scratchNotes.isEmpty)
         #expect(restoredModel.scratchDrawingData == nil)
+        #expect(restoredModel.calculatorState == PracticeCalculatorState())
         #expect(try await recoveryStore.load() == nil)
     }
 

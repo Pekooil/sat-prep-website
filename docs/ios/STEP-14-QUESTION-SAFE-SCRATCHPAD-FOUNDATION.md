@@ -1,6 +1,6 @@
 # Question-safe scratchpad foundation
 
-**Status:** Native drawing, typed notes, and attempt-scoped persistence complete; calculator and scratch-signal work remain open
+**Status:** Native drawing, typed notes, and attempt-scoped persistence complete; calculator continued in Step 15
 
 **Completed locally:** September 9, 2026
 
@@ -40,6 +40,6 @@ Verified with Xcode 26.6 and the iOS 26.5 SDK:
 - Drawing and typed-note screenshots from the test runner were visually inspected for prompt visibility, control reachability, layout, contrast, and keyboard behavior.
 - The unsigned Release device build passed store validation; signed physical-device validation remains externally blocked.
 
-## Remaining I9 work
+## I9 continuation
 
-The next unblocked I9 item is the defined native calculator or licensed integration. On-device non-content signals, supported Apple Vision preprocessing, privacy-approved structured uploads, and confidence-aware server signals remain separate work. Apple Pencil, external/software keyboard, memory-pressure, and backgrounding validation on signed physical hardware remains tracked by I11.
+The native calculator fallback is complete in [`STEP-15-NATIVE-CALCULATOR-FALLBACK.md`](STEP-15-NATIVE-CALCULATOR-FALLBACK.md). On-device non-content signals, supported Apple Vision preprocessing, privacy-approved structured uploads, and confidence-aware server signals remain separate work. Apple Pencil, external/software keyboard, memory-pressure, and backgrounding validation on signed physical hardware remains tracked by I11.

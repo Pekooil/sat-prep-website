@@ -23,6 +23,12 @@ struct RecoveryAndRepositoryTests {
             elapsedSeconds: 42,
             scratchNotes: "2x = 8",
             scratchDrawingData: Data([0x53, 0x41, 0x54]),
+            calculatorState: PracticeCalculatorState(
+                inputs: [.seven, .multiply, .eight],
+                lastAnswer: 56,
+                showsResult: true,
+                angleMode: .degrees
+            ),
             updatedAt: Date(timeIntervalSince1970: 1_000),
             questionStep: .mock,
             submissionIdempotencyKey: "submission-1"

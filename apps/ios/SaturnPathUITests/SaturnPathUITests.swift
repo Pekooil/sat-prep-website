@@ -257,4 +257,56 @@ final class SaturnPathUITests: XCTestCase {
         app.buttons["saturnpath.practice.close"].tap()
         app.buttons["Leave Practice"].tap()
     }
+
+    func testScientificCalculatorEvaluatesAndRestoresAttemptState() {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 8))
+        app.swipeUp()
+        app.buttons["saturnpath.home.start"].tap()
+        XCTAssertTrue(app.staticTexts["saturnpath.practice.prompt"].waitForExistence(timeout: 5))
+
+        app.buttons["saturnpath.practice.scratchpad"].tap()
+        XCTAssertTrue(app.staticTexts["saturnpath.scratchpad.sheet"].waitForExistence(timeout: 5))
+        app.segmentedControls.buttons["Calculator"].tap()
+
+        let calculator = app.descendants(matching: .any)["saturnpath.calculator"]
+        XCTAssertTrue(calculator.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["saturnpath.calculator.official-graphing"].exists)
+
+        app.buttons["saturnpath.calculator.key.input-seven"].tap()
+        app.buttons["saturnpath.calculator.key.input-multiply"].tap()
+        app.buttons["saturnpath.calculator.key.input-eight"].tap()
+
+        let equalsButton = app.buttons["saturnpath.calculator.key.equals"]
+        if !equalsButton.isHittable {
+            calculator.swipeUp()
+        }
+        XCTAssertTrue(equalsButton.waitForExistence(timeout: 2))
+        equalsButton.tap()
+
+        calculator.swipeDown()
+
+        let result = app.staticTexts["saturnpath.calculator.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 3))
+        XCTAssertTrue(result.label.contains("56"))
+
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Native scientific calculator"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+
+        app.buttons["saturnpath.scratchpad.done"].tap()
+        app.buttons["saturnpath.practice.scratchpad"].tap()
+        app.segmentedControls.buttons["Calculator"].tap()
+
+        let restoredResult = app.staticTexts["saturnpath.calculator.result"]
+        XCTAssertTrue(restoredResult.waitForExistence(timeout: 3))
+        XCTAssertTrue(restoredResult.label.contains("56"))
+
+        app.buttons["saturnpath.scratchpad.done"].tap()
+        app.buttons["saturnpath.practice.close"].tap()
+        app.buttons["Leave Practice"].tap()
+    }
 }
