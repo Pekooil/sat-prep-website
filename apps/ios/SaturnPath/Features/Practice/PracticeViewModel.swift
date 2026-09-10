@@ -35,7 +35,8 @@ final class PracticeViewModel {
     private(set) var classificationFailure: PracticeViewFailure?
     private(set) var isClassifying = false
 
-    private var scratchNotes = ""
+    private(set) var scratchNotes = ""
+    private(set) var scratchDrawingData: Data?
     private var submissionIdempotencyKey: String?
     private var classificationIdempotencyKey: String?
 
@@ -104,6 +105,20 @@ final class PracticeViewModel {
         selectedResponse = response
     }
 
+    func updateScratchNotes(_ notes: String) {
+        guard phase == .question else {
+            return
+        }
+        scratchNotes = String(notes.prefix(2_000))
+    }
+
+    func updateScratchDrawing(_ data: Data?) {
+        guard phase == .question else {
+            return
+        }
+        scratchDrawingData = data
+    }
+
     func submit(
         using repository: any PracticeRepository,
         recoveryStore: (any PracticeRecoveryStoring)? = nil,
@@ -135,6 +150,7 @@ final class PracticeViewModel {
             isSubmitting = false
             submissionIdempotencyKey = nil
             resetClassification()
+            resetScratchpad()
             phase = .feedback
             await discardRecovery(using: recoveryStore)
         } catch {
@@ -276,6 +292,7 @@ final class PracticeViewModel {
             selectedResponse: selectedResponse,
             elapsedSeconds: TimeInterval(elapsedSeconds(at: now)),
             scratchNotes: scratchNotes,
+            scratchDrawingData: scratchDrawingData,
             updatedAt: now,
             questionStep: questionStep,
             submissionIdempotencyKey: submissionIdempotencyKey
@@ -323,7 +340,7 @@ final class PracticeViewModel {
         selectedResponse = nil
         questionPresentedAt = now
         accumulatedElapsedSeconds = 0
-        scratchNotes = ""
+        resetScratchpad()
         submissionIdempotencyKey = nil
         isSubmitting = false
         isResolvingStop = false
@@ -339,6 +356,7 @@ final class PracticeViewModel {
         questionPresentedAt = now
         accumulatedElapsedSeconds = max(0, recovery.elapsedSeconds)
         scratchNotes = recovery.scratchNotes
+        scratchDrawingData = recovery.scratchDrawingData
         submissionIdempotencyKey = recovery.submissionIdempotencyKey
         isSubmitting = false
         isResolvingStop = false
@@ -432,5 +450,10 @@ final class PracticeViewModel {
         classificationFailure = nil
         classificationIdempotencyKey = nil
         isClassifying = false
+    }
+
+    private func resetScratchpad() {
+        scratchNotes = ""
+        scratchDrawingData = nil
     }
 }

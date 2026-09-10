@@ -159,53 +159,131 @@ private struct PracticeQuestionView: View {
     let step: PracticeQuestionStep
 
     @Environment(\.appDependencies) private var dependencies
+    @State private var showsScratchpad = false
+    @State private var questionBottom: CGFloat = 0
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: SaturnPathSpacing.large) {
-                    questionHeader
-                    Text(step.question.prompt)
-                        .font(.system(.title3, design: .rounded, weight: .semibold))
-                        .foregroundStyle(SaturnPathTheme.ink)
-                        .lineSpacing(5)
-                        .accessibilityAddTraits(.isHeader)
-                        .accessibilityIdentifier("saturnpath.practice.prompt")
-
-                    responseControls
-                    whyCard
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: SaturnPathSpacing.large) {
+                        questionCard
+                        scratchpadButton
+                        responseControls
+                        whyCard
+                    }
+                    .frame(maxWidth: 620)
+                    .padding(.horizontal, SaturnPathSpacing.large)
+                    .padding(.vertical, SaturnPathSpacing.large)
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: 620)
+                .scrollIndicators(.hidden)
+
+                Button {
+                    Task {
+                        await model.submit(
+                            using: dependencies.practiceRepository,
+                            recoveryStore: dependencies.recoveryStore
+                        )
+                    }
+                } label: {
+                    if model.isSubmitting {
+                        ProgressView()
+                            .tint(.white)
+                            .accessibilityLabel("Submitting answer")
+                    } else {
+                        Text("Submit Answer")
+                    }
+                }
+                .buttonStyle(SaturnPathPrimaryButtonStyle())
+                .disabled(!model.canSubmit)
+                .opacity(model.canSubmit ? 1 : 0.55)
                 .padding(.horizontal, SaturnPathSpacing.large)
-                .padding(.vertical, SaturnPathSpacing.large)
-                .frame(maxWidth: .infinity)
+                .padding(.vertical, SaturnPathSpacing.medium)
+                .background(.ultraThinMaterial)
+                .accessibilityIdentifier("saturnpath.practice.submit")
             }
-            .scrollIndicators(.hidden)
-
-            Button {
+            .coordinateSpace(name: "practice-question")
+            .onPreferenceChange(PracticeQuestionBottomPreferenceKey.self) { bottom in
+                questionBottom = bottom
+            }
+            .sheet(isPresented: $showsScratchpad) {
+                ScratchpadView(practiceModel: model) {
+                    Task {
+                        await model.persist(using: dependencies.recoveryStore)
+                        showsScratchpad = false
+                    }
+                }
+                .presentationDetents([
+                    .height(scratchpadHeight(containerHeight: geometry.size.height))
+                ])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(SaturnPathRadius.hero)
+                .presentationBackground(.ultraThinMaterial)
+                .presentationContentInteraction(.scrolls)
+            }
+            .onChange(of: showsScratchpad) { wasShowing, isShowing in
+                guard wasShowing, !isShowing else {
+                    return
+                }
                 Task {
-                    await model.submit(
-                        using: dependencies.practiceRepository,
-                        recoveryStore: dependencies.recoveryStore
-                    )
-                }
-            } label: {
-                if model.isSubmitting {
-                    ProgressView()
-                        .tint(.white)
-                        .accessibilityLabel("Submitting answer")
-                } else {
-                    Text("Submit Answer")
+                    await model.persist(using: dependencies.recoveryStore)
                 }
             }
-            .buttonStyle(SaturnPathPrimaryButtonStyle())
-            .disabled(!model.canSubmit)
-            .opacity(model.canSubmit ? 1 : 0.55)
-            .padding(.horizontal, SaturnPathSpacing.large)
-            .padding(.vertical, SaturnPathSpacing.medium)
-            .background(.ultraThinMaterial)
-            .accessibilityIdentifier("saturnpath.practice.submit")
         }
+    }
+
+    private var questionCard: some View {
+        VStack(alignment: .leading, spacing: SaturnPathSpacing.large) {
+            questionHeader
+            Text(step.question.prompt)
+                .font(.system(.title3, design: .rounded, weight: .semibold))
+                .foregroundStyle(SaturnPathTheme.ink)
+                .lineSpacing(5)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("saturnpath.practice.prompt")
+        }
+        .background {
+            GeometryReader { geometry in
+                Color.clear.preference(
+                    key: PracticeQuestionBottomPreferenceKey.self,
+                    value: geometry.frame(in: .named("practice-question")).maxY
+                )
+            }
+        }
+    }
+
+    private var scratchpadButton: some View {
+        Button {
+            showsScratchpad = true
+        } label: {
+            HStack(spacing: SaturnPathSpacing.small) {
+                Image(systemName: "pencil.and.scribble")
+                    .accessibilityHidden(true)
+                Text(model.scratchDrawingData == nil && model.scratchNotes.isEmpty ? "Open Scratchpad" : "Resume Scratchpad")
+                Spacer()
+                Image(systemName: "chevron.up")
+                    .font(.system(.caption, weight: .bold))
+                    .accessibilityHidden(true)
+            }
+            .font(SaturnPathTypography.bodyStrong)
+            .foregroundStyle(SaturnPathTheme.primaryDeep)
+            .padding(.horizontal, SaturnPathSpacing.medium)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .background(SaturnPathTheme.primarySoft, in: RoundedRectangle(cornerRadius: SaturnPathRadius.control, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: SaturnPathRadius.control, style: .continuous)
+                    .stroke(SaturnPathTheme.primary.opacity(0.32), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Opens below the complete question and may cover answer choices")
+        .accessibilityIdentifier("saturnpath.practice.scratchpad")
+    }
+
+    private func scratchpadHeight(containerHeight: CGFloat) -> CGFloat {
+        let safeQuestionBottom = max(0, questionBottom)
+        return max(140, min(520, containerHeight - safeQuestionBottom - SaturnPathSpacing.small))
     }
 
     private var questionHeader: some View {
@@ -308,6 +386,14 @@ private struct PracticeQuestionView: View {
             .padding(SaturnPathSpacing.small)
             .background(SaturnPathTheme.primarySoft, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
         }
+    }
+}
+
+private struct PracticeQuestionBottomPreferenceKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 

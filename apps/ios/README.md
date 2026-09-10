@@ -80,6 +80,12 @@ Adaptive feedback now renders a structured before/after route tile and an option
 
 This is not a live adaptive session. The sample question and feedback remain isolated mock data until the practice API handoff is marked `READY`; physical-device validation also remains open. See `docs/ios/STEP-11-PRACTICE-PRESENTATION-FOUNDATION.md` and `docs/ios/STEP-12-ADAPTIVE-PRESENTATION-FOUNDATION.md`.
 
+## Question-safe scratchpad foundation
+
+Every active question now offers a native scratchpad immediately below the complete question. Its measured bottom sheet can cover answer choices but leaves the full prompt visible. Draw mode uses PencilKit with pen, eraser, four labeled ink colors, undo, redo, and confirmed clearing; Notes mode provides a focused, 2,000-character plain-text workspace.
+
+Drawings and notes persist only with the active attempt, survive dismissal and app relaunch, and clear after a successful submission, explicit exit, or transition to another question. Existing recovery files saved before drawing support remain compatible. This foundation does not upload raw scratch content. Calculator integration, on-device signal extraction, Apple Vision preprocessing, structured signal sharing, and physical-device Pencil/keyboard validation remain open. See `docs/ios/STEP-14-QUESTION-SAFE-SCRATCHPAD-FOUNDATION.md`.
+
 ## Review and error-resolution foundation
 
 Incorrect feedback can now ask for a repository-supplied mistake reason. Common reasons save with one tap; Something Else opens a focused, labeled note field limited to 80 characters. The next action stays unavailable until the reason is stored, and classification retries reuse the same idempotency key.

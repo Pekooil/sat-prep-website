@@ -6,6 +6,7 @@ struct PracticeRecoveryState: Codable, Equatable, Sendable {
     let selectedResponse: String?
     let elapsedSeconds: TimeInterval
     let scratchNotes: String
+    let scratchDrawingData: Data?
     let updatedAt: Date
     let questionStep: PracticeQuestionStep?
     let submissionIdempotencyKey: String?
@@ -16,6 +17,7 @@ struct PracticeRecoveryState: Codable, Equatable, Sendable {
         selectedResponse: String?,
         elapsedSeconds: TimeInterval,
         scratchNotes: String,
+        scratchDrawingData: Data? = nil,
         updatedAt: Date,
         questionStep: PracticeQuestionStep? = nil,
         submissionIdempotencyKey: String? = nil
@@ -25,6 +27,7 @@ struct PracticeRecoveryState: Codable, Equatable, Sendable {
         self.selectedResponse = selectedResponse
         self.elapsedSeconds = elapsedSeconds
         self.scratchNotes = scratchNotes
+        self.scratchDrawingData = scratchDrawingData
         self.updatedAt = updatedAt
         self.questionStep = questionStep
         self.submissionIdempotencyKey = submissionIdempotencyKey

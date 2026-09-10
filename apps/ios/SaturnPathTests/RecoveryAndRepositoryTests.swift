@@ -22,6 +22,7 @@ struct RecoveryAndRepositoryTests {
             selectedResponse: "B",
             elapsedSeconds: 42,
             scratchNotes: "2x = 8",
+            scratchDrawingData: Data([0x53, 0x41, 0x54]),
             updatedAt: Date(timeIntervalSince1970: 1_000),
             questionStep: .mock,
             submissionIdempotencyKey: "submission-1"
@@ -32,6 +33,26 @@ struct RecoveryAndRepositoryTests {
 
         try await store.clear()
         #expect(try await store.load() == nil)
+    }
+
+    @Test
+    func recoveryStateDecodesDataSavedBeforeDrawingSupport() throws {
+        let legacyState = LegacyPracticeRecoveryState(
+            sessionID: "session-legacy",
+            questionID: "question-legacy",
+            selectedResponse: nil,
+            elapsedSeconds: 12,
+            scratchNotes: "legacy note",
+            updatedAt: Date(timeIntervalSince1970: 1_000),
+            questionStep: .mock,
+            submissionIdempotencyKey: nil
+        )
+
+        let data = try JSONEncoder().encode(legacyState)
+        let restoredState = try JSONDecoder().decode(PracticeRecoveryState.self, from: data)
+
+        #expect(restoredState.scratchNotes == "legacy note")
+        #expect(restoredState.scratchDrawingData == nil)
     }
 
     @Test
@@ -53,4 +74,15 @@ struct RecoveryAndRepositoryTests {
         #expect(bootstrap.hasCompletedOnboarding)
         #expect(home.recommendedMinutes > 0)
     }
+}
+
+private struct LegacyPracticeRecoveryState: Codable {
+    let sessionID: String
+    let questionID: String
+    let selectedResponse: String?
+    let elapsedSeconds: TimeInterval
+    let scratchNotes: String
+    let updatedAt: Date
+    let questionStep: PracticeQuestionStep?
+    let submissionIdempotencyKey: String?
 }

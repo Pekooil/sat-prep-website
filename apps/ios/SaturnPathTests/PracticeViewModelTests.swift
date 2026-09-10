@@ -162,6 +162,41 @@ struct PracticeViewModelTests {
     }
 
     @Test
+    func scratchpadRestoresForTheActiveAttemptAndClearsAfterSubmission() async throws {
+        let repository = RecordingPracticeRepository()
+        let recoveryStore = InMemoryPracticeRecoveryStore()
+        let drawingData = Data([0x53, 0x50, 0x01])
+        let firstModel = PracticeViewModel()
+        await firstModel.start(using: repository, recoveryStore: recoveryStore)
+        firstModel.updateScratchNotes("2x + 4 = 10")
+        firstModel.updateScratchDrawing(drawingData)
+        await firstModel.persist(using: recoveryStore)
+
+        let restoredModel = PracticeViewModel()
+        await restoredModel.start(using: repository, recoveryStore: recoveryStore)
+
+        #expect(restoredModel.scratchNotes == "2x + 4 = 10")
+        #expect(restoredModel.scratchDrawingData == drawingData)
+
+        restoredModel.selectResponse("B")
+        await restoredModel.submit(using: repository, recoveryStore: recoveryStore)
+
+        #expect(restoredModel.scratchNotes.isEmpty)
+        #expect(restoredModel.scratchDrawingData == nil)
+        #expect(try await recoveryStore.load() == nil)
+    }
+
+    @Test
+    func typedScratchNotesAreConstrained() async {
+        let model = PracticeViewModel()
+        await model.start(using: MockPracticeRepository())
+
+        model.updateScratchNotes(String(repeating: "x", count: 2_100))
+
+        #expect(model.scratchNotes.count == 2_000)
+    }
+
+    @Test
     func ambiguousSubmissionRetryReusesItsIdempotencyKey() async throws {
         let repository = FlakyPracticeRepository()
         let recoveryStore = InMemoryPracticeRecoveryStore()

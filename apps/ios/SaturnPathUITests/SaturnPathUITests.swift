@@ -204,4 +204,57 @@ final class SaturnPathUITests: XCTestCase {
         app.buttons["saturnpath.practice.close"].tap()
         app.buttons["Leave Practice"].tap()
     }
+
+    func testScratchpadStaysBelowQuestionAndRestoresTypedNotes() {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["saturnpath.home.title"].waitForExistence(timeout: 8))
+        app.swipeUp()
+        app.buttons["saturnpath.home.start"].tap()
+
+        let prompt = app.staticTexts["saturnpath.practice.prompt"]
+        XCTAssertTrue(prompt.waitForExistence(timeout: 5))
+        let scratchpadButton = app.buttons["saturnpath.practice.scratchpad"]
+        XCTAssertTrue(scratchpadButton.waitForExistence(timeout: 5))
+        scratchpadButton.tap()
+
+        let scratchpadTitle = app.staticTexts["saturnpath.scratchpad.sheet"]
+        XCTAssertTrue(scratchpadTitle.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["saturnpath.scratchpad.canvas"].exists)
+        XCTAssertLessThanOrEqual(
+            prompt.frame.maxY + 8,
+            scratchpadTitle.frame.minY,
+            "The scratchpad must begin below the complete question."
+        )
+
+        let drawingScreenshot = XCTAttachment(screenshot: app.screenshot())
+        drawingScreenshot.name = "Question-safe drawing scratchpad"
+        drawingScreenshot.lifetime = .keepAlways
+        add(drawingScreenshot)
+
+        app.segmentedControls.buttons["Notes"].tap()
+        let notes = app.textViews["saturnpath.scratchpad.notes"]
+        XCTAssertTrue(notes.waitForExistence(timeout: 5))
+        notes.tap()
+        notes.typeText("2x + 4 = 10")
+
+        let notesScreenshot = XCTAttachment(screenshot: app.screenshot())
+        notesScreenshot.name = "Typed scratch notes"
+        notesScreenshot.lifetime = .keepAlways
+        add(notesScreenshot)
+
+        app.buttons["saturnpath.scratchpad.done"].tap()
+        XCTAssertTrue(app.buttons["saturnpath.practice.scratchpad"].waitForExistence(timeout: 5))
+        app.buttons["saturnpath.practice.scratchpad"].tap()
+        app.segmentedControls.buttons["Notes"].tap()
+
+        let restoredNotes = app.textViews["saturnpath.scratchpad.notes"]
+        XCTAssertTrue(restoredNotes.waitForExistence(timeout: 5))
+        XCTAssertTrue((restoredNotes.value as? String)?.contains("2x + 4 = 10") == true)
+
+        app.buttons["saturnpath.scratchpad.done"].tap()
+        app.buttons["saturnpath.practice.close"].tap()
+        app.buttons["Leave Practice"].tap()
+    }
 }

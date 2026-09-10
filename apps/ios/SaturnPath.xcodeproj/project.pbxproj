@@ -48,6 +48,7 @@
 		A00000000000000000000029 /* ReviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000012D /* ReviewViewModel.swift */; };
 		A0000000000000000000002A /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000012E /* ReviewView.swift */; };
 		A0000000000000000000002B /* ReviewViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000012F /* ReviewViewModelTests.swift */; };
+		A0000000000000000000002C /* ScratchpadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000130 /* ScratchpadView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,6 +117,7 @@
 		A0000000000000000000012D /* ReviewViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViewModel.swift; sourceTree = "<group>"; };
 		A0000000000000000000012E /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
 		A0000000000000000000012F /* ReviewViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViewModelTests.swift; sourceTree = "<group>"; };
+		A00000000000000000000130 /* ScratchpadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScratchpadView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -236,6 +238,7 @@
 				A00000000000000000000319 /* Home */,
 				A0000000000000000000031F /* Practice */,
 				A00000000000000000000320 /* Review */,
+				A00000000000000000000321 /* Scratchpad */,
 				A0000000000000000000031A /* Shared */,
 				A0000000000000000000031B /* Shell */,
 			);
@@ -250,6 +253,7 @@
 		A0000000000000000000031E /* Onboarding */ = {isa = PBXGroup; children = (A00000000000000000000124 /* OnboardingViewModel.swift */, A00000000000000000000125 /* OnboardingView.swift */); path = Onboarding; sourceTree = "<group>"; };
 		A0000000000000000000031F /* Practice */ = {isa = PBXGroup; children = (A00000000000000000000129 /* PracticeViewModel.swift */, A0000000000000000000012A /* PracticeView.swift */); path = Practice; sourceTree = "<group>"; };
 		A00000000000000000000320 /* Review */ = {isa = PBXGroup; children = (A0000000000000000000012D /* ReviewViewModel.swift */, A0000000000000000000012E /* ReviewView.swift */); path = Review; sourceTree = "<group>"; };
+		A00000000000000000000321 /* Scratchpad */ = {isa = PBXGroup; children = (A00000000000000000000130 /* ScratchpadView.swift */); path = Scratchpad; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -321,7 +325,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A00000000000000000000610 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000001 /* SaturnPathApp.swift in Sources */, A00000000000000000000002 /* AppShellView.swift in Sources */, A00000000000000000000003 /* SaturnPathTheme.swift in Sources */, A00000000000000000000008 /* AppConfiguration.swift in Sources */, A00000000000000000000009 /* FeatureFlags.swift in Sources */, A0000000000000000000000A /* SessionStore.swift in Sources */, A0000000000000000000000B /* APIClient.swift in Sources */, A0000000000000000000000C /* PracticeRecoveryStore.swift in Sources */, A0000000000000000000000D /* MockRepositories.swift in Sources */, A0000000000000000000000E /* AppDependencies.swift in Sources */, A00000000000000000000014 /* SaturnPathTokens.swift in Sources */, A00000000000000000000015 /* SaturnPathComponents.swift in Sources */, A00000000000000000000016 /* HomeViewModel.swift in Sources */, A00000000000000000000017 /* HomeView.swift in Sources */, A00000000000000000000018 /* PlaceholderFeatureView.swift in Sources */, A00000000000000000000019 /* MainTabView.swift in Sources */, A0000000000000000000001B /* AccountRepositories.swift in Sources */, A0000000000000000000001C /* AppFlowViewModel.swift in Sources */, A0000000000000000000001D /* AppFlowView.swift in Sources */, A0000000000000000000001E /* AuthViewModel.swift in Sources */, A0000000000000000000001F /* SignInView.swift in Sources */, A00000000000000000000020 /* OnboardingViewModel.swift in Sources */, A00000000000000000000021 /* OnboardingView.swift in Sources */, A00000000000000000000024 /* PracticeRepository.swift in Sources */, A00000000000000000000025 /* PracticeViewModel.swift in Sources */, A00000000000000000000026 /* PracticeView.swift in Sources */, A00000000000000000000028 /* ReviewRepository.swift in Sources */, A00000000000000000000029 /* ReviewViewModel.swift in Sources */, A0000000000000000000002A /* ReviewView.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
+		A00000000000000000000610 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000001 /* SaturnPathApp.swift in Sources */, A00000000000000000000002 /* AppShellView.swift in Sources */, A00000000000000000000003 /* SaturnPathTheme.swift in Sources */, A00000000000000000000008 /* AppConfiguration.swift in Sources */, A00000000000000000000009 /* FeatureFlags.swift in Sources */, A0000000000000000000000A /* SessionStore.swift in Sources */, A0000000000000000000000B /* APIClient.swift in Sources */, A0000000000000000000000C /* PracticeRecoveryStore.swift in Sources */, A0000000000000000000000D /* MockRepositories.swift in Sources */, A0000000000000000000000E /* AppDependencies.swift in Sources */, A00000000000000000000014 /* SaturnPathTokens.swift in Sources */, A00000000000000000000015 /* SaturnPathComponents.swift in Sources */, A00000000000000000000016 /* HomeViewModel.swift in Sources */, A00000000000000000000017 /* HomeView.swift in Sources */, A00000000000000000000018 /* PlaceholderFeatureView.swift in Sources */, A00000000000000000000019 /* MainTabView.swift in Sources */, A0000000000000000000001B /* AccountRepositories.swift in Sources */, A0000000000000000000001C /* AppFlowViewModel.swift in Sources */, A0000000000000000000001D /* AppFlowView.swift in Sources */, A0000000000000000000001E /* AuthViewModel.swift in Sources */, A0000000000000000000001F /* SignInView.swift in Sources */, A00000000000000000000020 /* OnboardingViewModel.swift in Sources */, A00000000000000000000021 /* OnboardingView.swift in Sources */, A00000000000000000000024 /* PracticeRepository.swift in Sources */, A00000000000000000000025 /* PracticeViewModel.swift in Sources */, A00000000000000000000026 /* PracticeView.swift in Sources */, A00000000000000000000028 /* ReviewRepository.swift in Sources */, A00000000000000000000029 /* ReviewViewModel.swift in Sources */, A0000000000000000000002A /* ReviewView.swift in Sources */, A0000000000000000000002C /* ScratchpadView.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
 		A00000000000000000000611 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000006 /* SaturnPathEnvironmentTests.swift in Sources */, A0000000000000000000000F /* APIClientTests.swift in Sources */, A00000000000000000000012 /* SessionStoreTests.swift in Sources */, A00000000000000000000013 /* RecoveryAndRepositoryTests.swift in Sources */, A0000000000000000000001A /* HomeViewModelTests.swift in Sources */, A00000000000000000000022 /* AppFlowViewModelTests.swift in Sources */, A00000000000000000000023 /* AuthAndOnboardingViewModelTests.swift in Sources */, A00000000000000000000027 /* PracticeViewModelTests.swift in Sources */, A0000000000000000000002B /* ReviewViewModelTests.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
 		A00000000000000000000612 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000007 /* SaturnPathUITests.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
